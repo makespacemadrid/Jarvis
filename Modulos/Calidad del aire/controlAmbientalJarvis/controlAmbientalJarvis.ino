@@ -1,3 +1,5 @@
+
+
 //Version 0.1 del control ambiental de Jarvis.
 //Desarrollado por CrakerNano 4 Makespace Madrid
 
@@ -5,6 +7,7 @@
 
 //llamadas a la librerias
 #include <SoftwareSerial.h>
+#include <EEPROM.h>
 #include <MQ135.h>
 #include "DHT.h"
 #include <Wire.h>  
@@ -117,6 +120,8 @@ float calibrarMQ135(){
   return rzero;//El valor devuelto por esta funcion debera ser cargado en MQ135.h -> #define RZERO ____
 }
 
+void setMAC(uint8_t mac){EEPROM.write(0, mac);}//metodo para asignar MAC de forma dinamica
+uint8_t getMAC(){return  EEPROM.read(0);}//metodo que devuelve la MAC almacenada en la EPROM
 
 void sendArray(float lecturas[]){
 
