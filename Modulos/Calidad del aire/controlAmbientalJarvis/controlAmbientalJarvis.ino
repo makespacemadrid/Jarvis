@@ -25,7 +25,7 @@ RTC_DS1307 RTC;
 #define DHTPIN 4 //Pin del sensor de humedad y temperatura
 #define flamepin 3 //Sensor de Llamas
 #define WAKEUPpin 2//Pin de interrupcion para despertar al Arduino
-#define RX 1//RX del puerto serial
+#define RX 1//RX del puerto serial y tigger del modo ahorro de energia
 #define TX 0//TX del puerto serial
 #define MQ135PIN A0 //Pin del sensor NH3, Benceno, Alcohol
 #define LDRpin A1 //Pin del sensor de Luz
@@ -36,12 +36,11 @@ RTC_DS1307 RTC;
 #define DHTTYPE DHT22 //Configuracion del modelo de sensor DHT22
 
 //Variables 
-float temp, humedad;
-int CO, COO;
-boolean humo, llamas, debuggear;
+
+boolean debuggear;
 int address;//direccion del modulo
 String name; //Nombre del modulo
-File myFile;  
+File myFile; 
 
 //Declaracion de objetos
 SoftwareSerial BT(10, 11); //virtualizamos un puerto serial para la conectividad Bluetooth (RX, TX)
@@ -64,11 +63,6 @@ void setup(){
    BT.println("Real clock init"); 
    
    // inicializacion de las variables
-   temp = -273;
-   humedad = -1;
-   CO = -1;
-   COO = -1;
-   humo = true;
    debuggear = false; 
    Serial.println("init variable");
  
@@ -103,7 +97,7 @@ float getMQ135(float t, float h){
 }
 
 //Alarma Sonora
-void alarm(int t){
+void soundAlarm(int t){
   analogWrite(9,20);
   delay(t);
   analogWrite(9,20);
@@ -111,7 +105,7 @@ void alarm(int t){
 }
 
 //Alarma visual
-void destellos(int t, int d){
+void ligthAlarm(int t, int d){
   digitalWrite(luminoso, HIGH);
   delay(t);
   digitalWrite(luminoso, LOW);
@@ -160,29 +154,183 @@ void debuggerMode(){
 //Activar el modo de debuggeo
 void disableDebuggerMode(){
   Serial.end();//Cerramos la conexion y liberamos los pines RX y TX
-  digitalWrite(RX,HIGH);//cambia el estado del biestable
-  digitalWrite(RX,LOW);
+  digitalWrite(RX,HIGH);//Reactiva la alimentacion externa  
   debuggear = false;  
 }
 
+//Activa el modo de debuggeo
 void enableDebuggerMode(){
   debuggear = true;
   Serial.begin(9600);//Inicializacion del puerto serial para debugger
   Serial.println("Serial Debugger Port Open"); 
 }
 
+//Devuelve TRUE si hay alimentacion externa y FALSE en caso contrario
 boolean externalVcc(){
   if(digitalRead(TX)==HIGH){return true;}
   else{return false;}
 }
-/*
-void saveData(float datos[]){
-  //Guardamos el registro de datos en la SD
-  DateTime now = RTC.now();//Creamos un objeto que contiene la hora y fecha actual    
-  //String ultimosRegistros = now.day() + "/" + now.month() + "/" + now.year() + " " +now.hour()+":"+now.minute()+":"+now.second()
-  //if(!guardaDatos(ultimosRegistros,"registro.txt")){guardaDatos(datos[],"log.txt");}
+
+//Devuelve el porcentaje de luz etectado
+float getLight(int LDRpin){
+   int light = analogRead(LDRpin);
+   float lightPerCent = light/10.23;//calculamos el tanto por ciento de luz detectada
+   return lightPerCent;
 }
 
-boolean guardaDatos(float informacion[], String fichero){return true;}
-void volcarDatos(){}
-*/
+//Devuelve la lectura del CO en partes por millon
+float getCO(int MQ07pin){
+  int val = analogRead(MQ07pin);
+  float ppm = map(val, 0, 1023, 0, 2000);//Mapeamos el valor leido a ppm
+  return ppm;
+}
+
+//Devuelve la lectura del CO2 en partes por millon
+float getCOO(int MQ811){
+  int val = analogRead(MQ811);
+  float ppm = map(val,0,1023,0,10000);
+  return ppm;
+}
+
+void saveData(float datos[], String fichero){
+  if (!SD.begin(CS)) {
+    myFile = SD.open("registros.txt", FILE_WRITE);
+    if (myFile) {
+      myFile.print(date() + " - " + time() + " - ");  //Marcamos fecha y hora en el registro
+      for(int i=0; i<sizeof(datos)/sizeof(float); i++){
+        myFile.print(datos[i]);
+        myFile.print(",");
+       }
+       myFile.println();
+    }else{saveLog("Error al abrir el fichero de registros");}
+  }else{saveLog("Error al iniciar la tarjeta SD");}
+  myFile.close();
+}
+
+void saveLog(String msg){
+  if (!SD.begin(CS)) {
+    myFile = SD.open("log.txt", FILE_WRITE);
+    if (myFile) {
+      myFile.print(date() + " - " + time() + " - ");  //Marcamos fecha y hora en el registro
+      myFile.println(msg);
+    }else{alarm(10);}
+  }else{alarm(10);}
+  myFile.close();
+}
+
+//Vuelca el contenido de la tarjeta SD a la conexion
+void download(){
+  
+}
+
+//Devuelve un String con la fecha en formato dd/mm/aaaa
+String date(){
+   DateTime now = RTC.now();//Creamos un objeto que contiene la hora y fecha actual      
+   String fecha = now.day()+"/";
+   fecha = fecha+"/"+now.month();
+   fecha = fecha + "/"+now.year();
+   return fecha;
+}
+
+//Devuelve un String con la hora en formato hh/mm/ss
+String time(){
+  DateTime now = RTC.now();
+  String hora = now.hour() + ":";
+   hora = hora + ":" +now.minute();
+   hora = hora + ":"+now.second();
+   return hora;
+}
+
+void alarm(int alarm){
+  /*
+  0 -> Alarma de incendios
+  1 -> Alarma de gases explosivos
+  2 -> Alarma de CO
+  3 -> Alarma de CO2
+  4 -> Alarma de humo
+  5 -> Alarma de temperatura
+  6 -> Alarma de alimentacion
+  7 -> Alarma de cambio de modo
+  8 -> Alarma de modo ahorro
+  9 -> Alarma de desabilitacion
+  10 -> Mal funcionamiento de la tarjeta SD
+  
+  */
+  //Tiempos de encedido y apagado de la alarma visual
+  int   fireLight[]  =   {200,100};
+  int   gasLight[]   =   {200,100};
+  int   COLight[]    =   {200,100};
+  int   COOLight[]   =   {200,100};
+  int   smokeLight[] =   {200,100};
+  int   tempLight[]  =   {200,100};
+  int   vccLight[]   =   {200,100};
+  int   modeLight[]  =   {200,100};
+  int   lowEnergyModeLight[] = {200,100};
+  int   disableLight[]       = {200,100};
+  int   SDfailLight[]        = {200,100};
+  
+  //Frecuencia de sonido de al alarma acustica
+  int   fireSound  = 200;  
+  int   gasSound   = 200;  
+  int   COSound    = 200;  
+  int   COOSound   = 200;  
+  int   smokeSound = 200;  
+  int   tempSound  = 200;  
+  int   vccSound   = 200;  
+  int   modeSound  = 200;  
+  int   lowEnergyModeSound  = 200;  
+  int   disableSound        = 200;  
+  int   SDfailSound         = 200;
+  
+  switch (alarm) {
+  case 0:    //Alarma de incendios
+    soundAlarm(fireSound);
+    ligthAlarm(fireLight[0],fireLight[1]);
+    break;    
+  case 1:    //Alarma de gases explisivos
+    soundAlarm(gasSound);
+    ligthAlarm(gasLight[0],gasLight[1]);
+    break;
+  case 2:    // Alarma de monoxido de carbono
+    soundAlarm(COSound);
+    ligthAlarm(COLight[0],COLight[1]);
+    break;
+  case 3:    // Alarma de dioxido de carbono
+    soundAlarm(COOSound);
+    ligthAlarm(COOLight[0],COOLight[1]);
+    break;
+  case 4:    // Alarma de humo
+    soundAlarm(smokeSound);
+    ligthAlarm(smokeLight[0],smokeLight[1]);
+    break;   
+  case 5:  //Alarma de temperatura
+   soundAlarm(tempSound);
+    ligthAlarm(tempLight[0],tempLight[1]); 
+    break;
+  case 6:    // Alarma de alimentacion
+    soundAlarm(vccSound);
+    ligthAlarm(vccLight[0],vccLight[1]);
+    break;
+  case 7:    // Alarma de cambio de modo
+    soundAlarm(modeSound);
+    ligthAlarm(modeLight[0],modeLight[1]);
+    break;
+  case 8:    // Alarma de modo LowEnergy
+    soundAlarm(lowEnergyModeSound);
+    ligthAlarm(lowEnergyModeLight[0],lowEnergyModeLight[1]);
+    break;
+  case 9:    // Alarma de 
+    soundAlarm(disableSound);
+    ligthAlarm(disableLight[0],disableLight[1]);
+    break;    
+  case 10:    // Alarma de desabilitacion de la placa
+    soundAlarm(SDfailSound);
+    ligthAlarm(SDfailLight[0],SDfailLight[1]);
+    break;  
+  default:    // your hand is nowhere near the sensor
+    Serial.println("bright");
+    break;
+    
+  } 
+  
+}
