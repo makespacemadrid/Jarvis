@@ -15,7 +15,8 @@ RTC_DS1307 RTC;
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 
-//contantes
+//CONTANTES-------------------------------------------------------------->
+//pines
 #define SCLK 13//SCLK del puerto SPI
 #define MISO 12//MISO del puerto SPI
 #define MOSI 11//MOSI del puerto SPI
@@ -36,13 +37,21 @@ RTC_DS1307 RTC;
 #define MQ07pin A3//Pin del sensor de CO
 #define SDA A4//SDA del I2C
 #define SCL A5//SCL del I2C
+
+//Limites
+#define NH3LIMIT 15000
+#define COOLIMIT 15000
+#define COLIMIT  15000
+#define TEMPMAX 40
+#define TEMPMIN 3
+
+//Otros
 #define DHTTYPE DHT22 //Configuracion del modelo de sensor DHT22
 
 //Declaracion de Variables 
 
 boolean debuggear;
-int address;//direccion del modulo
-String name; //Nombre del modulo
+int tRefresh;
 File myFile; 
 
 //Declaracion de objetos
@@ -72,7 +81,13 @@ void setup(){
    //Iniciamos el control de interrupciones
    attachInterrupt(WAKEUPpin, wakeup, CHANGE);  
    attachInterrupt(FLAMEpin, llamas, RISING);  
- 
+   Serial.println("Attach Interrupt OK");
+   
+   //Cargamos los valores almacenados en la EEPROM
+   tRefresh = 1000;//valor por defecto para el primer arranque
+   tRefresh = EEPROM.read(1);
+   Serial.println("Load EEPROM values");
+   
 }
 
 void loop(){
@@ -80,9 +95,16 @@ void loop(){
   if (BT.available()){
     char c = BT.read();
     jarvisInterface(c);        
-  }  
+  }else{
+    //Si no hay conexion, entramos en modo autonomo  
+    if(checkExcLimit(getMQ135(getTemp(),getHum()),NH3LIMIT)){alarm(1);}
+    if(checkExcLimit(getCO(MQ07pin),COLIMIT)){alarm(2);}
+    if(checkExcLimit(getCOO(MQ811pin),COOLIMIT)){alarm(3);}  
+    delay(tRefresh);
+  }
   
-  if(debuggear){debuggerMode;}//Si esta activo el modo de debuggeo llamamos a la funcion
+  
+  if(debuggear){debuggerMode;}//Si esta activo el modo de debuggeo llamamos a su funcion funcion
 }
 
 
@@ -125,7 +147,7 @@ float calibrarMQ135(){
 
 void setMAC(uint8_t mac){EEPROM.write(0, mac);}//metodo para asignar MAC de forma dinamica
 uint8_t getMAC(){return  EEPROM.read(0);}//metodo que devuelve la MAC almacenada en la EPROM
-
+void setRefresh(int t){EEPROM.write(1, t);}
 void sendArray(float lecturas[]){
 
   BT.print('#');//Caracter de inicializacion de la cadena    
@@ -397,7 +419,9 @@ void jarvisInterface(int c){
   18 -> Activa/Desactiva el modo de debuggeo
   19 -> Devuelve la MAC del modulo
   20 -> Asigna una MAC al modulo
-  21 -> Volcado de registro de log
+  21 -> Mostrar registro de log
+  22 -> Volcado del registro del log
+  23 -> Asignar tiempo de refresco
   
   */
   
@@ -504,7 +528,9 @@ void jarvisInterface(int c){
       break;
       
     case 23:
-    
+      BT.println("Escriba el tiempo de refresco que desea para el modulo(s)");      
+      t = BT.read();
+      setRefresh(t);
       break;
       
     case 24:
