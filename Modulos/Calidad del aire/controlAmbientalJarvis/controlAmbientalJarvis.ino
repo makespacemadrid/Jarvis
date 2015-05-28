@@ -21,7 +21,8 @@
 #include "LDR.h"
 #include "energy.h"
 #include "reboot.h"
-//#include "util.h"
+#include "jarvisTool.h"
+#include "debugger.h"
 
 //CONTANTES-------------------------------------------------------------->
 //pines
@@ -60,7 +61,7 @@
 
 boolean debuggear;
 int tRefresh;
-//File myFile; 
+
 
 //Declaracion de objetos
 SoftwareSerial BT(10, 11); //virtualizamos un puerto serial para la conectividad Bluetooth (RX, TX)
@@ -74,7 +75,8 @@ connection link;
 LDR ldr(LDRpin);
 energy energy(TX,RX);
 reboot reboot(RESETpin);
-//util util;
+jarvisTool util;
+debugger bug(RX,TX);
 
 void setup(){
  
@@ -115,18 +117,18 @@ void loop(){
     if(checkExcLimit(mq07.getCO(),COLIMIT)){alarmas.typeAlarm(2);}//Comprobacion de los niveles de CO
     if(checkExcLimit(mg811.getCOO(),COOLIMIT)){alarmas.typeAlarm(3);} //Comprobacion de los niveles de CO2 
     
-    delay(tRefresh);
+    delay(tRefresh);//Tiempo de espera entre refrescos
   }
   
-  
-  if(debuggear){debuggerMode;}//Si esta activo el modo de debuggeo llamamos a su funcion funcion
+  //Comprobamos si el modo de debuggeo esta activo 
+  if(bug.debuggerStatusMode()){bug.debuggerMode(dht.readTemperature(),dht.readHumidity(),getMQ135(dht.readTemperature(),dht.readHumidity()),mq07.getCO(),mg811.getCOO(),getFlame());}//Si esta activo el modo de debuggeo llamamos a su funcion funcion
 }
 
 
 
 boolean checkExcLimit(int lectura, int limite){if(lectura>limite)return true;}//Comprueba si el valor pasado supera el limite
 boolean getFlame(){return digitalRead(FLAMEpin);}//Funcion que devuelve la lectura del sensor de llamas.
-void disable(int t){delay(t);}//Permite desabilitar el modulo por un periodo de tiempo
+
 
 //Funcion para que devuelve el valor dado por el sensor MQ135
 float getMQ135(float t, float h){
@@ -154,43 +156,6 @@ void sendArray(float lecturas[]){
   delay(10);  
 }
 
-//Modulo de debugger
-void debuggerMode(){    
-    unsigned long t0 = millis();    // Se toma el tiempo actual  
-    Serial.print("Temperatura");
-    Serial.println(dht.readTemperature());
-    Serial.print("Humedad");
-    Serial.print(dht.readHumidity());
-    Serial.println("%");
-    Serial.print("CO");
-    Serial.println(getMQ135(dht.readTemperature(), dht.readHumidity()));
-    Serial.print("CO2");
-    Serial.println();
-    Serial.print("CO");
-    Serial.println();
-    Serial.print("Deteccion de llamas:");
-    Serial.println(getFlame());
-    unsigned long t1 = millis();    // Se toma el tiempo actual
-    Serial.print("Todo medido en: ");
-    Serial.print(t1-t0);
-    Serial.println("ms");  
-}
-
-//Activar el modo de debuggeo
-void disableDebuggerMode(){
-  Serial.end();//Cerramos la conexion y liberamos los pines RX y TX
-  digitalWrite(RX,HIGH);//Reactiva la alimentacion externa  
-  debuggear = false;  
-}
-
-//Activa el modo de debuggeo
-void enableDebuggerMode(){
-  debuggear = true;
-  Serial.begin(9600);//Inicializacion del puerto serial para debugger
-  Serial.println("Serial Debugger Port Open"); 
-}
-
-boolean debuggerStatusMode(){return debuggear;} 
 
 float* getArrayLecturas(){float lecturas[] = {dht.readHumidity(), dht.readTemperature(), ldr.getLight(), getFlame()}; }
 
@@ -295,15 +260,15 @@ void jarvisInterface(int c){
       int t; 
       t = BT.read();
       t = t * 1000;//Convertimos los segundos en milis
-      disable(t);
+      util.disable(t);
       break;
       
     case 17:
-      goToSleep();
+      util.goToSleep();
       break;
       
     case 18:
-      if(debuggerStatusMode()){disableDebuggerMode();}else{enableDebuggerMode();}
+      if(bug.debuggerStatusMode()){bug.disableDebuggerMode();}else{bug.enableDebuggerMode();}
       break;
    
     case 19:
@@ -328,11 +293,11 @@ void jarvisInterface(int c){
     case 23:
       BT.println("Escriba el tiempo de refresco que desea para el modulo(s)");      
       t = BT.read();
-      //util.setRefresh(t);
+      util.setRefresh(t);
       break;
       
     case 24:
-    
+      BT.println("HOLA!");
       break;
       
     default:
@@ -341,10 +306,6 @@ void jarvisInterface(int c){
   }
 }
 
-void llamas(){alarmas.typeAlarm(0);}
+void llamas(){alarmas.typeAlarm(0);}//Dispara una alarma de tipo fuego si se detectan llamas
+void wakeup(){sleep_disable();}//reactiva Arduino
 
-void wakeup(){sleep_disable();}
-void goToSleep(){
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN); 
-  sleep_enable(); 
-}

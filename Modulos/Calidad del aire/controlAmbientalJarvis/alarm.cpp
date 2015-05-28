@@ -129,7 +129,7 @@ void alarm::typeAlarm(int type){
     ligthAlarm(SDfailLight[0],SDfailLight[1]);
     break;  
   default:    // your hand is nowhere near the sensor
-    Serial.println("bright");
+    soundAlarm(300);
     break;
     
   } 
