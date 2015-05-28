@@ -113,20 +113,19 @@ void loop(){
     jarvisInterface(c);        
   }else{
     //Si no hay conexion, entramos en modo autonomo      
-    if(checkExcLimit(getMQ135(dht.readTemperature(),dht.readHumidity()),NH3LIMIT)){alarmas.typeAlarm(1);}//Comprobacion de los niveles de calidad del aire
-    if(checkExcLimit(mq07.getCO(),COLIMIT)){alarmas.typeAlarm(2);}//Comprobacion de los niveles de CO
-    if(checkExcLimit(mg811.getCOO(),COOLIMIT)){alarmas.typeAlarm(3);} //Comprobacion de los niveles de CO2 
+    if(jarvisData.checkExcLimit(getMQ135(dht.readTemperature(),dht.readHumidity()),NH3LIMIT)){alarmas.typeAlarm(1);}//Comprobacion de los niveles de calidad del aire
+    if(jarvisData.checkExcLimit(mq07.getCO(),COLIMIT)){alarmas.typeAlarm(2);}//Comprobacion de los niveles de CO
+    if(jarvisData.checkExcLimit(mg811.getCOO(),COOLIMIT)){alarmas.typeAlarm(3);} //Comprobacion de los niveles de CO2 
     
     delay(tRefresh);//Tiempo de espera entre refrescos
   }
   
-  //Comprobamos si el modo de debuggeo esta activo 
-  if(bug.debuggerStatusMode()){bug.debuggerMode(dht.readTemperature(),dht.readHumidity(),getMQ135(dht.readTemperature(),dht.readHumidity()),mq07.getCO(),mg811.getCOO(),getFlame());}//Si esta activo el modo de debuggeo llamamos a su funcion funcion
+  //Comprobamos si el modo de debuggeo esta activo y si lo esta enviamos todas las lecturas a su funcion para que se muestren
+  if(bug.debuggerStatusMode()){bug.debuggerMode(dht.readTemperature(),dht.readHumidity(),getMQ135(dht.readTemperature(),dht.readHumidity()),
+                                                mq07.getCO(),mg811.getCOO(),getFlame());}
 }
 
 
-
-boolean checkExcLimit(int lectura, int limite){if(lectura>limite)return true;}//Comprueba si el valor pasado supera el limite
 boolean getFlame(){return digitalRead(FLAMEpin);}//Funcion que devuelve la lectura del sensor de llamas.
 
 
@@ -137,13 +136,6 @@ float getMQ135(float t, float h){
   return ppm;
 }
 
-
-float calibrarMQ135(){  
-  float rzero = mq135.getRZero();
-  return rzero;//El valor devuelto por esta funcion debera ser cargado en MQ135.h -> #define RZERO ____
-}
-
-//void setRefresh(int t){EEPROM.write(1, t);}
 void sendArray(float lecturas[]){
 
   BT.print('#');//Caracter de inicializacion de la cadena    
@@ -155,9 +147,6 @@ void sendArray(float lecturas[]){
   BT.println();
   delay(10);  
 }
-
-
-float* getArrayLecturas(){float lecturas[] = {dht.readHumidity(), dht.readTemperature(), ldr.getLight(), getFlame()}; }
 
 void jarvisInterface(int c){
   /*
@@ -190,7 +179,7 @@ void jarvisInterface(int c){
   
   switch(c){
     case 0:      
-      sendArray(getArrayLecturas());
+      sendArray(jarvisData.getArrayLecturas(dht.readHumidity(), dht.readTemperature(), ldr.getLight(), getFlame()));
       break;
     case 1:
       energy.enableExternalVcc();
@@ -306,6 +295,13 @@ void jarvisInterface(int c){
   }
 }
 
+//Funciones llamadas por excepciones.
 void llamas(){alarmas.typeAlarm(0);}//Dispara una alarma de tipo fuego si se detectan llamas
 void wakeup(){sleep_disable();}//reactiva Arduino
+
+/*ↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆ----------------------------------------- ANOTACIONES --------------------------------------------------------ↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆↆ
+
+mq135.getRZero();//El valor devuelto por esta funcion debera ser cargado en MQ135.h -> #define RZERO ____
+
+*/
 

@@ -16,7 +16,9 @@ class data{
      boolean downloadSDlog();
      String getDate();
      String getTime();
-   
+     boolean checkExcLimit(int lectura, int limite);
+     float* getArrayLecturas(float humedad,float temperatura, int luz, boolean llama);
+
    private:
      int _pin;
      File myFile; 

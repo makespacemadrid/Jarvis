@@ -93,3 +93,10 @@ String data::getTime(){
    hora = hora + ":"+now.second();
    return hora;
 }
+
+boolean data::checkExcLimit(int lectura, int limite){if(lectura>limite)return true;}//Comprueba si el valor pasado supera el limite
+
+float* data::getArrayLecturas(float humedad,float temperatura, int luz, boolean llama){
+  float lecturas[] = {humedad,temperatura, luz, llama}; 
+  return lecturas;
+}
