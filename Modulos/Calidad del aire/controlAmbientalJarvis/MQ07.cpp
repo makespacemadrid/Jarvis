@@ -16,3 +16,7 @@ float MQ07::getCO(){
   float ppm = map(val, 0, 1023, 0, 2000);//Mapeamos el valor leido a ppm
   return ppm;
 }
+
+float getCorrectedCO(float t, float h){}
+float getRZero(){}
+float getCorrectedRZero(float t, float h){}

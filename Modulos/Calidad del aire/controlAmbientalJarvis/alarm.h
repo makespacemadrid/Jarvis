@@ -4,7 +4,12 @@ Created by CrakerNano, May 27, 2015. Released into the public domain.
 */
 #ifndef alarm_h
 #define alarm_h
-#include "Arduino.h"
+
+#if ARDUINO >= 100
+ #include "Arduino.h"
+#else
+ #include "WProgram.h"
+#endif
 
 class alarm{
    public:alarm(int LEDpin, int altavozPin);

@@ -4,7 +4,12 @@ Created by CrakerNano, May 28, 2015. Released into the public domain.
 */
 #ifndef debugger_h
 #define debugger_h
-#include "Arduino.h"
+
+#if ARDUINO >= 100
+ #include "Arduino.h"
+#else
+ #include "WProgram.h"
+#endif
 
 class debugger{
    public: debugger(int rx,int tx); 
