@@ -1,0 +1,4 @@
+puertaInterior   KEYWORD1  
+getDoorStatus    KEYWORD2  
+openDoor   KEYWORD2  
+closeDoor  KEYWORD2  
