@@ -1,4 +1,4 @@
-#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoPixel.h> //WTF hay que hacer el include en el main!
 
 class led{
   public:
@@ -15,43 +15,50 @@ class led{
   void white() {setColor(200,200,200);}
 };
 
-
 class ws2812Strip {
   public:
-  ws2812Strip(int pin, int lednr) : m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800),m_led_nr(lednr), m_pin(pin)
+  ws2812Strip(int pin, int lednr) : m_pin(pin), m_led_nr(lednr), m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
   {
-    if(( pin != -1) && (lednr > 0))
+    if(( m_pin != -1) && (m_led_nr > 0))
     {
-      m_pixels.begin();
-      m_leds = new led[m_led_nr];
-      test();    
+      m_leds = new led[m_led_nr];  
     } else {
       m_leds = new led[1];
     }
+  }
+  ~ws2812Strip() {delete m_leds;}
 
-  }  
+  bool isValid() {return m_pin != -1;}
+  led* leds()    {return m_leds; }
 
-  led* leds() {return m_leds; }
+  void setup()
+  {
+    if(!isValid()) return;
+    m_pixels.begin();
+    test();  
+  }
   
   void update(){
-    if(( m_pin == -1) || (m_led_nr < 1))
-        return;
+    if(!isValid()) return;
         
-    for(int i=0;i<m_led_nr;i++){
+    for(int i=0;i<m_led_nr;i++)
+    {
       m_pixels.setPixelColor(i, m_leds[i].r,m_leds[i].g,m_leds[i].b);
     }
     m_pixels.show(); 
   }
   void off()
   {
+    if(!isValid()) return;
     for( uint8_t i = 0 ; i < m_led_nr ; i++) 
     {
-	  m_leds[i].off();
+	    m_leds[i].off();
     }
     update();
   }
   void test()
   {
+    if(!isValid()) return;
     for( uint8_t i = 0 ; i < m_led_nr ; i++) 
     {
       m_leds[i].setColor(10,10,10);

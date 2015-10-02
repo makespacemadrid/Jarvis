@@ -1,51 +1,31 @@
 #include <Adafruit_NeoPixel.h>
+#include <EEPROM.h>
+
 #include "ws2812led.h"
 #include "ssr.h"
+#include "piezoSpeaker.h"
+#include "storage.h"
 
+EEPROMStorage myEEPROM;
 
-int relayPin               = -1;
-int currentMeterPin        = -1;
-int relayTemperatureSensor = -1;
-int fanPin                 = -1;
-int maxAmps                = 15;
-bool dimmable              = false;
+settingList settings(myEEPROM.getSettings()); // Toda la configuracion está en el settings.h
 
-int ledStripPin            = -1;
-int ledNumber              =  1;
+SSR                   mySwitch(settings.relayPin ,settings.currentMeterPin,settings.relayMaxAmps,settings.relayDimmable,settings.relayTemperatureSensor,settings.fanPin);
+ws2812Strip           myLedStrip(settings.ledStripPin, settings.ledNumber);
+piezoSpeaker          mySpeaker(settings.piezoPin);
 
-
-magneticCurrentSensor myCurrentSensor(currentMeterPin);
-SSR mySwitch(relayPin ,currentMeterPin,maxAmps,dimmable,relayTemperatureSensor,fanPin);
-ws2812Strip myLedStrip(ledStripPin, ledNumber);
-
-
-void set2KhzInterrupt1()
-{
-cli();//stop interrupts
-//set timer0 interrupt at 2kHz
-  TCCR0A = 0;// set entire TCCR2A register to 0
-  TCCR0B = 0;// same for TCCR2B
-  TCNT0  = 0;//initialize counter value to 0
-  // set compare match register for 2khz increments
-  OCR0A = 124;// = (16*10^6) / (2000*64) - 1 (must be <256)
-  // turn on CTC mode
-  TCCR0A |= (1 << WGM01);
-  // Set CS01 and CS00 bits for 64 prescaler
-  TCCR0B |= (1 << CS01) | (1 << CS00);   
-  // enable timer compare interrupt
-  TIMSK0 |= (1 << OCIE0A);
-  sei();
-}
+//functionPointer int0Pointer = 0;
 
 void setup() {
-  
-  if(mySwitch.currentSensor().isValid())
-    set2KhzInterrupt1();
-  else
-    cli();
+  mySwitch.setup();
+  myLedStrip.setup();
+  mySpeaker.setup();
+  //if(mySwitch.currentSensor().isValid())
+    //int0Pointer = mySwitch.currentSensor().isrRead;
 }
 
 ISR(TIMER0_COMPA_vect){
+    //if(int0Pointer) int0Pointer();
     mySwitch.currentSensor().isrRead();
 }
 
