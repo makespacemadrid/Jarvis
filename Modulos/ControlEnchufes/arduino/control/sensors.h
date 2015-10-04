@@ -63,6 +63,7 @@ public:
   }
   void set2KhzInterrupt1()
   {
+#ifndef ESP8266
   cli();//stop interrupts
   //set timer0 interrupt at 2kHz
     TCCR0A = 0;// set entire TCCR2A register to 0
@@ -77,6 +78,7 @@ public:
     // enable timer compare interrupt
     TIMSK0 |= (1 << OCIE0A);
     sei();
+#endif
   }
 
 

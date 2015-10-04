@@ -54,6 +54,8 @@ class SSR {
 			m_last_miliamps = m_current_sensor.readMiliamps();
 			if(m_last_miliamps >= m_max_amps * 1000) 
 			  switch_off();
+      //Serial.print("current:");
+      //Serial.println(m_last_miliamps,10);
 		}
 		if(m_temp_sensor.isValid())
 		{

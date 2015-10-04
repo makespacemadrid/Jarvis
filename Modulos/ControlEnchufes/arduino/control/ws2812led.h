@@ -1,4 +1,4 @@
-#include <Adafruit_NeoPixel.h> //WTF hay que hacer el include en el main!
+#include <Adafruit_NeoPixel.h> //WTF hay que hacer el include en el ino!
 
 class led{
   public:
