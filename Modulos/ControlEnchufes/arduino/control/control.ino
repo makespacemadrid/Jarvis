@@ -20,48 +20,84 @@ communicationModule* myWifi = new espNative();
 communicationModule* myWifi = new espProxy();
 #endif
 
-EEPROMStorage myEEPROM;
-settingList settings(myEEPROM.getSettings()); // Toda la configuracion está en el settings.h
+EEPROMStorage         myEEPROM;
+settingList           mySettings(myEEPROM.getSettings()); // Toda la configuracion está en el settings.h
 
-SSR                   mySwitch(settings.relayPin ,settings.currentMeterPin,settings.relayMaxAmps,settings.relayDimmable,settings.relayTemperatureSensor,settings.fanPin);
-ws2812Strip           myLedStrip(settings.ledStripPin, settings.ledNumber);
-piezoSpeaker          mySpeaker(settings.piezoPin);
+SSR                   mySwitch(mySettings.relayPin ,mySettings.currentMeterPin,mySettings.relayMaxAmps,mySettings.relayDimmable,mySettings.relayTemperatureSensor,mySettings.fanPin);
+ws2812Strip           myLedStrip(mySettings.ledStripPin, mySettings.ledNumber);
+piezoSpeaker          mySpeaker(mySettings.piezoPin);
 
 //functionPointer int0Pointer = 0;
 
 void setup() {
   Serial.begin(115200);
   Serial.println("I:INIT");
-  if(settings.factoryResetPin != -1)
+  if(mySettings.factoryResetPin != -1)
   {
-     pinMode(settings.factoryResetPin, INPUT);
-     if(digitalRead(settings.factoryResetPin) == HIGH)
+     pinMode(mySettings.factoryResetPin, INPUT);
+     if(digitalRead(mySettings.factoryResetPin) == HIGH)
      {
         Serial.println("I:Factory reset!");
         myEEPROM.clearEEPROM();
-        settings = myEEPROM.getSettings();
+        mySettings = myEEPROM.getSettings();
         //Falta resetear para que se cargen los nuevos settings
      }
   }
-
 #ifdef ESP8266
   Serial.println("-ESP8266");
 #else
   Serial.println("-Arduino");
 #endif
-  if(settings.factoryResetPin != -1) Serial.println("-Factory reset button");
-  if(mySwitch.has_switch_pin())      Serial.println("-Switch");
-  if(mySwitch.has_current_sensor())  Serial.println("-Current sensor");
-  if(mySwitch.has_temp_sensor())     Serial.println("-Temperature sensor");
-  if(mySpeaker.isValid())            Serial.println("-Buzzer");
-  if(myLedStrip.isValid())           Serial.println("-WS2812");
-  
-  mySwitch.setup();
-  myLedStrip.setup();
-  mySpeaker.setup();
+  if(myLedStrip.isValid())
+  {
+    Serial.println("I:-WS2812");
+    myLedStrip.setup();
+    myLedStrip.off();
+    myLedStrip.leds()[0].setColor(10,10,0);
+    mySwitch.setStatusLed(&myLedStrip.leds()[2]);
+  }
+  if(mySettings.alivePin != -1)
+  {
+    pinMode(mySettings.alivePin,OUTPUT);
+    Serial.println("I:-Alive led");
+  } 
+  if(mySettings.factoryResetPin != -1) Serial.println("I:-Factory reset button");
+  if(mySwitch.has_switch_pin()) 
+  {
+    Serial.println("I:-Switch");
+    mySwitch.setup();
+  }
+  if(mySwitch.has_current_sensor())    Serial.println("I:-Current sensor");
+  if(mySwitch.has_temp_sensor())       Serial.println("I:-Temperature sensor");
+  if(mySpeaker.isValid())
+  {
+    Serial.println("I:-Buzzer");  
+    mySpeaker.setup();
+  }
+
+
   //if(mySwitch.currentSensor().isValid())
     //int0Pointer = mySwitch.currentSensor().isrRead;
   Serial.println("I:INIT OK");
+}
+
+uint8_t loopCount = 0;
+void imAlive()
+{
+  if(loopCount == 15)
+  {
+    if(mySwitch.switched())
+      mySwitch.switchOff();
+    else
+      mySwitch.switchOn();
+      
+    digitalWrite(mySettings.alivePin, !digitalRead(mySettings.alivePin));
+    loopCount = 0;
+  }
+  else
+  {
+    loopCount++;
+  }
 }
 
 #ifndef ESP8266
@@ -72,8 +108,9 @@ ISR(TIMER0_COMPA_vect){
 #endif
 
 void loop() {
-  
+
+  imAlive();
   mySwitch.update();
-  myLedStrip.update();
+  //myLedStrip.update();
   delay(50);
 }

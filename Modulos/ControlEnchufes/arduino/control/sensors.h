@@ -1,6 +1,7 @@
 
 typedef void (* functionPointer) ();
 
+
 class temperatureSensor
 {
 public:
@@ -26,14 +27,13 @@ class magneticCurrentSensor
 public:
   magneticCurrentSensor(int pin = -1, int bufferSize = 300) : m_pin(pin), m_buffer_size(bufferSize)
   {
-    m_valid = m_pin!=-1;
     m_buffer = new int[m_buffer_size];
     for (int i = 0 ; i < m_buffer_size ; i++)
       m_buffer[i] = 0;
   }
   ~magneticCurrentSensor() {delete m_buffer;}
   
-  bool isValid()    {return m_valid;}
+  bool isValid()    {return m_pin!=-1;}
   int bufferSize()  {return m_buffer_size;}
   void setConversionfactor(float factor) {m_conversion_factor = factor;}
   void isrRead()
@@ -53,6 +53,7 @@ public:
   int readMiliamps()
   {
     if(!isValid()) return 0;
+    
     int average = 0;
     for (int i = 0  ; i < m_buffer_size  ; i++ )
     {
@@ -83,7 +84,6 @@ public:
 
 
 private:
-  bool  m_valid = false;
   int   m_pin;
   int*  m_buffer;
   int   m_buffer_size;
