@@ -3,6 +3,9 @@
 #include <WiFiClient.h> 
 #endif
 
+#include "ws2812led.h"
+
+
 class communicationModule
 {
   public:
@@ -10,12 +13,18 @@ class communicationModule
 
     void setAP(String essid,String pass, uint8_t channel = 6)      
     {
+     if(m_status_led) 
+        m_status_led->setColor(10,10,0);
+
       m_essid = essid, m_pass = pass, m_channel = channel;
       connectAP();
     }
 
     void setStation(String essid,String pass)
     {
+      if(m_status_led) 
+        m_status_led->setColor(10,10,0);
+
       m_essid = essid, m_pass = pass;
       connectAP();
     }
@@ -26,7 +35,12 @@ class communicationModule
       parseBuffer(m_rxBuffer);
     }
     //void setMacAddr();
-
+    void setStatusLed(ws2812Strip::led* statusLed) 
+    {
+      m_status_led= statusLed;
+      m_status_led->setColor(0,0,10);
+      
+    }
     virtual bool isConnected()    = 0;
     virtual void setup()          = 0;
     virtual void send(String str) = 0;
@@ -47,6 +61,7 @@ class communicationModule
     String   m_remotehost;
     uint16_t m_remotePort;
 
+    ws2812Strip::led*     m_status_led = 0;
     
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;     
@@ -108,6 +123,9 @@ class espNative : public communicationModule
       for(uint8_t i = 0; i < m_max_clients; i++){
       if (m_server_clients[i] && m_server_clients[i].connected()){
         m_server_clients[i].write(sbuf, len);
+        if(m_status_led) 
+          m_status_led->setColor(20,0,0);
+  
         delay(1);
       }
     }
@@ -133,6 +151,9 @@ class espNative : public communicationModule
             //get data from the telnet client and push it to the UART
             while(m_server_clients[i].available())
             {
+             if(m_status_led) 
+                m_status_led->setColor(0,20,0);
+
               char b = m_server_clients[i].read();
               if(m_bridge)Serial.write(b);
               m_rxBuffer += b;

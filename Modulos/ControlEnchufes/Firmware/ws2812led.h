@@ -58,6 +58,7 @@ public:
     }
     m_pixels.show(); 
   }
+
   void off()
   {
     if(!isValid()) return;
@@ -67,6 +68,17 @@ public:
     }
     update();
   }
+
+  void setColor(uint8_t r,uint8_t g, uint8_t b){
+    if(!isValid()) return;
+        
+    for(int i=0;i<m_led_nr;i++)
+    {
+      m_leds[i].setColor(r,g,b);
+    }
+    update();
+  }
+
   void test()
   {
     if(!isValid()) return;

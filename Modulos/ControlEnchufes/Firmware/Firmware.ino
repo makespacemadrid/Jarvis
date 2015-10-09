@@ -11,7 +11,7 @@
 #include "ws2812led.h"
 #include "ssr.h"
 #include "piezoSpeaker.h"
-#include "storage.h"
+#include "settings.h"
 #include "communication.h"
 
 #ifdef ESP8266
@@ -29,25 +29,55 @@ piezoSpeaker          mySpeaker(mySettings.piezoPin);
 
 //functionPointer int0Pointer = 0;
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println("I:INIT");
+void checkFactoryReset()
+{
   if(mySettings.factoryResetPin != -1)
   {
      pinMode(mySettings.factoryResetPin, INPUT);
-     if(digitalRead(mySettings.factoryResetPin) == HIGH)
+     if(digitalRead(mySettings.factoryResetPin) == LOW)
      {
         Serial.println("I:Factory reset!");
+        if(myLedStrip.isValid())
+        {
+          myLedStrip.setup();
+          myLedStrip.setColor(10,10,0);
+        }
+        mySpeaker.playTone(200,100);
+        mySpeaker.playTone(500,100);
+        mySpeaker.playTone(200,100);
+
         myEEPROM.clearEEPROM();
+        mySpeaker.playTone(500,100);
+        if(myLedStrip.isValid())
+          myLedStrip.leds()[0].setColor(0,0,20);
+
         mySettings = myEEPROM.getSettings();
-        //Falta resetear para que se cargen los nuevos settings
+        mySpeaker.playTone(500,100);
+        if(myLedStrip.isValid())
+          myLedStrip.leds()[1].setColor(0,0,20);
+
+        myEEPROM.storeSettings(mySettings);
+        mySpeaker.playTone(1000,300);
+        if(myLedStrip.isValid())
+          myLedStrip.leds()[2].setColor(0,0,20);
+
+        softReset();
      }
   }
+}
+
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("I:INIT");
+  checkFactoryReset();
 #ifdef ESP8266
-  Serial.println("-ESP8266");
+  Serial.println("I:-ESP8266");
 #else
-  Serial.println("-Arduino");
+  Serial.println("I:-Arduino");
 #endif
+  if(myEEPROM.hasSettings())
+        Serial.println("I:-EEPROM");
   if(myLedStrip.isValid())
   {
     Serial.println("I:-WS2812");
@@ -55,6 +85,7 @@ void setup() {
     myLedStrip.off();
     myLedStrip.leds()[0].setColor(10,10,0);
     mySwitch.setStatusLed(&myLedStrip.leds()[2]);
+    myWifi->setStatusLed(&myLedStrip.leds()[1]);
   }
   if(mySettings.alivePin != -1)
   {
@@ -71,7 +102,7 @@ void setup() {
   if(mySwitch.has_temp_sensor())       Serial.println("I:-Temperature sensor");
   if(mySpeaker.isValid())
   {
-    Serial.println("I:-Buzzer");  
+    Serial.println("I:-Buzzer");
     mySpeaker.setup();
   }
 
@@ -79,18 +110,15 @@ void setup() {
   //if(mySwitch.currentSensor().isValid())
     //int0Pointer = mySwitch.currentSensor().isrRead;
   Serial.println("I:INIT OK");
+  if(myLedStrip.isValid()) myLedStrip.leds()[0].setColor(0,20,0);
 }
 
 uint8_t loopCount = 0;
+
 void imAlive()
 {
   if(loopCount == 15)
   {
-    if(mySwitch.switched())
-      mySwitch.switchOff();
-    else
-      mySwitch.switchOn();
-      
     digitalWrite(mySettings.alivePin, !digitalRead(mySettings.alivePin));
     loopCount = 0;
   }

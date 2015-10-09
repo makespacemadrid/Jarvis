@@ -1,5 +1,10 @@
 #include <EEPROM.h> //WTF hay que hacer el include en el main!
 
+#ifndef ESP8266
+#include <avr/wdt.h>
+#endif
+
+
 struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
@@ -17,7 +22,7 @@ struct settingList
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
   int   piezoPin               = -1;
-  int   ledStripPin            = -1;
+  int   ledStripPin            = 3;
   int   factoryResetPin        = -1;
   #else
   //Pineado por defecto del arduino
@@ -26,9 +31,9 @@ struct settingList
   int   currentMeterPin        = -1;
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
-  int   piezoPin               = -1;
+  int   piezoPin               =  6;
   int   ledStripPin            =  9;
-  int   factoryResetPin        = -1;
+  int   factoryResetPin        =  8;
   #endif
 
   //Configuracion
@@ -76,3 +81,16 @@ public:
 private:
 
 };
+
+void softReset()
+{
+  Serial.println("I:RESET!");
+  delay(1);
+  #ifdef ESP8266
+    ESP.wdtEnable(WDTO_15MS);
+  #else
+    //wdt_enable(WDTO_15MS); // En arduino parece no funcionar como se espera...WTF
+    asm volatile ("  jmp 0");
+  #endif
+  while(true); // Al meter el programa en un bucle se fuerza a que el watchdog salte y haga un reset del micro
+}
