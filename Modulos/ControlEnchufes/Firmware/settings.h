@@ -4,6 +4,11 @@
 #include <avr/wdt.h>
 #endif
 
+enum operationMode {
+  ESPNative,
+  ESPRepeater,
+  ArduinoWESP
+};
 
 struct settingList
 {//Configuracion por defecto (Factory)
@@ -13,8 +18,11 @@ struct settingList
   char    remoteHost[17]  = "10.0.100.1";
   int     remotePort      = 31416;
   int     localPort       = 31416;
+
+
   
   #ifdef ESP8266
+  operationMode mode      = ESPRepeater;
   //Pineado por defecto del ESP8266
   int   alivePin               =  2;
   int   relayPin               = -1;
@@ -22,9 +30,10 @@ struct settingList
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
   int   piezoPin               = -1;
-  int   ledStripPin            = 3;
+  int   ledStripPin            = -1;
   int   factoryResetPin        = -1;
   #else
+  operationMode mode      = ArduinoWESP;
   //Pineado por defecto del arduino
   int   alivePin               = 13;
   int   relayPin               =  6;

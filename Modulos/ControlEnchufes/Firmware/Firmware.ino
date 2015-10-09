@@ -15,7 +15,8 @@
 #include "communication.h"
 
 #ifdef ESP8266
-communicationModule* myWifi = new espNative();
+communicationModule* myWifi = new espNative(true);
+
 #else
 communicationModule* myWifi = new espProxy();
 #endif
@@ -136,9 +137,9 @@ ISR(TIMER0_COMPA_vect){
 #endif
 
 void loop() {
-
   imAlive();
   mySwitch.update();
+  myWifi->update();
   //myLedStrip.update();
-  delay(50);
+  delay(100);
 }
