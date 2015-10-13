@@ -107,7 +107,7 @@ void setup() {
     mySpeaker.setup();
   }
 
-
+  myWifi->setup();
   //if(mySwitch.currentSensor().isValid())
     //int0Pointer = mySwitch.currentSensor().isrRead;
   Serial.println("I:INIT OK");
@@ -122,6 +122,7 @@ void imAlive()
   {
     digitalWrite(mySettings.alivePin, !digitalRead(mySettings.alivePin));
     loopCount = 0;
+    Serial.println("D:ImAlive!");
   }
   else
   {
@@ -130,7 +131,7 @@ void imAlive()
 }
 
 #ifndef ESP8266
-ISR(TIMER0_COMPA_vect){
+ISR(TIMER0_COMPA_vect){//interrupcion 0.
     //if(int0Pointer) int0Pointer();
     mySwitch.currentSensor().isrRead();
 }

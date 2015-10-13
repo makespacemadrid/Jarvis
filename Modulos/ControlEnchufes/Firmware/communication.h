@@ -3,13 +3,28 @@
 #include <WiFiClient.h> 
 #endif
 
-#include "ws2812led.h"
+//Status del wifi:
+//WL_CONNECTED   3
+//WL_IDLE_STATUS  0
+//WL_NO_SSID_AVAIL  1
+//WL_CONNECT_FAILED   4
+//WL_CONNECTION_LOST  5
+//WL_DISCONNECTED   6
 
+//Configuracion del parseador. Formato de paquete :
+//-COMANDO:ARG:ARG\n
+// Ej: -ESP:WifiStatus\n
+#define P_PACKETSTART  "-"
+#define P_PACKETEND    "\n"
+#define P_SEPARATOR    ":"
+
+
+#include "ws2812led.h"
 
 class communicationModule
 {
   public:
-    communicationModule(bool bridgeMode) : m_bridge(bridgeMode) {};
+    communicationModule(uint16_t localPort = 180, bool bridgeMode =false) : m_bridge(bridgeMode) , m_localPort(localPort) {};
 
     void setAP(String essid,String pass, uint8_t channel = 6)      
     {
@@ -46,10 +61,12 @@ class communicationModule
       m_status_led->setColor(0,0,10);
       
     }
-    virtual bool isConnected()    = 0;
-    virtual void setup()          = 0;
-    virtual void send(String str) = 0;
-    virtual void read()           = 0;
+    virtual bool isConnected()      = 0;
+    virtual int  connectionStatus() = 0;
+    virtual void setup()            = 0;
+    virtual void send(String str)   = 0;
+    virtual void read()             = 0;
+    virtual IPAddress localIP()     = 0;
   protected:
     bool     m_bridge = false;
     
@@ -62,32 +79,51 @@ class communicationModule
     String   m_pass;
     uint8_t  m_channel;
 
-    uint16_t m_localPort = 180;
+    uint16_t m_localPort;
     String   m_remotehost;
     uint16_t m_remotePort;
 
-    ws2812Strip::led*     m_status_led = 0;
+    ws2812Strip::led*  m_status_led = 0;
     
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;     
 
     void parseBuffer(String& buf)
     {
-      //Serial.print(buf);
-      int index = buf.indexOf("\n");
-      while(index >= 0)
+      if(buf.length() == 0) return;
+      int s_index = buf.indexOf(P_PACKETSTART);
+      int e_index = buf.indexOf(P_PACKETEND);
+      //saneado del buffer
+      if      (s_index > 0)
       {
-        String line = buf.substring(0,index);
+        Serial.print("D:Basurilla en el buffer:");
+        Serial.println(buf.substring(0,s_index));
+      } 
+        else if(s_index < 0)
+      {
+        Serial.print("D:Basurilla en el buffer:");
+        Serial.println(buf);
+        buf = "";
+        Serial.print("D:Buffer purgado");
+        return;
+      }
+      //extraccion de comandos
+      while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
+      {
+        String line = buf.substring(s_index+1,e_index);
         parseCommand(line);
-        buf = buf.substring(index+1);
-        index = buf.indexOf("\n");
+        buf = buf.substring(e_index+1);
+        s_index = buf.indexOf(P_PACKETSTART);
+        e_index = buf.indexOf(P_PACKETEND);
       }
     }
-    void parseCommand(String& line)
+
+    void parseCommand(String line)
     {
-      //Serial.print(line);
+      Serial.print("D:comando:");
+      Serial.println(line);
       if(m_bridge && (!line.startsWith("ESP"))) return; //En modo puente solo hace caso a los comandos del modo esp
-      if(line.startsWith("ESP:")) parseESPCommand(line.substring(4));
+      if(line.startsWith("ESP")) parseESPCommand(line.substring(4));
       //else if(line.startsWith("ESP:"))
       //else if(line.startsWith("ESP:"))
     }
@@ -95,28 +131,31 @@ class communicationModule
     void parseESPCommand(String cmd)
     {
       //Serial.println("Comando ESP");
-      if       (cmd.startsWith("AP:"))
+      if       (cmd.startsWith("AP"))
       {
-        //Serial.println("AP");
-        int index = cmd.indexOf(":",3);
+        int index = cmd.indexOf(P_SEPARATOR,3);
         //if(!index >= 0) return;
         String essid = cmd.substring(3,index);
         String pass = cmd.substring(index+1);
-        Serial.println("a:"+essid+ " p:"+pass);
         setAP(essid,pass);
-        
-      } else if(cmd.startsWith("CLIENT:"))
+      } 
+      else if(cmd.startsWith("Client:"))
       {
-        int index = cmd.indexOf(":",7);
+        int index = cmd.indexOf(P_SEPARATOR,7);
         //if(!index >= 0) return;
         String essid = cmd.substring(7,index);
         String pass = cmd.substring(index+1);
-        Serial.println("\na:"+essid+ " p:"+pass);
-        setStation(essid,pass);        
-      } else if(cmd.startsWith("CSTATUS"))
+        setStation(essid,pass);
+      } 
+      else if(cmd.startsWith("WifiStatus"))
       {
-        
-        
+        Serial.print("WifiStatus:");
+        Serial.println(connectionStatus());
+      }
+      else if(cmd.startsWith("LocalIP"))
+      {
+        Serial.print("LocalIP: ");
+        Serial.println(localIP());
       }
     }
 };
@@ -125,20 +164,68 @@ class communicationModule
 class espNative : public communicationModule
 {
   public:
-    espNative(int localPort = 31416, bool bridge = false) :communicationModule(bridge), m_server(localPort) {;}
-    bool isConnected(){return WiFi.status() != WL_CONNECTED;}
+    espNative(uint16_t localPort = 180, bool bridge = false) :communicationModule(bridge,localPort), m_server(localPort) {;}
+
+    bool isConnected()      {return WiFi.status() != WL_CONNECTED;}
+
+    int connectionStatus()  {return WiFi.status();}
+
+    IPAddress localIP()     {return WiFi.localIP();}
 
     void setup()
     {
+      int i = 0;
+      while (WiFi.status() != WL_CONNECTED)
+      {
+        if(i == 1000)
+          break;
+        delay(50);
+        i++;
+      }
+      if(WiFi.status() != WL_CONNECTED)
+      {
+        Serial.println("D:no hay conexion,lanzando AP");
+        setAP("Configureme","configureme");
+        delay(100);
+        Serial.print("I:WifiAP:");
+        Serial.println(WiFi.localIP());
+      } 
+      else
+      {
+        Serial.print("I:Wificlient:");
+        Serial.println(WiFi.localIP());
+      }
+
       m_server.begin();
+      m_server.setNoDelay(true);
     }
 
     void update()
     {
       communicationModule::update();
+      manageClients();  
       readSerial();
-      parseBuffer(m_serialBuffer);
+      parseBuffer(m_serialBuffer);    
     }
+
+    void manageClients()
+    {
+      if (m_server.hasClient()){
+        for(uint8_t i = 0; i < m_max_clients; i++){
+          //find free/disconnected spot
+          if (!m_server_clients[i] || !m_server_clients[i].connected()){
+            if(m_server_clients[i]) m_server_clients[i].stop();
+            m_server_clients[i] = m_server.available();
+            Serial1.print("D:New client");
+            continue;
+          }
+        }
+        //no free/disconnected spot so reject
+        WiFiClient serverClient = m_server.available();
+        serverClient.stop();
+    }
+  }      
+
 
     void send(String str)
     {
@@ -156,18 +243,18 @@ class espNative : public communicationModule
 
     void read()
     {
-      if (m_server.hasClient()){
-        for(uint8_t i = 0; i < m_max_clients; i++){
-          //find free/disconnected spot
-          if (!m_server_clients[i] || !m_server_clients[i].connected()){
-            if(m_server_clients[i]) m_server_clients[i].stop();
-            m_server_clients[i] = m_server.available();
-          }
-        }
+      //if (m_server.hasClient()){
+      //  for(uint8_t i = 0; i < m_max_clients; i++){
+      //    //find free/disconnected spot
+      //    if (!m_server_clients[i] || !m_server_clients[i].connected()){
+      //      if(m_server_clients[i]) m_server_clients[i].stop();
+      //      m_server_clients[i] = m_server.available();
+      //    }
+      //  }
         //no free/disconnected spot so reject
-        WiFiClient serverClient = m_server.available();
-        serverClient.stop();
-      }
+        //WiFiClient serverClient = m_server.available();
+        //serverClient.stop();
+      //}
       //check clients for data
       for(uint8_t i = 0; i < m_max_clients; i++){
         if (m_server_clients[i] && m_server_clients[i].connected()){
@@ -218,44 +305,43 @@ class espNative : public communicationModule
     String     m_serialBufer;
     WiFiServer m_server;
     WiFiClient m_server_clients[2];
+
     void connectAP()
     {
-      char* essid  = new char[20];
-      char* pass   = new char[20];
-      m_essid.toCharArray(essid,20);
-      m_pass.toCharArray(pass,20);
-      Serial.print("Creando AP: ");
+      char* essid  = new char[m_essid.length()+1];
+      char* pass   = new char[m_pass.length()+1];
+      m_essid.toCharArray(essid,m_essid.length()+1);
+      m_pass.toCharArray(pass,m_pass.length()+1);
+      Serial.print("D:AP: ");
       Serial.print(essid);
-      Serial.print(" ");
+      Serial.print("#");
       Serial.println(pass);
+      WiFi.disconnect();
+      delay(1000);
       WiFi.softAP(essid, pass);
-      delete[] pass;
-      delete[] essid;
+      delay(500);
+      m_server.begin();
+      delete pass;
+      delete essid;
     }
+    
     void connectStation()
     {
-      //WTF! no hay cosa mas odiosa que los punteros a char....
-      // parece ser que ("pollas en vinagre") != (char* variable = "pollas en vinagre") != (char[] array = pollas en vinagre) != (String str("pollas en vinagre"))
-      char* essid = new char[40];
-      char* pass  = new char[40];
-      m_essid.toCharArray(essid,40);
-      m_pass.toCharArray(pass,40);
-      Serial.print("Conectando a red: ");
-      Serial.print(m_essid);
-      Serial.print("#");
+      char* essid = new char[m_essid.length()+1];
+      char* pass  = new char[m_pass.length()+1];
+      m_essid.toCharArray(essid,m_essid.length()+1);
+      m_pass.toCharArray(pass,m_pass.length()+1);
+      Serial.print("D:Client: ");
       Serial.print(essid);
       Serial.print("#");
-      Serial.print(m_pass);
-      Serial.print("#");
       Serial.print(pass);
-      Serial.println("#");
+      WiFi.disconnect();
+      delay(10);
       WiFi.begin(essid, pass);
-        while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-      delete[] pass;
-      delete[] essid;
+      delay(1000);
+      m_server.begin();
+      delete pass;
+      delete essid;
     }
 };
 #endif
@@ -264,10 +350,12 @@ class espProxy : public communicationModule
 {
   public:
     espProxy() : communicationModule(false) {;}
-    bool isConnected() {;}
-    void setup() {;}
-    void send(String str) {;}
-    void read() {;}
+    bool isConnected()      {;}
+    int  connectionStatus() {;}
+    void setup()            {;}
+    void send(String str)   {;}
+    void read()             {;}
+    IPAddress localIP()     {;}
   private:
     void connectAP(){;}
     void connectStation(){;}
