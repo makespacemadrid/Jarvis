@@ -24,7 +24,7 @@
 class communicationModule
 {
   public:
-    communicationModule(uint16_t localPort = 180, bool bridgeMode =false) : m_bridge(bridgeMode) , m_localPort(localPort) {};
+    communicationModule(int localPort, bool bridgeMode =false) : m_bridge(bridgeMode) , m_localPort(localPort) {};
 
     void setAP(String essid,String pass, uint8_t channel = 6)      
     {
@@ -79,9 +79,9 @@ class communicationModule
     String   m_pass;
     uint8_t  m_channel;
 
-    uint16_t m_localPort;
+    int      m_localPort;
     String   m_remotehost;
-    uint16_t m_remotePort;
+    int      m_remotePort;
 
     ws2812Strip::led*  m_status_led = 0;
     
@@ -164,7 +164,7 @@ class communicationModule
 class espNative : public communicationModule
 {
   public:
-    espNative(uint16_t localPort = 180, bool bridge = false) :communicationModule(bridge,localPort), m_server(localPort) {;}
+    espNative(int localPort, bool bridge = false) :communicationModule(localPort,bridge), m_server(localPort) {;}
 
     bool isConnected()      {return WiFi.status() != WL_CONNECTED;}
 
@@ -185,17 +185,18 @@ class espNative : public communicationModule
       if(WiFi.status() != WL_CONNECTED)
       {
         Serial.println("D:no hay conexion,lanzando AP");
-        setAP("Configureme","configureme");
+        setAP("ConfigureMe","configureme");
         delay(100);
         Serial.print("I:WifiAP:");
-        Serial.println(WiFi.localIP());
+        Serial.print(WiFi.localIP());
       } 
       else
       {
         Serial.print("I:Wificlient:");
-        Serial.println(WiFi.localIP());
+        Serial.print(WiFi.localIP());
       }
-
+      Serial.print(" p:");
+      Serial.println(m_localPort);
       m_server.begin();
       m_server.setNoDelay(true);
     }

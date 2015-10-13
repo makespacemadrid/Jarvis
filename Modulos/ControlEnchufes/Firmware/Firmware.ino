@@ -14,15 +14,14 @@
 #include "settings.h"
 #include "communication.h"
 
-#ifdef ESP8266
-communicationModule* myWifi = new espNative(true);
-
-#else
-communicationModule* myWifi = new espProxy();
-#endif
-
 EEPROMStorage         myEEPROM;
 settingList           mySettings(myEEPROM.getSettings()); // Toda la configuracion está en el settings.h
+
+#ifdef ESP8266
+communicationModule* myWifi = new espNative(mySettings.localPort, true);
+#else
+communicationModule* myWifi = new espProxy(ySettings.localPort,false);
+#endif
 
 SSR                   mySwitch(mySettings.relayPin ,mySettings.currentMeterPin,mySettings.relayMaxAmps,mySettings.relayDimmable,mySettings.relayTemperatureSensor,mySettings.fanPin);
 ws2812Strip           myLedStrip(mySettings.ledStripPin, mySettings.ledNumber);
