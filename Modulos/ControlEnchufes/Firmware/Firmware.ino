@@ -4,6 +4,7 @@
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 #endif
 //WTF hay que hacer el include de las librerias en el .ino!
 
@@ -20,7 +21,7 @@ settingList           mySettings(myEEPROM.getSettings()); // Toda la configuraci
 #ifdef ESP8266
 communicationModule* myWifi = new espNative(mySettings.localPort, true);
 #else
-communicationModule* myWifi = new espProxy(ySettings.localPort,false);
+communicationModule* myWifi = new espProxy(mySettings.localPort);
 #endif
 
 SSR                   mySwitch(mySettings.relayPin ,mySettings.currentMeterPin,mySettings.relayMaxAmps,mySettings.relayDimmable,mySettings.relayTemperatureSensor,mySettings.fanPin);

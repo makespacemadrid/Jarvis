@@ -1,3 +1,6 @@
+#ifndef SETTINGS
+#define SETTINGS
+
 #include <EEPROM.h> //WTF hay que hacer el include en el main!
 
 #ifndef ESP8266
@@ -58,14 +61,14 @@ struct settingList
 class EEPROMStorage
 {
 public:
-  bool hasSettings()
+  static bool hasSettings()
   {
     settingList settings;
     EEPROM.get(0,settings);
     return settings.magicNumber == 31416;
   }
   
-  settingList getSettings()
+  static settingList getSettings()
   {
     settingList settings;
     EEPROM.get(0,settings);
@@ -75,7 +78,7 @@ public:
       return settingList();// Si falla la comprobacion se devuelven los settings por defecto.
   }
   
-  void storeSettings(settingList settings)
+  static void storeSettings(settingList settings)
   {
     EEPROM.put(0,settings);
   }
@@ -103,3 +106,5 @@ void softReset()
   #endif
   while(true); // Al meter el programa en un bucle se fuerza a que el watchdog salte y haga un reset del micro
 }
+
+#endif

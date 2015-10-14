@@ -1,7 +1,9 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
+#include "webconfigurator.h"
 #include <WiFiClient.h> 
 #endif
+
 
 //Status del wifi:
 //WL_CONNECTED   3
@@ -66,7 +68,6 @@ class communicationModule
     virtual void setup()            = 0;
     virtual void send(String str)   = 0;
     virtual void read()             = 0;
-    virtual IPAddress localIP()     = 0;
   protected:
     bool     m_bridge = false;
     
@@ -155,7 +156,13 @@ class communicationModule
       else if(cmd.startsWith("LocalIP"))
       {
         Serial.print("LocalIP: ");
-        Serial.println(localIP());
+        #ifdef ESP8266
+        Serial.println(WiFi.localIP());
+        #endif
+      }
+      else if(cmd.startsWith("Reset"))
+      {
+        softReset();
       }
     }
 };
@@ -164,20 +171,18 @@ class communicationModule
 class espNative : public communicationModule
 {
   public:
-    espNative(int localPort, bool bridge = false) :communicationModule(localPort,bridge), m_server(localPort) {;}
+    espNative(int localPort, bool bridge = false) :communicationModule(localPort,bridge), m_server(localPort), m_webServer(80) {;}
 
     bool isConnected()      {return WiFi.status() != WL_CONNECTED;}
 
     int connectionStatus()  {return WiFi.status();}
-
-    IPAddress localIP()     {return WiFi.localIP();}
 
     void setup()
     {
       int i = 0;
       while (WiFi.status() != WL_CONNECTED)
       {
-        if(i == 1000)
+        if(i == 500)
           break;
         delay(50);
         i++;
@@ -197,6 +202,7 @@ class espNative : public communicationModule
       }
       Serial.print(" p:");
       Serial.println(m_localPort);
+      m_webServer.setup();
       m_server.begin();
       m_server.setNoDelay(true);
     }
@@ -204,9 +210,10 @@ class espNative : public communicationModule
     void update()
     {
       communicationModule::update();
-      manageClients();  
+      manageClients();
+      m_webServer.handleClient();
       readSerial();
-      parseBuffer(m_serialBuffer);    
+      parseBuffer(m_serialBuffer);
     }
 
     void manageClients()
@@ -244,18 +251,6 @@ class espNative : public communicationModule
 
     void read()
     {
-      //if (m_server.hasClient()){
-      //  for(uint8_t i = 0; i < m_max_clients; i++){
-      //    //find free/disconnected spot
-      //    if (!m_server_clients[i] || !m_server_clients[i].connected()){
-      //      if(m_server_clients[i]) m_server_clients[i].stop();
-      //      m_server_clients[i] = m_server.available();
-      //    }
-      //  }
-        //no free/disconnected spot so reject
-        //WiFiClient serverClient = m_server.available();
-        //serverClient.stop();
-      //}
       //check clients for data
       for(uint8_t i = 0; i < m_max_clients; i++){
         if (m_server_clients[i] && m_server_clients[i].connected()){
@@ -301,12 +296,13 @@ class espNative : public communicationModule
     }
     
   private:
-    String     m_serialBuffer;
-    uint8_t    m_max_clients =2;
-    String     m_serialBufer;
-    WiFiServer m_server;
-    WiFiClient m_server_clients[2];
-
+    String           m_serialBuffer;
+    uint8_t          m_max_clients =2;
+    String           m_serialBufer;
+    WiFiServer       m_server;
+    WiFiClient       m_server_clients[2];
+    webConfigurator  m_webServer;
+    
     void connectAP()
     {
       char* essid  = new char[m_essid.length()+1];
@@ -350,14 +346,50 @@ class espNative : public communicationModule
 class espProxy : public communicationModule
 {
   public:
-    espProxy() : communicationModule(false) {;}
-    bool isConnected()      {;}
-    int  connectionStatus() {;}
-    void setup()            {;}
-    void send(String str)   {;}
-    void read()             {;}
-    IPAddress localIP()     {;}
+    espProxy(int localPort) : communicationModule(localPort,false) {;}
+    bool isConnected()      {return m_lastStatus == 3;}
+    int  connectionStatus() {return m_lastStatus;}
+    
+    void setup()            
+    {
+      int i = 0;
+      while (!isConnected())
+      {
+        if(i == 500)
+          break;
+        delay(50);
+        i++;
+      }
+    }
+    
+    void send(String str)
+    {
+      Serial.print(str);
+    }
+    void read()             
+    {
+      if(m_status_led && Serial.available())
+          m_status_led->setColor(0,20,0);
+      while(Serial.available())
+      {
+        size_t len = Serial.available();
+        //Serial.print("s:");
+        //Serial.println(len);
+        char sbuf[len];
+        Serial.readBytes(sbuf, len);
+        m_rxBuffer += sbuf;
+      }
+    }
+
   private:
-    void connectAP(){;}
-    void connectStation(){;}
+    int m_lastStatus = 6;
+    
+    void connectAP()
+    {
+      send("-ESP:AP:"+m_essid+":"+m_pass);
+    }
+    void connectStation()
+    {
+      send("-ESP:Client:"+m_essid+":"+m_pass);;
+    }
 };
