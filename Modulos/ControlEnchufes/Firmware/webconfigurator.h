@@ -26,12 +26,12 @@ class webConfigurator {
     ESP8266WebServer m_webServer;
   
     void handleRoot() {
-      char temp[400];
+      char temp[1000];
       int sec = millis() / 1000;
       int min = sec / 60;
       int hr = min / 60;
     
-      snprintf ( temp, 400,
+      snprintf ( temp, 1000,
     
     "<html>\
       <head>\
@@ -48,8 +48,7 @@ class webConfigurator {
   <br>\
   Last name:<br>\
   <input type=\"text\" name=\"lastname\" value=\"Mouse\">\
-  <br><br>\
-  <input type=\"submit\" value=\"Submit\">\
+  <button type=\"submit\">\
  </form>\ 
       </body>\
     </html>",

@@ -49,6 +49,7 @@ struct settingList
   #endif
 
   //Configuracion
+  bool  bridgeMode              = false;
   float currentMeterFactor     = 29.296875f;
   int   currentMeterVolts      = 220;
   int   relayMaxAmps           = 15;

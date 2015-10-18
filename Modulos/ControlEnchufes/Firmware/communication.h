@@ -4,6 +4,8 @@
 #include <WiFiClient.h> 
 #endif
 
+#include "jarvisParser.h"
+
 
 //Status del wifi:
 //WL_CONNECTED   3
@@ -23,7 +25,7 @@
 
 #include "ws2812led.h"
 
-class communicationModule
+class communicationModule : public jarvisParser
 {
   public:
     communicationModule(int localPort, bool bridgeMode =false) : m_bridge(bridgeMode) , m_localPort(localPort) {};
@@ -50,6 +52,45 @@ class communicationModule
     {
       m_bridge = enabled;
     }
+
+    virtual void setup()
+    {
+      if(m_bridge)
+      {// Si estamos en modo puente dejamos que sea el arduino el que haga el bucle de conexion.
+        return;
+      }
+      int i = 0;
+      while (connectionStatus() != 3)
+      {
+        if(i == 500)
+          break;
+        delay(50);
+        updateWifiStatus();
+        i++;
+      }
+      if(connectionStatus() != 3)
+      {
+        Serial.println("D:no hay conexion,lanzando AP");
+        setAP("ConfigureMe","configureme");
+        delay(100);
+        Serial.print("I:WifiAP:");
+      }
+      else
+      {
+        Serial.print("I:Wificlient:");
+      }
+      Serial.print(localIP());
+      Serial.print("  p:");
+      Serial.println(m_localPort);
+    }
+
+    virtual void updateWifiStatus() 
+    {
+      #ifndef ESP8266
+      send("-ESP:WifiStatus\n");
+      #endif
+      return;
+    }
     
     virtual void update()
     {
@@ -63,13 +104,14 @@ class communicationModule
       m_status_led->setColor(0,0,10);
       
     }
+
+    virtual String localIP()        = 0;
     virtual bool isConnected()      = 0;
     virtual int  connectionStatus() = 0;
-    virtual void setup()            = 0;
     virtual void send(String str)   = 0;
     virtual void read()             = 0;
   protected:
-    bool     m_bridge = false;
+    bool     m_bridge;
     
     String   m_rxBuffer;
 
@@ -87,49 +129,9 @@ class communicationModule
     ws2812Strip::led*  m_status_led = 0;
     
     virtual void connectAP()      = 0;
-    virtual void connectStation() = 0;     
+    virtual void connectStation() = 0;
 
-    void parseBuffer(String& buf)
-    {
-      if(buf.length() == 0) return;
-      int s_index = buf.indexOf(P_PACKETSTART);
-      int e_index = buf.indexOf(P_PACKETEND);
-      //saneado del buffer
-      if      (s_index > 0)
-      {
-        Serial.print("D:Basurilla en el buffer:");
-        Serial.println(buf.substring(0,s_index));
-      } 
-        else if(s_index < 0)
-      {
-        Serial.print("D:Basurilla en el buffer:");
-        Serial.println(buf);
-        buf = "";
-        Serial.print("D:Buffer purgado");
-        return;
-      }
-      //extraccion de comandos
-      while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
-      {
-        String line = buf.substring(s_index+1,e_index);
-        parseCommand(line);
-        buf = buf.substring(e_index+1);
-        s_index = buf.indexOf(P_PACKETSTART);
-        e_index = buf.indexOf(P_PACKETEND);
-      }
-    }
-
-    void parseCommand(String line)
-    {
-      Serial.print("D:comando:");
-      Serial.println(line);
-      if(m_bridge && (!line.startsWith("ESP"))) return; //En modo puente solo hace caso a los comandos del modo esp
-      if(line.startsWith("ESP")) parseESPCommand(line.substring(4));
-      //else if(line.startsWith("ESP:"))
-      //else if(line.startsWith("ESP:"))
-    }
-
-    void parseESPCommand(String cmd)
+    void processJarvisMsg(std::vector<String> args)
     {
       //Serial.println("Comando ESP");
       if       (cmd.startsWith("AP"))
@@ -140,7 +142,7 @@ class communicationModule
         String pass = cmd.substring(index+1);
         setAP(essid,pass);
       } 
-      else if(cmd.startsWith("Client:"))
+      else if(cmd.startsWith("Client"))
       {
         int index = cmd.indexOf(P_SEPARATOR,7);
         //if(!index >= 0) return;
@@ -156,13 +158,15 @@ class communicationModule
       else if(cmd.startsWith("LocalIP"))
       {
         Serial.print("LocalIP: ");
-        #ifdef ESP8266
-        Serial.println(WiFi.localIP());
-        #endif
+        Serial.println(localIP());
       }
       else if(cmd.startsWith("Reset"))
       {
         softReset();
+      }
+      else if(cmd.startsWith("Bridge"))
+      {
+        m_bridge = cmd.substring(7) == "True";
       }
     }
 };
@@ -179,29 +183,7 @@ class espNative : public communicationModule
 
     void setup()
     {
-      int i = 0;
-      while (WiFi.status() != WL_CONNECTED)
-      {
-        if(i == 500)
-          break;
-        delay(50);
-        i++;
-      }
-      if(WiFi.status() != WL_CONNECTED)
-      {
-        Serial.println("D:no hay conexion,lanzando AP");
-        setAP("ConfigureMe","configureme");
-        delay(100);
-        Serial.print("I:WifiAP:");
-        Serial.print(WiFi.localIP());
-      } 
-      else
-      {
-        Serial.print("I:Wificlient:");
-        Serial.print(WiFi.localIP());
-      }
-      Serial.print(" p:");
-      Serial.println(m_localPort);
+      communicationModule::setup();
       m_webServer.setup();
       m_server.begin();
       m_server.setNoDelay(true);
@@ -294,6 +276,20 @@ class espNative : public communicationModule
         }
       } 
     }
+
+    String localIP()
+    {
+      IPAddress local = WiFi.localIP();
+      String result;
+      result += local[0];
+      result += ".";
+      result += local[1];
+      result += ".";
+      result += local[2];
+      result += ".";
+      result += local[3];
+      return result;
+    }
     
   private:
     String           m_serialBuffer;
@@ -352,6 +348,7 @@ class espProxy : public communicationModule
     
     void setup()            
     {
+      send("-ESP:Bridge:True");
       int i = 0;
       while (!isConnected())
       {
@@ -381,15 +378,21 @@ class espProxy : public communicationModule
       }
     }
 
+    String localIP()
+    {
+      String result = "0.0.0.0";
+      return result;
+    }
+
   private:
     int m_lastStatus = 6;
     
     void connectAP()
     {
-      send("-ESP:AP:"+m_essid+":"+m_pass);
+      send("-ESP:AP:"+m_essid+":"+m_pass+"\n");
     }
     void connectStation()
     {
-      send("-ESP:Client:"+m_essid+":"+m_pass);;
+      send("-ESP:Client:"+m_essid+":"+m_pass+"\n");
     }
 };
