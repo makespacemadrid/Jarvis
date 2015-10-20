@@ -14,7 +14,7 @@
 //  
 //
 #ifndef ESP8266
-#include <StandardCplusplus.h> //Comentar para compilar en el ESP!!!!!!!!!!!!
+//#include <StandardCplusplus.h> //Comentar para compilar en el ESP!!!!!!!!!!!!
 #endif
 
 

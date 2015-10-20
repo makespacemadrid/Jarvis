@@ -10,7 +10,7 @@ class webConfigurator {
     {
       m_webServer.on         ( "/", std::bind(&webConfigurator::handleRoot, this));
       m_webServer.on ( "/test.svg", std::bind(&webConfigurator::drawGraph,this));
-      m_webServer.onNotFound       (std::bind(&webConfigurator::handleNotFound,this));
+      m_webServer.onNotFound       (std::bind(&webConfigurator::handleNotFound,this));//Si peta la compilacion aqui para el ESP hay que comentar la linea del .ino #include <StandardCplusplus.h>
 //      m_webServer.on ( "/inline", []() {
 //        server.send ( 200, "text/plain", "this works as well" );
 //      } );

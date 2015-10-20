@@ -15,20 +15,12 @@
 //WL_CONNECTION_LOST  5
 //WL_DISCONNECTED   6
 
-//Configuracion del parseador. Formato de paquete :
-//-COMANDO:ARG:ARG\n
-// Ej: -ESP:WifiStatus\n
-#define P_PACKETSTART  "-"
-#define P_PACKETEND    "\n"
-#define P_SEPARATOR    ":"
-
-
 #include "ws2812led.h"
 
 class communicationModule : public jarvisParser
 {
   public:
-    communicationModule(int localPort, bool bridgeMode =false) : m_bridge(bridgeMode) , m_localPort(localPort) {};
+    communicationModule(int localPort, bool bridgeMode =false) : jarvisParser(),  m_bridge(bridgeMode) , m_localPort(localPort) {};
 
     void setAP(String essid,String pass, uint8_t channel = 6)      
     {
@@ -95,7 +87,6 @@ class communicationModule : public jarvisParser
     virtual void update()
     {
       read();
-      parseBuffer(m_rxBuffer);
     }
     //void setMacAddr();
     void setStatusLed(ws2812Strip::led* statusLed) 
@@ -131,44 +122,6 @@ class communicationModule : public jarvisParser
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;
 
-    void processJarvisMsg(std::vector<String> args)
-    {
-      //Serial.println("Comando ESP");
-      if       (cmd.startsWith("AP"))
-      {
-        int index = cmd.indexOf(P_SEPARATOR,3);
-        //if(!index >= 0) return;
-        String essid = cmd.substring(3,index);
-        String pass = cmd.substring(index+1);
-        setAP(essid,pass);
-      } 
-      else if(cmd.startsWith("Client"))
-      {
-        int index = cmd.indexOf(P_SEPARATOR,7);
-        //if(!index >= 0) return;
-        String essid = cmd.substring(7,index);
-        String pass = cmd.substring(index+1);
-        setStation(essid,pass);
-      } 
-      else if(cmd.startsWith("WifiStatus"))
-      {
-        Serial.print("WifiStatus:");
-        Serial.println(connectionStatus());
-      }
-      else if(cmd.startsWith("LocalIP"))
-      {
-        Serial.print("LocalIP: ");
-        Serial.println(localIP());
-      }
-      else if(cmd.startsWith("Reset"))
-      {
-        softReset();
-      }
-      else if(cmd.startsWith("Bridge"))
-      {
-        m_bridge = cmd.substring(7) == "True";
-      }
-    }
 };
 
 #ifdef ESP8266
@@ -240,12 +193,14 @@ class espNative : public communicationModule
             //get data from the telnet client and push it to the UART
             if(m_status_led && m_server_clients[i].available())
               m_status_led->setColor(0,20,0);
+            String buff;
             while(m_server_clients[i].available())
             {
               char b = m_server_clients[i].read();
               if(m_bridge)Serial.write(b);
-              m_rxBuffer += b;
+              buff += b;
             }
+            append(buff);
           }
         }
       }
@@ -291,13 +246,59 @@ class espNative : public communicationModule
       return result;
     }
     
-  private:
+  protected:
     String           m_serialBuffer;
     uint8_t          m_max_clients =2;
     String           m_serialBufer;
     WiFiServer       m_server;
     WiFiClient       m_server_clients[2];
     webConfigurator  m_webServer;
+
+    void processEspMsg(std::vector<String> args)
+    {
+      if(args.size()<=0) return;
+      
+      if     (args[0] == C_SETAP)
+      {
+        if(args.size() != 3) return;
+        String essid = args[1];
+        String pass =  args[2];
+        setAP(essid,pass);
+      } 
+      else if(args[0] == C_SETCLIENT)
+      {
+        if(args.size() != 3) return;
+        String essid = args[1];
+        String pass =  args[2];
+        setStation(essid,pass);
+      } 
+      else if(args[0] == C_WSTATUS)
+      {
+        Serial.print("WifiStatus:");
+        Serial.println(connectionStatus());
+      }
+      else if(args[0] == C_LOCALIP)
+      {
+        Serial.print("LocalIP: ");
+        Serial.println(localIP());
+      }
+      else if(args[0] == C_RESET)
+      {
+        softReset();
+      }
+      else if(args[0] == C_BRIDGEMODE)
+      {
+        if(args.size() != 2) return;
+        if(args[1] == C_ENABLE)
+        {
+          m_bridge = true;
+          Serial.println("D:Bridge enabled");
+        } else {
+          m_bridge = false;
+          Serial.println("D:Bridge disabled");          
+        }
+      }
+    }
     
     void connectAP()
     {
@@ -384,8 +385,24 @@ class espProxy : public communicationModule
       return result;
     }
 
-  private:
+  protected:
     int m_lastStatus = 6;
+    
+    void processEspMsg(std::vector<String> args)
+    {
+      if(args.size()<=0) return;
+      
+      if(args[0] == C_WSTATUS)
+      {
+        Serial.print("WifiStatus:");
+        Serial.println(connectionStatus());
+      }
+      else if(args[0] == C_LOCALIP)
+      {
+        Serial.print("LocalIP: ");
+        Serial.println(localIP());
+      }
+    }
     
     void connectAP()
     {

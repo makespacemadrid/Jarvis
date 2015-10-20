@@ -1,3 +1,4 @@
+
 #ifndef JPARSER
 #define JPARSER
 
@@ -7,45 +8,21 @@
 
 static std::vector<String> splitStr(String str,String sep){
 	std::vector<String> result;
-	if(str.length() < 1) return result;
-	int sep_index = str.indexOf(sep);
-	if(sep_index == -1)
-	{//no hay separador, se devuelve un unico elemento
-		result.push_back(str);
-		return result;
-	}
-	while (sep_index >= 0)
-	{
-		int nextsep_index = str.indexOf(sep,sep_index+1);
-		if(sep_index == 0)
-		{//si el buffer empieza con separador extraemos el siguiente campo al separador.
-			if(nextsep_index > 0)
-			{
-				result.push_back(str.substring(1,nextsep_index));
-				str = str.substring(nextsep_index+1);
-			}
-			else
-			{
-				result.push_back(str.substring(1));
-				str = ""; // ultimo campo extraido, buffer vacio.
-			}
-		}
-		else//el buffer empieza con argumento, se extrae hasta siguiente separador o fin de buffer.
-		{
-			if(nextsep_index > 0)
-			{
-				result.push_back(str.substring(0,nextsep_index));
-				str = str.substring(nextsep_index+1);
-			}
-			else
-			{
-				result.push_back(str);
-				str = ""; // ultimo campo extraido, buffer vacio.
-			}			
-		}		
-		sep_index = str.indexOf(sep);
-	}
-	if(str.length()) result.push_back(str);
+  if(str.length() < 1) return result;
+  int sep_index = str.indexOf(sep);
+  if(sep_index == -1)
+  {//no hay separador, se devuelve un unico elemento
+    result.push_back(str);
+    return result;
+  }
+
+  while (sep_index >= 0)
+  {
+    result.push_back(str.substring(0,sep_index));
+    str = str.substring(sep_index+1);
+    sep_index = str.indexOf(sep);
+  }
+  if(str.length()) result.push_back(str);
 	return result;
 }
 
@@ -57,6 +34,7 @@ public:
   void append(String buf)
   {
     m_buffer += buf;
+    parseBuffer(m_buffer);
   }
 
   static String encodeJarvisMsg(std::vector<String> args)
@@ -107,29 +85,30 @@ protected:
 
 	void parseBuffer(String& buf)
 	{
-	  if(buf.length() == 0) return;
-	  int s_index = buf.indexOf(P_PACKETSTART);
-	  int e_index = buf.indexOf(P_PACKETTERMINATOR);
-	  //saneado del buffer
-	  if(s_index < 0)
-	  {// si no hay inicio de paquete lo que hay en el buffer tiene que ser basura.
-		buf = "";
-		return;
-	  }
-	  //extraccion de comandos
-	  while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
-	  {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
-		String packet = buf.substring(s_index+1,e_index);
-		parsePacket(packet);
-		buf = buf.substring(e_index+1);
-		s_index = buf.indexOf(P_PACKETSTART);
-		e_index = buf.indexOf(P_PACKETTERMINATOR);
-	  }
+    if(buf.length() == 0) return;
+    int s_index = buf.indexOf(P_PACKETSTART);
+    int e_index = buf.indexOf(P_PACKETTERMINATOR);
+    //saneado del buffer
+    if(s_index < 0)
+    {// si no hay inicio de paquete lo que hay en el buffer tiene que ser basura.
+    buf = "";
+    return;
+    }
+    //extraccion de comandos
+    while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
+    {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
+    String packet = buf.substring(s_index+1,e_index);
+    parsePacket(packet);
+    buf = buf.substring(e_index+1);
+    s_index = buf.indexOf(P_PACKETSTART);
+    e_index = buf.indexOf(P_PACKETTERMINATOR);
+    }
 	}
 
 	void parsePacket(String str)
 	{
-		std::vector<String> args = splitStr(str, P_PACKETSEPARATOR);
+		std::vector<String> args;
+		args = splitStr(str, P_PACKETSEPARATOR);
 		if(args.size() < 2) return;
 		String arg = args[0];
 		args.erase(args.begin());
