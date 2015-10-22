@@ -105,7 +105,7 @@ protected:
     }
 	}
 
-	void parsePacket(String str)
+	void parsePacket(String& str)
 	{
 		std::vector<String> args;
 		args = splitStr(str, P_PACKETSEPARATOR);
@@ -121,15 +121,15 @@ protected:
 			processEspMsg(args);
 	}
 	
-	virtual void processNodeMsg(std::vector<String> args)
+	virtual void processNodeMsg(std::vector<String>& args)
 	{ // que cada cual implemente su parte en la herencia
 		
 	}
-	virtual void processJarvisMsg(std::vector<String> args)
+	virtual void processJarvisMsg(std::vector<String>& args)
 	{
 		
 	}
-	virtual void processEspMsg(std::vector<String> args)
+	virtual void processEspMsg(std::vector<String>& args)
 	{
 		
 	}
