@@ -7,12 +7,6 @@
 #include <avr/wdt.h>
 #endif
 
-enum operationMode {
-  ESPNative,
-  ESPRepeater,
-  ArduinoWESP
-};
-
 struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
@@ -24,7 +18,6 @@ struct settingList
 
   
   #ifdef ESP8266
-  operationMode mode      = ESPRepeater;
   //Pineado por defecto del ESP8266
   int   alivePin               =  2;
   int   relayPin               = -1;
@@ -35,7 +28,6 @@ struct settingList
   int   ledStripPin            = -1;
   int   factoryResetPin        = -1;
   #else
-  operationMode mode      = ArduinoWESP;
   //Pineado por defecto del arduino
   int   alivePin               = 13;
   int   relayPin               =  6;
@@ -44,11 +36,11 @@ struct settingList
   int   fanPin                 = -1;
   int   piezoPin               =  6;
   int   ledStripPin            =  9;
-  int   factoryResetPin        =  8;
+  int   factoryResetPin        =  -1;//8
   #endif
 
   //Configuracion
-  bool  bridgeMode              = false;
+  bool  bridgeMode             = false;
   float currentMeterFactor     = 29.296875f;
   int   currentMeterVolts      = 220;
   int   relayMaxAmps           = 15;
@@ -63,7 +55,7 @@ class EEPROMStorage
 public:
   EEPROMStorage()
   {
-    m_settings = getSettings();
+    refresh();
   }
 
   settingList& settings()
@@ -79,18 +71,20 @@ public:
   static bool hasSettings()
   {
     settingList settings;
-    EEPROM.get(0,settings);
+    settings.magicNumber = 0;
+    //EEPROM.get(0,settings); // De momento dejo la EEPROM desactivada
     return settings.magicNumber == 31416;
   }
   
   static settingList getSettings()
   {
     settingList settings;
-    EEPROM.get(0,settings);
+    settings.magicNumber = 0;
+    //EEPROM.get(0,settings);  // De momento dejo la EEPROM desactivada
     if(settings.magicNumber == 31416)
       return settings;
     else
-      return settingList();// Si falla la comprobacion se devuelven los settings por defecto.
+      return settingList(); // Si falla la comprobacion se devuelven los settings por defecto.
   }
   
   static void storeSettings(settingList settings)
@@ -101,6 +95,7 @@ public:
   void clearEEPROM()
   {
 #ifndef ESP8266
+    //no hay .length() en el ESP de momento
     for ( int i = 0 ; i < EEPROM.length() ; i++ )
       EEPROM.write(i, 0);
 #endif

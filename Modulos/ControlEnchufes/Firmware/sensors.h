@@ -1,6 +1,35 @@
 
 typedef void (* functionPointer) ();
 
+enum sensorType
+{
+  s_ambientTemp,
+  s_
+};
+
+class sensor
+{
+  public:
+    sensor(int pin = -1) : m_pin(pin)
+    {};
+    virtual void setup()
+    {
+      
+    }
+    virtual void update()
+    {
+      
+    }
+
+    bool isValid()
+    {
+      return (m_pin != -1);
+    }
+
+  protected:
+    int m_pin;
+};
+
 
 class temperatureSensor
 {

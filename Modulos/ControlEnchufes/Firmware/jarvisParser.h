@@ -31,12 +31,6 @@ class jarvisParser {
 public:
   jarvisParser() {};
 
-  void append(String buf)
-  {
-    m_buffer += buf;
-    parseBuffer(m_buffer);
-  }
-
   static String encodeJarvisMsg(std::vector<String> args)
   {
 	  String result;
@@ -47,6 +41,7 @@ public:
 	  result += P_PACKETTERMINATOR;
 	  return result;
   }
+  
   static String encodeEspMsg(std::vector<String> args)
   {
 	  String result;
@@ -57,6 +52,7 @@ public:
 	  result += P_PACKETTERMINATOR;
 	  return result;
   }
+  
   static String encodeNodeMsg(std::vector<String> args)
   {
 	  String result;
@@ -68,8 +64,8 @@ public:
 	  return result;
   }
 
+
 protected:
-	String m_buffer;
 
 	static String encodeArgs(std::vector<String> args)
 	{	

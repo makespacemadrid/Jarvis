@@ -17,5 +17,7 @@
 #define C_RESET       F("reset")
 #define C_ENABLE      F("enable")
 #define C_DISABLE     F("disable")
+#define C_PING        F("ping")
+#define C_PONG        F("pong")
 
 #endif

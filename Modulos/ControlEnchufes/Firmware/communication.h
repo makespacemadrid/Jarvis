@@ -1,12 +1,15 @@
 #ifndef COMM
 #define COMM
 
+#define I2C_TRANSPORT
+
+#include <Wire.h>
+
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include "webconfigurator.h"
 #include <WiFiClient.h> 
 #endif
-
 #include "jarvisParser.h"
 #include "ws2812led.h"
 
@@ -43,9 +46,13 @@ class communicationModule : public jarvisParser
       connectStation();
     }
 
-    void setBridge(bool enabled)
+    virtual void setBridge(bool enabled)
     {
       m_bridge = enabled;
+      if(enabled)
+        debugln(String(F("D:Bridge enabled")));
+      else
+        debugln(String(F("D:Bridge disabled")));
     }
 
     virtual void setup()
@@ -57,17 +64,16 @@ class communicationModule : public jarvisParser
       int i = 0;
       while (connectionStatus() != 3)
       {
-        if(i == 500)
+        debugln(F("D:Waiting for connection..."));
+        if(i == 300)
           break;
-        delay(50);
-        updateWifiStatus();
+        update();//al hacer el update duerme 50ms;
         i++;
       }
       if(connectionStatus() != 3)
       {
-        debugln(String(F("D:lanzando AP")));
         setAP(F("ConfigureMe"),F("configureme"));
-        debugln(String(F("I:WifiAP:")));
+        debugln(String(F("I:ConfigurationAP:")));
       }
       else
       {
@@ -77,25 +83,31 @@ class communicationModule : public jarvisParser
       debug(String(F("  p:")));
       debugln(m_localPort);
     }
-
-    virtual void updateWifiStatus() 
-    {
-      #ifndef ESP8266
-      //send("-ESP:WifiStatus\n");
-      #endif
-      return;
-    }
     
     virtual void update()
     {
       read();
+      parseBuffer(m_rxBuffer);
     }
-    //void setMacAddr();
+
     void setStatusLed(ws2812Strip::led* statusLed) 
     {
       m_status_led= statusLed;
-      m_status_led->setColor(0,0,10);
-      
+      m_status_led->setColor(0,0,10); 
+    }
+
+    void softReset()
+    {
+      debugln(String(F("I:RESET!")));
+      delay(5);
+      #ifdef ESP8266
+      ESP.reset();
+        //ESP.wdtEnable(WDTO_15MS);
+        //while(true); // Al meter el programa en un bucle se fuerza a que el watchdog salte y haga un reset del micro
+      #else
+        //wdt_enable(WDTO_15MS); // En arduino parece no funcionar como se espera...WTF
+        asm volatile ("  jmp 0");
+      #endif
     }
 
     virtual String localIP()        = 0;
@@ -126,27 +138,20 @@ class communicationModule : public jarvisParser
 
     void debug(String str)
     {
-      
+      Serial.print(str);
     }
     void debugln(String str)
     {
-      
+      Serial.println(str);
     }
-//    void debug(char* str)
-//    {
-      
-//    }
-//    void debugln(char* str)
-//    {
-      
-//    }
+
     void debug(int number)
     {
-      
+      Serial.print(number);      
     }
     void debugln(int number)
     {
-      
+      Serial.println(number);
     }
 
 };
@@ -167,6 +172,9 @@ class espNative : public communicationModule
       m_webServer.setup();
       m_server.begin();
       m_server.setNoDelay(true);
+      #ifdef I2C_TRANSPORT
+      Wire.begin(0,2);// guardar los pines i2c en la eeprom!
+      #endif
     }
 
     void update()
@@ -197,10 +205,11 @@ class espNative : public communicationModule
   }      
 
 
-    void send(String str)
+    void send(String str)//envia por wifi
     {
       int len = str.length();
-      char sbuf[len];
+      char sbuf[len+1];
+      str.toCharArray(sbuf,len+1);
       for(uint8_t i = 0; i < m_max_clients; i++){
         if (m_server_clients[i] && m_server_clients[i].connected()){
           m_server_clients[i].write(sbuf, len);
@@ -211,7 +220,7 @@ class espNative : public communicationModule
       }
     }
 
-    void read()
+    void read()//lee desde el wifi
     {
       //check clients for data
       for(uint8_t i = 0; i < m_max_clients; i++){
@@ -227,10 +236,27 @@ class espNative : public communicationModule
               if(m_bridge)Serial.write(b);
               buff += b;
             }
-            append(buff);
+            m_rxBuffer += buff;
           }
         }
       }
+    }
+#ifdef I2C_TRANSPORT
+
+    void sendSerial(String str)
+    {
+      Serial.print(str);
+    }
+
+    void readSerial()
+    {
+    
+    }
+
+#else
+    void sendSerial(String str)
+    {
+      Serial.print(str);
     }
 
     void readSerial()
@@ -240,8 +266,6 @@ class espNative : public communicationModule
       while(Serial.available())
       {
         size_t len = Serial.available();
-        //Serial.print("s:");
-        //Serial.println(len);
         char sbuf[len];
         Serial.readBytes(sbuf, len);
         m_serialBuffer += sbuf;
@@ -258,6 +282,7 @@ class espNative : public communicationModule
         }
       } 
     }
+#endif
 
     String localIP()
     {
@@ -297,13 +322,17 @@ class espNative : public communicationModule
       } 
       else if(args[0] == C_WSTATUS)
       {
-        //Serial.print("WifiStatus:");
-        //Serial.println(connectionStatus());
+        std::vector<String> args;
+        args.push_back(C_WSTATUS);
+        args.push_back(String(connectionStatus()));
+        sendSerial(encodeEspMsg(args));
       }
       else if(args[0] == C_LOCALIP)
       {
-        //Serial.print("LocalIP: ");
-        //Serial.println(localIP());
+        std::vector<String> args;
+        args.push_back(C_LOCALIP);
+        args.push_back(localIP());
+        sendSerial(encodeEspMsg(args));
       }
       else if(args[0] == C_RESET)
       {
@@ -313,13 +342,9 @@ class espNative : public communicationModule
       {
         if(args.size() != 2) return;
         if(args[1] == C_ENABLE)
-        {
-          m_bridge = true;
-          debugln(String(F("D:Bridge enabled")));
-        } else {
-          m_bridge = false;
-          debugln(String(F("D:Bridge disabled")));
-        }
+          setBridge(true);
+        else
+          setBridge(false);
       }
     }
     
@@ -369,48 +394,79 @@ class espProxy : public communicationModule
   public:
     espProxy(int localPort,bool bridge=false) : communicationModule(localPort,bridge) {;}
     bool isConnected()      {return m_lastStatus == 3;}
-    int  connectionStatus() {return m_lastStatus;}
-    
-    void setup()            
+
+    int  connectionStatus() 
     {
-      //send("-ESP:Bridge:True");
-      int i = 0;
-      while (!isConnected())
-      {
-        if(i == 500)
-          break;
-        delay(50);
-        i++;
-      }
+      updateConnectionStatus();
+      return m_lastStatus;
+    }
+    
+    void setup()
+    {
+      setBridge(true);
+      #ifdef I2C_TRANSPORT
+      Wire.begin(8);
+      Wire.onRequest(sendi2c);
+      Wire.onReceive(readi2c);
+      #endif
+      communicationModule::setup();
+    }
+    
+#ifdef I2C_TRANSPORT
+    static void sendi2c()
+    {
+      
+    }
+
+    static void readi2c(int count)
+    {
+
     }
     
     void send(String str)
     {
       Serial.print(str);
     }
-    void read()             
+
+    void read()
+    {
+    }
+
+#else
+    void send(String str)
+    {
+      Serial.print(str);
+    }
+
+    void read()
     {
       if(m_status_led && Serial.available())
           m_status_led->setColor(0,20,0);
       while(Serial.available())
       {
         size_t len = Serial.available();
-        //Serial.print("s:");
-        //Serial.println(len);
         char sbuf[len];
         Serial.readBytes(sbuf, len);
         m_rxBuffer += sbuf;
       }
     }
+#endif
 
+    virtual void update()
+    {
+      communicationModule::update();
+    }
+    
     String localIP()
     {
-      String result = "0.0.0.0";
-      return result;
+      updateConnectionStatus();
+      delay(5);
+      return m_localIP;
     }
-
+    
   protected:
-    int m_lastStatus = 6;
+    int     m_lastStatus = 6;
+    String  m_localIP = "0";
     
     void processEspMsg(std::vector<String>& args)
     {
@@ -418,23 +474,56 @@ class espProxy : public communicationModule
       
       if(args[0] == C_WSTATUS)
       {
-        //Serial.print("WifiStatus:");
-        //Serial.println(connectionStatus());
+        if(args.size() != 2) return;
+        m_lastStatus = args[1].toInt();
       }
       else if(args[0] == C_LOCALIP)
       {
-        //Serial.print("LocalIP: ");
-        //Serial.println(localIP());
+        if(args.size() != 2) return;
+        m_localIP = args[1];
       }
+    }
+
+    void updateConnectionStatus()
+    {
+      std::vector<String> args;
+      args.push_back(C_WSTATUS);
+      send(encodeEspMsg(args));
+      args.clear();
+      args.push_back(C_LOCALIP);
+      send(encodeEspMsg(args));
+      delay(5);
+      update();
     }
     
     void connectAP()
     {
-      //send("-ESP:AP:"+m_essid+":"+m_pass+"\n");
+      std::vector<String> args;
+      args.push_back(C_SETAP);
+      args.push_back(m_essid);
+      args.push_back(m_pass);
+      send(encodeEspMsg(args));
     }
     void connectStation()
     {
-      //send("-ESP:Client:"+m_essid+":"+m_pass+"\n");
+      std::vector<String> args;
+      args.push_back(C_SETCLIENT);
+      args.push_back(m_essid);
+      args.push_back(m_pass);
+      send(encodeEspMsg(args));
+    }
+
+    void setBridge(bool enabled)
+    {
+      std::vector<String> args;
+      args.push_back(C_BRIDGEMODE);
+
+      if(enabled)
+        args.push_back(C_ENABLE);
+      else
+        args.push_back(C_DISABLE);
+
+      send(encodeEspMsg(args));
     }
 };
 
