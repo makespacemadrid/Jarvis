@@ -4,7 +4,7 @@
 static bool pinCanPWM(char pin)
 {
 #ifdef ESP8266
-  return true; //Creo que todos los pines del esp pueden hacer pwm
+  return true; //Creo que todos los pines del esp pueden hacer pwm el (0 no)
 #else
   if((pin == 3)  || //Arduino Nano puede hacer pwm en los pines 3,5,6,9,10,11.
      (pin == 5)  || 
@@ -21,7 +21,7 @@ static bool pinCanPWM(char pin)
 class SSR {
   public:
 	SSR(int swPin = -1,int currentPin = -1,int maxAmps = 15,bool dimmable = false ,int tempPin = -1,int fanPin = -1) : 
-	    m_switch_pin(swPin),m_current_sensor(currentPin),m_max_amps(maxAmps),m_temp_sensor(tempPin),m_fan_pin(fanPin) 
+	    m_switch_pin(swPin),m_current_sensor(currentPin),m_max_amps(maxAmps),m_fan_pin(fanPin) 
 	    {
         if(dimmable)
           dimmable = pinCanPWM(swPin);
@@ -29,7 +29,7 @@ class SSR {
 	    
 	bool has_switch_pin()    {return m_switch_pin  != -1;}
 	bool has_current_sensor(){return m_current_sensor.isValid();}
-	bool has_temp_sensor()   {return m_temp_sensor.isValid();}
+	//bool has_temp_sensor()   {return m_temp_sensor.isValid();}
 	bool has_fan_pin()       {return m_fan_pin     != -1;}
 	bool switched()          {return m_switched;}
 	bool is_dimmable()       {return m_dimmable;}
@@ -87,12 +87,12 @@ class SSR {
       //Serial.print("current:");
       //Serial.println(m_last_miliamps,10);
 		}
-		if(m_temp_sensor.isValid())
-		{
-			m_last_temp = m_temp_sensor.readCelsius();
-			if(m_last_temp >= m_max_temp)
-				switchOff();
-		}
+//		if(m_temp_sensor.isValid())
+//		{
+			//m_last_temp = m_temp_sensor.readCelsius();
+//			if(m_last_temp >= m_max_temp)
+//				switchOff();
+//		}
 	}
 
   private:
@@ -108,7 +108,7 @@ class SSR {
   int  m_last_temp 			= 0;
   int  m_fan_pwr   			= 0;
 
-  temperatureSensor     m_temp_sensor;
+  //TemperatureSensor     m_temp_sensor;
   magneticCurrentSensor m_current_sensor;
   ws2812Strip::led*     m_status_led = 0;
 };

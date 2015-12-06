@@ -2,10 +2,11 @@
 //https://arduino-tone.googlecode.com/svn/trunk/examples/RTTTL/RTTTL.pde
 
 #include "notes.h"
+#include "actuators.h"
 
 #define isdigit(n) (n >= '0' && n <= '9')
 
-class piezoSpeaker
+class piezoSpeaker : public actuators
 {
   public:
     piezoSpeaker(int pinNr = -1):m_pin(pinNr){};

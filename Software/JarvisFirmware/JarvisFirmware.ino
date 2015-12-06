@@ -2,6 +2,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <EEPROM.h>
 #include <Wire.h>
+#include <DHT.h>
 
 #ifdef ESP8266
   #include <ESP8266WiFi.h>
@@ -15,18 +16,44 @@
 //  
 //
 #ifndef ESP8266
-  #include <StandardCplusplus.h> //Comentar para compilar en el ESP!!!!!!!!!!!!
-  #include <MemoryFree.h>
+  //#include <StandardCplusplus.h>  //Comentar para compilar en el ESP//Descomentar en arduino!!!!!!!!!!!!
+  //#include <MemoryFree.h>         //Comentar para compilar en el ESP//Descomentar en arduino!!!!!!!!!!!!
 #endif
 
 #include "jarvisModule.h"
+#include "MakeSwitch.h"
 
 
-jarvisModule jarvisNode;//functionPointer int0Pointer = 0;
+jarvisModule* jarvisNode;
 
 void setup() 
 {
-  jarvisNode.setup();
+    jarvisModules type = EEPROMStorage::getSettings().moduleType;
+    if      (type == unknownModule)
+    {
+        jarvisNode = new jarvisModule();
+    }else if(type == espRepeaterModule)
+    {
+        jarvisNode = new jarvisModule(jarvisModule::espRepeater);
+
+    }else if(type == simpleSwitchModule)
+    {
+        jarvisNode = new simpleSwitch();
+    }else if(type == makeSwitchModule)
+    {
+        jarvisNode = new makeSwitch();
+    }else if(type == airQualityModule)
+    {
+
+    }else if(type == simplePowerControlModule)
+    {
+
+    }else if(type == advancedPowerControlModule)
+    {
+
+    }
+
+    jarvisNode->setup();
 }
 
 
@@ -38,5 +65,5 @@ ISR(TIMER0_COMPA_vect){//interrupcion 0.
 #endif
 
 void loop() {
-  jarvisNode.update();
+  jarvisNode->update();
 }

@@ -9,23 +9,31 @@
 #include "communication.h"
 #include "settings.h"
 
+#include "sensors.h"
+#include "actuators.h"
+
 #ifdef ESP8266
 class jarvisModule : public espNative
 {
 public:
-  jarvisModule() : espNative(EEPROMStorage::getSettings().localPort,m_EEPROM.settings().bridgeMode) ,
+  jarvisModule(commModes cmode = nativeNode) : espNative(cmode , EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin) ,
 #else 
 class jarvisModule : public espProxy
 {
 public:
-  jarvisModule() : espProxy(EEPROMStorage::getSettings().localPort,false) ,
+  jarvisModule() : espProxy(EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin) ,
 #endif
 
 //inicializacion de los componentes en el constructor.
-  m_switch(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin) ,
-  m_ledStrip(m_EEPROM.settings().ledStripPin, m_EEPROM.settings().ledNumber) ,
-  m_speaker(m_EEPROM.settings().piezoPin)
-  {  };
+//  m_switch(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin) ,
+    m_speaker(m_EEPROM.settings().piezoPin)
+  {
+    if(m_ledStrip.isValid())
+    {
+        m_actuators.push_back(&m_statusLed);
+    }
+
+  }
 
   void setup()
   {
@@ -37,10 +45,19 @@ public:
       debugln(String(F("I:-EEPROM Settings")));
     else
       debugln(String(F("I:-Hardcoded Settings")));
+    
+    ///////////
+    //if(m_EEPROM.settings().factoryResetPin != -1) debugln(String(F("I:-Factory reset button")));
+    //checkFactoryReset();
 
-    if(m_EEPROM.settings().factoryResetPin != -1) debugln(String(F("I:-Factory reset button")));
-      
-    checkFactoryReset();
+    if(m_ledStrip.isValid())
+    {
+      debugln(String(F("I:-WS2812")));
+      m_ledStrip.setup();
+      m_ledStrip.off();
+      m_statusLed.controllerInit();
+    }
+  
   #ifdef ESP8266
     debugln(String(F("I:-ESP8266")));
     espNative::setup();
@@ -48,30 +65,29 @@ public:
     debugln(String(F("I:-Arduino")));
     espProxy::setup();
   #endif
-  
-    if(m_ledStrip.isValid())
+
+    for(int s = 0 ; s<m_sensors.size() ; s++ )
     {
-      debugln(String(F("I:-WS2812")));
-      m_ledStrip.setup();
-      m_ledStrip.off();
-      m_ledStrip.leds()[0].setColor(10,10,0);
-      m_switch.setStatusLed(&m_ledStrip.leds()[2]);
-      setStatusLed(&m_ledStrip.leds()[1]);
+        m_sensors[s]->setup();
     }
-    
+    for(int a = 0 ; a<m_actuators.size() ; a++ )
+    {
+        m_actuators[a]->setup();
+    }
+
     if(m_EEPROM.settings().alivePin != -1)
     {
       pinMode(m_EEPROM.settings().alivePin,OUTPUT);
       debugln(String(F("I:-Alive led")));
     }
     
-    if(m_switch.has_switch_pin()) 
-    {
-      debugln(String(F("I:-Switch")));
-      m_switch.setup();
-    }
-    if(m_switch.has_current_sensor())    debugln(String(F("I:-Current sensor")));
-    if(m_switch.has_temp_sensor())       debugln(String(F("I:-Temperature sensor")));
+//    if(m_switch.has_switch_pin()) 
+//    {
+//      debugln(String(F("I:-Switch")));
+//      m_switch.setup();
+//    }
+//    if(m_switch.has_current_sensor())    debugln(String(F("I:-Current sensor")));
+//    if(m_switch.has_temp_sensor())       debugln(String(F("I:-Temperature sensor")));
     if(m_speaker.isValid())
     {
       debugln(String(F("I:-Buzzer")));
@@ -81,7 +97,7 @@ public:
   //if(mySwitch.currentSensor().isValid())
     //int0Pointer = mySwitch.currentSensor().isrRead;
   debugln(String(F("I:INIT OK")));
-  m_ledStrip.leds()[0].setColor(0,20,0);
+  m_statusLed.controllerOK();  
   }
 
   void update()
@@ -93,17 +109,45 @@ public:
   #else
     espProxy::update();
   #endif
-    m_switch.update();
     delay(100);
+
+    for(int s = 0 ; s<m_sensors.size() ; s++ )
+    {
+        sensor* sen = m_sensors[s];
+        sen->update();
+        if(sen->hasEvents())
+        {
+            std::vector<jarvisEvents> events = sen->getEvents();
+            for(int e = 0 ; e <  events.size() ; e++)
+              sendEvent(sen->id(),events[e]);
+        }
+    }
+        
+
+    for(int s = 0 ; s<m_actuators.size() ; s++ )
+    {
+        actuators* act = m_actuators[s];
+        act->update();
+        if(act->hasEvents())
+        {
+          std::vector<jarvisEvents> events = act->getEvents();
+          for(int e = 0 ; e <  events.size() ; e++)
+            sendEvent(act->id(),events[e]);
+        }
+    }
   }
 
 
 protected:
+  jarvisModules         m_type;
   EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
   uint8_t m_loopCount = 0;
-  SSR                   m_switch;//(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin);
-  ws2812Strip           m_ledStrip;//(m_EEPROM.settings().ledStripPin, m_EEPROM.settings().ledNumber);
-  piezoSpeaker          m_speaker;//(m_EEPROM.settings().piezoPin);
+
+  std::vector<actuators*>    m_actuators;
+  std::vector<sensor*>       m_sensors;
+
+  //SSR                   m_switch;//(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin);
+  piezoSpeaker          m_speaker;   //(m_EEPROM.settings().piezoPin);
 
   void checkFactoryReset()
   {
@@ -112,6 +156,7 @@ protected:
        pinMode(m_EEPROM.settings().factoryResetPin, INPUT);
        if(digitalRead(m_EEPROM.settings().factoryResetPin) == LOW)
        {
+          m_ledStrip.setup();
           debugln(String(F("I:Factory reset!")));
           m_ledStrip.setColor(10,10,0);
           m_speaker.playTone(200,100);
@@ -147,31 +192,6 @@ protected:
       m_loopCount++;
   }
 
-  virtual void processNodeMsg(std::vector<String>& args)
-  {
-    if((m_bridge) || (args.size()<=0)) return; // En modo bridge no se procesan los mensajes de nodo(solo esp).
-    
-    if     (args[0] == C_SETAP)
-    {
-      if(args.size() != 3) return; //Guardar los parametros a la EEPROM!
-      setAP(args[1],args[2]);
-    } 
-    else if(args[0] == C_SETCLIENT)
-    {
-      if(args.size() != 3) return;
-      setStation(args[1],args[2]);
-    } 
-    else if(args[0] == C_RESET)
-    {
-      softReset();
-    }
-    else if(args[0] == C_PING)
-    {
-      std::vector<String> args;
-      args.push_back(C_PONG);
-      send(encodeNodeMsg(args));
-    }    
-  }
 
   void checkFreeMem()
   {
@@ -184,6 +204,98 @@ protected:
       debugln(F("bytes. Shit can happen anytime!"));
     }
     #endif
+  }
+
+
+  virtual void sendEvent(String source,jarvisEvents event)
+  {
+      //sobrecargar esta funcion para reaccionar a los eventos salientes.
+      communicationModule::sendEvent(source,event);
+  }
+
+// Implementaciones del protocolo
+  virtual void sendComponents()
+  {
+      for(int i  = 0 ; i < m_sensors.size() ; i++ )
+      {
+        std::vector<String> args;
+        args.push_back(C_COMPONENT);
+        sensor* sen = m_sensors[i];
+        args.push_back(sen->id());
+        args.push_back(E_EVENT);
+        for (int i = 0 ; i < sen->capableEvents().size() ; i++)
+        {
+            args.push_back(String(sen->capableEvents()[i]));
+        }
+            send(encodeJarvisMsg(args));
+      }
+
+      for(int i  = 0 ; i < m_actuators.size() ; i++ )
+      {
+        std::vector<String> args;
+        args.push_back(C_COMPONENT);
+        actuators* act = m_actuators[i];
+        args.push_back(act->id());
+        args.push_back(E_EVENT);
+        for (int i = 0 ; i < act->capableEvents().size() ; i++)
+        {
+            args.push_back(String(act->capableEvents()[i]));
+        }
+        args.push_back(E_ACTION);
+        for (int i = 0 ; i < act->getActions().size() ; i++)
+        {
+            args.push_back(String(act->getActions()[i]));
+        }
+            send(encodeJarvisMsg(args));
+      }
+  }
+
+  virtual void sendSensors()
+  {
+      std::vector<String> args;
+      args.push_back(C_SENSORS);
+      for(int i  = 0 ; i < m_sensors.size() ; i++ )
+      {
+        sensor* sen = m_sensors[i];
+        args.push_back(sen->id());
+        args.push_back(String(sen->read()));
+      }
+      send(encodeJarvisMsg(args));
+  }
+
+  virtual void sendSensor(String id)
+  {
+      std::vector<String> args;
+      args.push_back(C_SENSOR);
+      for(int i  = 0 ; i < m_sensors.size() ; i++ )
+      {
+        sensor* sen = m_sensors[i];
+        if(sen->id() == id)
+        {
+          args.push_back(sen->id());
+          args.push_back(String(sen->read()));
+        }
+      }
+      send(encodeJarvisMsg(args));
+  }
+
+  virtual void doAction(std::vector<String> args)
+  {
+      if(args.size() < 2) return;
+      for(int i = 0 ; i < m_actuators.size() ; i++)
+      {
+        actuators* act = m_actuators[i];
+        std::vector<String> arguments = args;
+        if(act->id() == arguments[0])
+        {
+            arguments.erase(arguments.begin());
+            jarvisActions action = jarvisActions(arguments[0].toInt());
+            Serial.print("Action:");
+            Serial.println(action);
+            arguments.erase(arguments.begin());
+            act->doAction(action,arguments);
+        }
+      }
   }
 
 };
