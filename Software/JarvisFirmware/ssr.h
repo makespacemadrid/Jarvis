@@ -40,8 +40,8 @@ class SSR {
   void setup()
   {
     if(has_switch_pin()) pinMode(m_switch_pin, OUTPUT);
-    if(currentSensor().isValid())
-      currentSensor().set2KhzInterrupt1();
+    //if(currentSensor().isValid())
+    //  currentSensor().set2KhzInterrupt1();
     if(m_status_led)
       m_status_led->setColor(0,0,20);
   }

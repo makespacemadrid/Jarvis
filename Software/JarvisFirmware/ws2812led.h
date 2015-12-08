@@ -5,6 +5,8 @@
 #include <Adafruit_NeoPixel.h> //WTF hay que hacer el include en el ino!
 #include "actuators.h"
 
+#include <vector>
+
 
 class ws2812Strip {
 public:
@@ -79,23 +81,32 @@ public:
     if(!isValid()) return;
     for( uint8_t i = 0 ; i < m_leds.size() ; i++) 
     {
-      m_leds[i].setColor(10,10,10);
+      m_leds[i].setColor(50,50,50);
       update();
-      delay(50);
+      delay(20);
     }
   }
   
 private:
-    std::vector<led> m_leds;
-    int  m_pin;
-    Adafruit_NeoPixel m_pixels;
+    std::vector<led>    m_leds;
+    int                 m_pin;
+    Adafruit_NeoPixel   m_pixels;
 };
 
 
 class ledGadget :  public actuators
 {
   public:
-    ledGadget(ws2812Strip* m_parentStrip): m_strip(m_parentStrip) 
+    enum animationType
+    {
+        animationNone,
+        animationFade,
+        animationGlow,
+        animationBlink,
+        animationCylon
+    };
+
+    ledGadget(ws2812Strip* m_parentStrip): m_strip(m_parentStrip)
     {
       m_capableEvents.push_back(E_ACTIVATED);
       m_capableEvents.push_back(E_DEACTIVATED);
@@ -141,6 +152,7 @@ class ledGadget :  public actuators
   protected:
     ws2812Strip*                    m_strip;
     std::vector<ws2812Strip::led*>  m_leds;
+    animationType                   m_animationType = animationNone;
 };
 
 class ledBar : public ledGadget
@@ -153,13 +165,151 @@ public:
     }
     void setReversed(bool reversed) {m_reversed = reversed;}
 
-    void cylon()
-    {//animacion cylon
-
+    void update()
+    {
+      animate();
     }
+
+    virtual void fade()
+    {
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        m_animationType = animationFade;
+    }
+
+    virtual void glow()
+    {
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 150;
+        m_animationType = animationGlow;
+    }
+
+    virtual void blink()
+    {
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        m_animationType = animationBlink;
+    }
+
+    virtual void cylon()
+    {//animacion cylon
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        m_animationType = animationCylon;
+    }
+
+    virtual void animate()
+    {
+        if      (m_animationType == animationNone)
+        {
+            return;
+        }else if(m_animationType == animationFade)
+        {
+            animateFade();
+        }else if(m_animationType == animationGlow)
+        {
+            animateGlow();
+        }else if(m_animationType == animationBlink)
+        {
+            animateBlink();
+        }else if(m_animationType == animationCylon)
+        {
+            animateCylon();
+        }
+    }
+
 
 protected:
     bool m_reversed;
+    uint8_t m_counter1;
+    uint8_t m_counter2;
+    uint8_t m_counter3;
+
+    void animateFade()
+    {
+        bool all_off = true;
+        for(int i = 0 ; i < m_leds.size() ; i++)
+        {
+            if(m_leds[i]->r > 0)
+            {
+                all_off = false;
+                m_leds[i]->r -= 1;
+            }
+            if(m_leds[i]->g > 0)
+            {
+                all_off = false;
+                m_leds[i]->g -= 1;
+            }
+            if(m_leds[i]->b > 0)
+            {
+                all_off = false;
+                m_leds[i]->b -= 1;
+            }
+        }
+        if(all_off) m_animationType == animationNone;
+        m_strip->update();
+    }
+
+    void animateGlow()
+    {//contador 1 se usa contar la iteracion, y el 2 para la direccion(sumando/restando), y el 3 para el limite
+        if(m_counter2 == 0)
+        {//sumando
+            for(int i = 0 ; i < m_leds.size() ; i++)
+            {
+                if(m_leds[i]->r < 255)
+                {
+                    m_leds[i]->r += 1;
+                }
+                if(m_leds[i]->g < 255)
+                {
+                    m_leds[i]->g += 1;
+                }
+                if(m_leds[i]->b < 255)
+                {
+                    m_leds[i]->b += 1;
+                }
+            }
+            m_counter1++;
+            if(m_counter1 == m_counter3)
+              m_counter2 = 1;
+        }
+        else
+        {//restando
+            for(int i = 0 ; i < m_leds.size() ; i++)
+            {
+                if(m_leds[i]->r > 0)
+                {
+                    m_leds[i]->r -= 1;
+                }
+                if(m_leds[i]->g > 0)
+                {
+                    m_leds[i]->g -= 1;
+                }
+                if(m_leds[i]->b > 0)
+                {
+                    m_leds[i]->b -= 1;
+                }
+            }
+            m_counter1--;
+            if(m_counter1 == 0)
+                m_counter2 = 0;
+        }
+//        Serial.print("C1: ");
+//        Serial.print(m_counter1);
+//        Serial.print(" :C2: ");
+//        Serial.print(m_counter2);
+//        Serial.print(" :C3: ");
+//        Serial.println(m_counter3);
+//        Serial.println("   ");
+//        Serial.println(m_leds[0]->b);
+        m_strip->update();
+    }
+
+    void animateBlink()
+    {
+
+    }
+
+    void animateCylon()
+    {
+
+    }
 
 };
 

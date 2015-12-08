@@ -109,8 +109,6 @@ public:
   #else
     espProxy::update();
   #endif
-    delay(100);
-
     for(int s = 0 ; s<m_sensors.size() ; s++ )
     {
         sensor* sen = m_sensors[s];
@@ -135,6 +133,7 @@ public:
             sendEvent(act->id(),events[e]);
         }
     }
+    delay(10);
   }
 
 
@@ -148,7 +147,6 @@ protected:
 
   //SSR                   m_switch;//(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin);
   piezoSpeaker          m_speaker;   //(m_EEPROM.settings().piezoPin);
-
   void checkFactoryReset()
   {
     if(m_EEPROM.settings().factoryResetPin != -1)
@@ -182,7 +180,7 @@ protected:
 
   void imAlive()
   {
-    if(m_loopCount == 15)
+    if(m_loopCount == 150)
     {
       digitalWrite(m_EEPROM.settings().alivePin, !digitalRead(m_EEPROM.settings().alivePin));
       m_loopCount = 0;

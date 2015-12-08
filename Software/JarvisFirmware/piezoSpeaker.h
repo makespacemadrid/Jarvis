@@ -18,6 +18,8 @@ class piezoSpeaker : public actuators
       if(isValid()) beep();
     }
 
+    void update() {;}
+
     void playTone(int note, int duration)
     {
       if(!isValid()) return;

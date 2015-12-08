@@ -57,7 +57,9 @@ public:
     {
       simpleSwitch::setup();
       m_makeLed.setColor(200,200,200);
+      m_makeLed.glow();
       m_offLed.setColor(200,200,200);
+      m_offLed.glow();
     }
 protected:
     ledBar m_makeLed;
