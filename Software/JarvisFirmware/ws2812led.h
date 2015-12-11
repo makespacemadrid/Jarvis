@@ -3,9 +3,8 @@
 
 
 #include <Adafruit_NeoPixel.h> //WTF hay que hacer el include en el ino!
-#include "actuators.h"
-
 #include <vector>
+#include "nodeComponent.h"
 
 
 class ws2812Strip {
@@ -94,7 +93,7 @@ private:
 };
 
 
-class ledGadget :  public actuators
+class ledGadget :  public nodeComponent
 {
   public:
     enum animationType
@@ -119,8 +118,15 @@ class ledGadget :  public actuators
 
     bool isValid() {return m_strip->isValid();}
 
+    void deactivate()
+    {
+        off();
+        m_events.push_back(E_DEACTIVATED);
+    }
+
     virtual void off()
     {
+        m_animationType = animationNone;
         for(int i = 0 ; i < m_leds.size() ; i++)
         {
             m_leds[i]->off();
@@ -130,6 +136,7 @@ class ledGadget :  public actuators
 
     virtual void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
+        m_animationType = animationNone;
         for(int i = 0 ; i < m_leds.size() ; i++)
         {
             m_leds[i]->setColor(r,g,b);

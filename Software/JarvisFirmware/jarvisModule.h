@@ -4,13 +4,12 @@
 
 #include "communication.h"
 #include "ws2812led.h"
-#include "ssr.h"
 #include "piezoSpeaker.h"
 #include "communication.h"
 #include "settings.h"
+#include "nodeComponent.h"
 
-#include "sensors.h"
-#include "actuators.h"
+
 
 #ifdef ESP8266
 class jarvisModule : public espNative
@@ -23,16 +22,12 @@ class jarvisModule : public espProxy
 public:
   jarvisModule() : espProxy(EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin) ,
 #endif
-
-//inicializacion de los componentes en el constructor.
-//  m_switch(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin) ,
     m_speaker(m_EEPROM.settings().piezoPin)
   {
     if(m_ledStrip.isValid())
-    {
-        m_actuators.push_back(&m_statusLed);
-    }
-
+        m_components.push_back(&m_statusLed);
+    if(m_speaker.isValid())
+        m_components.push_back(&m_speaker);
   }
 
   void setup()
@@ -66,13 +61,12 @@ public:
     espProxy::setup();
   #endif
 
-    for(int s = 0 ; s<m_sensors.size() ; s++ )
+    for(int c = 0 ; c < m_components.size() ; c++ )
     {
-        m_sensors[s]->setup();
-    }
-    for(int a = 0 ; a<m_actuators.size() ; a++ )
-    {
-        m_actuators[a]->setup();
+        m_components[c]->setup();
+        #ifdef VERBOSE_DEBUG
+        debugln(m_components[c]->id());
+        #endif
     }
 
     if(m_EEPROM.settings().alivePin != -1)
@@ -80,22 +74,7 @@ public:
       pinMode(m_EEPROM.settings().alivePin,OUTPUT);
       debugln(String(F("I:-Alive led")));
     }
-    
-//    if(m_switch.has_switch_pin()) 
-//    {
-//      debugln(String(F("I:-Switch")));
-//      m_switch.setup();
-//    }
-//    if(m_switch.has_current_sensor())    debugln(String(F("I:-Current sensor")));
-//    if(m_switch.has_temp_sensor())       debugln(String(F("I:-Temperature sensor")));
-    if(m_speaker.isValid())
-    {
-      debugln(String(F("I:-Buzzer")));
-      m_speaker.setup();
-    }
 
-  //if(mySwitch.currentSensor().isValid())
-    //int0Pointer = mySwitch.currentSensor().isrRead;
   debugln(String(F("I:INIT OK")));
   m_statusLed.controllerOK();  
   }
@@ -109,31 +88,18 @@ public:
   #else
     espProxy::update();
   #endif
-    for(int s = 0 ; s<m_sensors.size() ; s++ )
+    for(int c = 0 ; c<m_components.size() ; c++ )
     {
-        sensor* sen = m_sensors[s];
-        sen->update();
-        if(sen->hasEvents())
+        nodeComponent* comp = m_components[c];
+        comp->update();
+        if(comp->hasEvents())
         {
-            std::vector<jarvisEvents> events = sen->getEvents();
+            std::vector<jarvisEvents> events = comp->getEvents();
             for(int e = 0 ; e <  events.size() ; e++)
-              sendEvent(sen->id(),events[e]);
+              sendEvent(comp->id(),events[e]);
         }
     }
-        
-
-    for(int s = 0 ; s<m_actuators.size() ; s++ )
-    {
-        actuators* act = m_actuators[s];
-        act->update();
-        if(act->hasEvents())
-        {
-          std::vector<jarvisEvents> events = act->getEvents();
-          for(int e = 0 ; e <  events.size() ; e++)
-            sendEvent(act->id(),events[e]);
-        }
-    }
-    delay(10);
+    delay(updateInterval);
   }
 
 
@@ -142,8 +108,7 @@ protected:
   EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
   uint8_t m_loopCount = 0;
 
-  std::vector<actuators*>    m_actuators;
-  std::vector<sensor*>       m_sensors;
+  std::vector<nodeComponent*>    m_components;
 
   //SSR                   m_switch;//(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin);
   piezoSpeaker          m_speaker;   //(m_EEPROM.settings().piezoPin);
@@ -214,35 +179,21 @@ protected:
 // Implementaciones del protocolo
   virtual void sendComponents()
   {
-      for(int i  = 0 ; i < m_sensors.size() ; i++ )
+      for(int i  = 0 ; i < m_components.size() ; i++ )
       {
         std::vector<String> args;
         args.push_back(C_COMPONENT);
-        sensor* sen = m_sensors[i];
-        args.push_back(sen->id());
+        nodeComponent* comp = m_components[i];
+        args.push_back(comp->id());
         args.push_back(E_EVENT);
-        for (int i = 0 ; i < sen->capableEvents().size() ; i++)
+        for (int i = 0 ; i < comp->capableEvents().size() ; i++)
         {
-            args.push_back(String(sen->capableEvents()[i]));
-        }
-            send(encodeJarvisMsg(args));
-      }
-
-      for(int i  = 0 ; i < m_actuators.size() ; i++ )
-      {
-        std::vector<String> args;
-        args.push_back(C_COMPONENT);
-        actuators* act = m_actuators[i];
-        args.push_back(act->id());
-        args.push_back(E_EVENT);
-        for (int i = 0 ; i < act->capableEvents().size() ; i++)
-        {
-            args.push_back(String(act->capableEvents()[i]));
+            args.push_back(String(comp->capableEvents()[i]));
         }
         args.push_back(E_ACTION);
-        for (int i = 0 ; i < act->getActions().size() ; i++)
+        for (int i = 0 ; i < comp->getActions().size() ; i++)
         {
-            args.push_back(String(act->getActions()[i]));
+            args.push_back(String(comp->getActions()[i]));
         }
             send(encodeJarvisMsg(args));
       }
@@ -252,11 +203,14 @@ protected:
   {
       std::vector<String> args;
       args.push_back(C_SENSORS);
-      for(int i  = 0 ; i < m_sensors.size() ; i++ )
+      for(int i  = 0 ; i < m_components.size() ; i++ )
       {
-        sensor* sen = m_sensors[i];
-        args.push_back(sen->id());
-        args.push_back(String(sen->read()));
+        nodeComponent* comp = m_components[i];
+        if(comp->canRead())
+        {
+          args.push_back(comp->id());
+          args.push_back(String(comp->read()));  
+        }
       }
       send(encodeJarvisMsg(args));
   }
@@ -265,13 +219,13 @@ protected:
   {
       std::vector<String> args;
       args.push_back(C_SENSOR);
-      for(int i  = 0 ; i < m_sensors.size() ; i++ )
+      for(int i  = 0 ; i < m_components.size() ; i++ )
       {
-        sensor* sen = m_sensors[i];
-        if(sen->id() == id)
+        nodeComponent* comp = m_components[i];
+        if(comp->id() == id)
         {
-          args.push_back(sen->id());
-          args.push_back(String(sen->read()));
+          args.push_back(comp->id());
+          args.push_back(String(comp->read()));
         }
       }
       send(encodeJarvisMsg(args));
@@ -280,18 +234,16 @@ protected:
   virtual void doAction(std::vector<String> args)
   {
       if(args.size() < 2) return;
-      for(int i = 0 ; i < m_actuators.size() ; i++)
+      for(int i = 0 ; i < m_components.size() ; i++)
       {
-        actuators* act = m_actuators[i];
+        nodeComponent* comp = m_components[i];
         std::vector<String> arguments = args;
-        if(act->id() == arguments[0])
+        if(comp->id() == arguments[0])
         {
             arguments.erase(arguments.begin());
             jarvisActions action = jarvisActions(arguments[0].toInt());
-            Serial.print("Action:");
-            Serial.println(action);
             arguments.erase(arguments.begin());
-            act->doAction(action,arguments);
+            comp->doAction(action,arguments);
         }
       }
   }

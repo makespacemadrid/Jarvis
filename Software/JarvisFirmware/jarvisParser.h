@@ -29,7 +29,7 @@ static std::vector<String> splitStr(String str,String sep){
 class jarvisParser {
 
 public:
-  jarvisParser() {};
+  jarvisParser() {}
 
   static String encodeJarvisMsg(std::vector<String> args)
   {

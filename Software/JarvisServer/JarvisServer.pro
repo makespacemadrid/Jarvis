@@ -22,7 +22,9 @@ SOURCES += main.cpp\
     sjarvis.cpp \
     sjarvisnode.cpp \
     gwidgettxrx.cpp \
-    gwidgetnode.cpp
+    gwidgetnode.cpp \
+    gnodetestwidget.cpp \
+    stringCompatibility.cpp
 
 HEADERS  += gjarvisgui.h \
     ../JarvisFirmware/jarvisParser.h \
@@ -33,7 +35,10 @@ HEADERS  += gjarvisgui.h \
     sjarvis.h \
     sjarvisnode.h \
     gwidgettxrx.h \
-    gwidgetnode.h
+    gwidgetnode.h \
+    gnodetestwidget.h \
+    stringCompatibility.h
 
 FORMS    += gjarvisgui.ui \
-    gwidgetnode.ui
+    gwidgetnode.ui \
+    gnodetestwidget.ui

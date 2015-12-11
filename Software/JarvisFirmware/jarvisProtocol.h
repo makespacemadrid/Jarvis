@@ -1,8 +1,6 @@
 #ifndef JPROTOCOL
 #define JPROTOCOL
 
-#define EXTRA_CARRIAGE_RETURN
-
 //Separadores de paquete
 #define P_PACKETSTART       F("[")
 #define P_PACKETSEPARATOR   F("|")
@@ -45,7 +43,9 @@ enum jarvisEvents
     E_ENABLED,
     E_DISABLED,    
     E_ACTIVATED,
-    E_DEACTIVATED
+    E_DEACTIVATED,
+    E_GLOBAL_POWERON,
+    E_GLOBAL_SHUTDOWN
 };
 
 enum jarvisActions

@@ -1,15 +1,12 @@
 #ifndef COMM
 #define COMM
 
-//#define I2C_TRANSPORT
-
-#include <Wire.h>
-
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include "webconfigurator.h"
 #include <WiFiClient.h> 
 #endif
+
 #include "jarvisParser.h"
 #include "ws2812led.h"
 
@@ -21,6 +18,7 @@
 //WL_CONNECTION_LOST  5
 //WL_DISCONNECTED   6
 
+extern uint8_t updateInterval;
 
 
 class communicationModule : public jarvisParser
@@ -54,10 +52,12 @@ class communicationModule : public jarvisParser
     virtual void setBridge(bool enabled)
     {
       m_bridge = enabled;
+#ifdef DEBUG_STRINGS
       if(enabled)
         debugln(String(F("D:Bridge enabled")));
       else
         debugln(String(F("D:Bridge disabled")));
+#endif
     }
 
     virtual void setup()
@@ -70,26 +70,34 @@ class communicationModule : public jarvisParser
       int i = 0;
       while (connectionStatus() != 3)
       {
-        debugln(F("D:Waiting for connection..."));
-        if(i == 300)
+#ifdef VERBOSE_DEBUG
+        debug(F("."));
+#endif
+        if(i >= 15000/(updateInterval+1)) // Esperamos 15 segundos para que se establezca la conexion por defecto
           break;
-        update();//al hacer el update duerme 50ms;
+        update();;
         i++;
       }
       if(connectionStatus() != 3)
       {
         setAP(F("ConfigureMe"),F("configureme"));
+#ifdef VERBOSE_DEBUG
         debugln(String(F("I:ConfigurationAP:")));
+#endif
         m_statusLed.wifiAutoConfig();
       }
       else
       {
+#ifdef VERBOSE_DEBUG
         debugln(String(F("I:Wificlient:")));
+#endif
         m_statusLed.wifiClient();
       }
+#ifdef VERBOSE_DEBUG
       debug(localIP());
       debug(String(F("  p:")));
       debugln(m_localPort);
+#endif
     }
     
     virtual void update()
@@ -104,7 +112,7 @@ class communicationModule : public jarvisParser
 
     void softReset()
     {
-      debugln(String(F("I:RESET!")));
+      debugln(String(F("\nRESET\n")));
       delay(5);
       #ifdef ESP8266
       ESP.reset();

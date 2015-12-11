@@ -1,13 +1,14 @@
 // Arduino IDE WTF #1 hay que hacer el include de las librerias en el .ino! No vale si las haces en el .c
 #include <Adafruit_NeoPixel.h>
 #include <EEPROM.h>
-#include <Wire.h>
+//#include <Wire.h>
 #include <DHT.h>
 
 #ifdef ESP8266
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
 #endif
+
 
 //Arduino IDE WTF#2
 //Por aguna razon la siguiente libreria que es para poder usar la clase vector con el arduino hace crujir la compilacion en el ESP
@@ -20,11 +21,29 @@
   //#include <MemoryFree.h>         //Comentar para compilar en el ESP//Descomentar en arduino!!!!!!!!!!!!
 #endif
 
+//Magia negra con ifdefs
+//#define I2C_TRANSPORT (no implementado)
+//#define DEBUG_STRINGS
+//#define BIG_FLASH
+#define EXTRA_CARRIAGE_RETURN
+
+#ifdef ESP8266
+    #define DEBUG_STRINGS
+    #define VERBOSE_DEBUG
+    #define BIG_FLASH
+#endif
+
+uint8_t updateInterval = 10;
+
+#include "helpers.h"
 #include "jarvisModule.h"
+#include "simplePowerControl.h"
 #include "MakeSwitch.h"
 
 
+
 jarvisModule* jarvisNode;
+
 
 void setup() 
 {
@@ -32,11 +51,15 @@ void setup()
     if      (type == unknownModule)
     {
         jarvisNode = new jarvisModule();
-    }else if(type == espRepeaterModule)
+    }
+    #ifdef ESP8266
+    else if(type == espRepeaterModule)
     {
         jarvisNode = new jarvisModule(jarvisModule::espRepeater);
 
-    }else if(type == simpleSwitchModule)
+    }
+    #endif
+    else if(type == simpleSwitchModule)
     {
         jarvisNode = new simpleSwitch();
     }else if(type == makeSwitchModule)
@@ -47,7 +70,7 @@ void setup()
 
     }else if(type == simplePowerControlModule)
     {
-
+        jarvisNode = new simplePowerControl();
     }else if(type == advancedPowerControlModule)
     {
 
