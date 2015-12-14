@@ -9,19 +9,19 @@ sJarvisTcpClient::sJarvisTcpClient(QObject *parent) :
   connect(this,SIGNAL(readyRead()),
           this, SLOT(readSocket()));
 
-  connect(this,SIGNAL(disconnected()),
-          this,SLOT(deleteLater()));
+//  connect(this,SIGNAL(disconnected()),
+//          this,SLOT(deleteLater()));
 
-  m_keepAliveT = new QTimer();
-  connect(m_keepAliveT,SIGNAL(timeout()),this,SLOT(keep_alive()));
+  //m_keepAliveT = new QTimer();
+  //connect(m_keepAliveT,SIGNAL(timeout()),this,SLOT(keep_alive()));
   m_uptime = QDateTime::currentDateTime();
-  m_keepAliveT->start(m_keepAliveRate);
+  //m_keepAliveT->start(m_keepAliveRate);
 }
 
 sJarvisTcpClient::~sJarvisTcpClient()
 {
   close();
-  delete m_keepAliveT;
+  //delete m_keepAliveT;
 }
 
 QString sJarvisTcpClient::info()
@@ -56,11 +56,7 @@ void sJarvisTcpClient::closeSocket()
   this->close();
 }
 
-void sJarvisTcpClient::ping()
-{//Si recibimos un ping, contestamos con un pong
-
-}
-
+/*
 void sJarvisTcpClient::pong()
 {
     quint16 elapsed = m_pingMeter.elapsed();
@@ -72,3 +68,4 @@ void sJarvisTcpClient::keep_alive()
 {
     m_pingMeter.start();
 }
+*/

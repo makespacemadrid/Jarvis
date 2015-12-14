@@ -9,7 +9,7 @@
   #include <ESP8266WebServer.h>
 #endif
 
-
+#include <MemoryFree.h>
 //Arduino IDE WTF#2
 //Por aguna razon la siguiente libreria que es para poder usar la clase vector con el arduino hace crujir la compilacion en el ESP
 //Aunque la he probado a poner bajo un ifndef se sigue activando la libreria y fallando para el esp.
@@ -18,14 +18,17 @@
 //
 #ifndef ESP8266
   //#include <StandardCplusplus.h>  //Comentar para compilar en el ESP//Descomentar en arduino!!!!!!!!!!!!
-  //#include <MemoryFree.h>         //Comentar para compilar en el ESP//Descomentar en arduino!!!!!!!!!!!!
+#else
+extern "C" {
+#include "user_interface.h"
+}
 #endif
 
 //Magia negra con ifdefs
 //#define I2C_TRANSPORT (no implementado)
 //#define DEBUG_STRINGS
 //#define BIG_FLASH
-#define EXTRA_CARRIAGE_RETURN
+#define EXTRA_CARRIAGE_RETURN //añade un retorno de carro a los paquetes de protocolo para leerlos mejor
 
 #ifdef ESP8266
     #define DEBUG_STRINGS
@@ -70,7 +73,7 @@ void setup()
 
     }else if(type == simplePowerControlModule)
     {
-        jarvisNode = new simplePowerControl();
+        jarvisNode = new simplePowerControl(14);
     }else if(type == advancedPowerControlModule)
     {
 

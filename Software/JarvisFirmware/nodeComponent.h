@@ -8,7 +8,13 @@
 
 class nodeComponent{
 public:
-    nodeComponent(int pin = -1) : m_pin(pin) {;}
+    nodeComponent(int pin = -1) : m_pin(pin)
+    {
+        m_actions.push_back(A_ENABLE);
+        m_actions.push_back(A_DISABLE);
+        m_capableEvents.push_back(E_ENABLED);
+        m_capableEvents.push_back(E_DISABLED);
+    }
 
     String  id()                {return m_id;}
     void    setId(String nID)   {m_id = nID;}
@@ -30,8 +36,9 @@ public:
     }
     virtual void disable()
     {
-        m_enabled = false;
         deactivate();
+        m_enabled = false;
+        m_events.push_back(E_DISABLED);
     }
 
     virtual void activate()                               {;}

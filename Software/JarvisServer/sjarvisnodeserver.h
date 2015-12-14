@@ -11,10 +11,10 @@ public:
     explicit sJarvisNodeServer(QObject *parent = 0);
 
 protected:
-    QList<sJarvisNode*> m_clients;
+    QList<sJarvisNode*> m_nodes;
 
 signals:
-    void new_client(sJarvisTcpClient* n_client);
+    void new_node(sJarvisNode* nNode);
 public slots:
 
 };

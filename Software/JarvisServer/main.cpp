@@ -1,4 +1,4 @@
-#include "stringCompatibility.h"
+#include "arduinoCompat.h"
 
 #include "gjarvisgui.h"
 #include "gnodetestwidget.h"
@@ -6,7 +6,6 @@
 
 int main(int argc, char *argv[])
 {
-
     QApplication a(argc, argv);
     //gJarvisgui w;
     gNodeTestWidget w;

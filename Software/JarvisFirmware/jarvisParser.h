@@ -87,8 +87,8 @@ protected:
     //saneado del buffer
     if(s_index < 0)
     {// si no hay inicio de paquete lo que hay en el buffer tiene que ser basura.
-    buf = "";
-    return;
+        buf = "";
+        return;
     }
     //extraccion de comandos
     while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
@@ -104,8 +104,8 @@ protected:
 	void parsePacket(String& str)
 	{
 		std::vector<String> args;
-		args = splitStr(str, P_PACKETSEPARATOR);
-		if(args.size() < 2) return;
+        args = splitStr(str, P_PACKETSEPARATOR);
+        if(args.size() < 2) return;
 		String arg = args[0];
 		args.erase(args.begin());
 

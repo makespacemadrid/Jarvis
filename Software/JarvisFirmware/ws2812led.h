@@ -338,49 +338,84 @@ class ledStatusTrio : public ledBar
 
     void animate()
     {
+        ledGadget::animate();
 
+        if(m_statusDecay)
+        {
+            if(m_controllerLed->r > 0)
+              m_controllerLed->r--;
+            if(m_controllerLed->g > 0)
+              m_controllerLed->g--;
+            if(m_controllerLed->b > 0)
+              m_controllerLed->b--;
+        }
+        if(m_wifiStatusDecay)
+        {
+            if(m_wifiLed->r > 0)
+              m_wifiLed->r--;
+            if(m_wifiLed->g > 0)
+              m_wifiLed->g--;
+            if(m_wifiLed->b > 0)
+              m_wifiLed->b--;
+        }
+        if(m_extraLedDecay)
+        {
+            if(m_extraLed->r > 0)
+              m_extraLed->r--;
+            if(m_extraLed->g > 0)
+              m_extraLed->g--;
+            if(m_extraLed->b > 0)
+              m_extraLed->b--;
+        }
+        m_strip->update();
     }
 
     void controllerInit()
     {
-
+        m_statusDecay = false;
         m_controllerLed->setColor(0,10,10);
         m_strip->update();
     }
 
     void controllerOK()
     {
+        m_statusDecay = true;
         m_controllerLed->setColor(0,10,0);
         m_strip->update();
     }
 
     void controllerError()
     {
+        m_statusDecay = false;
         m_controllerLed->setColor(10,0,0);
         m_strip->update();
     }
 
     void wifiTX()
     {
+        m_wifiStatusDecay = true;
         m_wifiLed->setColor(0,10,0);
         m_strip->update();
     }
 
     void wifiRX()
     {
+        m_wifiStatusDecay = true;
         m_wifiLed->setColor(10,0,0);
         m_strip->update();
     }
 
     void wifiInit()
     {
+        m_wifiStatusDecay = false;
         m_wifiLed->setColor(10,10,0);
         m_strip->update();
     }
 
     void wifiClient()
     {
-        m_wifiLed->setColor(0,0,0);
+        m_wifiStatusDecay = false;
+        m_wifiLed->setColor(0,10,10);
         m_wifiStatusColor = *m_wifiLed;
         m_strip->update();
     }
@@ -388,6 +423,7 @@ class ledStatusTrio : public ledBar
     void wifiAutoConfig()
 
     {
+        m_wifiStatusDecay = false;
         m_wifiLed->setColor(10,0,10);
         m_wifiStatusColor = *m_wifiLed;
         m_strip->update();
@@ -395,14 +431,38 @@ class ledStatusTrio : public ledBar
 
     void wifiOK()
     {
-        *m_wifiLed = m_wifiStatusColor;
-        m_strip->update();
+//        *m_wifiLed = m_wifiStatusColor;
+//        m_strip->update();
     }
 
     void wifiError()
     {
+        m_wifiStatusDecay = false;
         m_wifiLed->setColor(10,0,0);
         m_strip->update();
+    }
+
+    void extraLedOK()
+    {
+        m_extraLed->setColor(0,20,0);
+        m_strip->update();
+    }
+
+    void extraLedIdle()
+    {
+        m_extraLed->setColor(0,0,20);
+        m_strip->update();
+    }
+
+    void extraLedError()
+    {
+        m_extraLed->setColor(20,0,0);
+        m_strip->update();
+    }
+
+    void extraLedSetDecay(bool decay)
+    {
+      m_extraLedDecay = decay;
     }
 
   private:
@@ -410,6 +470,10 @@ class ledStatusTrio : public ledBar
     ws2812Strip::led*   m_wifiLed;
     ws2812Strip::led*   m_extraLed;
     ws2812Strip::led    m_wifiStatusColor;
+
+    bool                m_statusDecay     = false;
+    bool                m_wifiStatusDecay = false;
+    bool                m_extraLedDecay   = false;
 };
 
 #endif

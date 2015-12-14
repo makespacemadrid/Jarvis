@@ -45,8 +45,8 @@ public:
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
 
-        m_switch.addEvent(E_GLOBAL_POWERON);
-        m_switch.addEvent(E_GLOBAL_SHUTDOWN);
+        m_switch.addCapableEvent(E_GLOBAL_POWERON);
+        m_switch.addCapableEvent(E_GLOBAL_SHUTDOWN);
         m_switch.setId("GlobalSwitch");
     }
 

@@ -124,6 +124,15 @@ class communicationModule : public jarvisParser
       #endif
     }
 
+    uint16_t getFreeMem()
+    {
+      #ifdef ESP8266
+      return system_get_free_heap_size();
+      #else
+      return freeMemory();
+      #endif    
+    }
+
     virtual String localIP()        = 0;
     virtual bool isConnected()      = 0;
     virtual int  connectionStatus() = 0;
@@ -245,6 +254,10 @@ class communicationModule : public jarvisParser
           args.push_back(C_PONG);
           send(encodeNodeMsg(args));
         }
+        else if(args[0] == C_GETID)
+        {
+            sendId();
+        }
         else if(args[0] == C_GETCOMPONENTS)
         {
             sendComponents();
@@ -262,6 +275,9 @@ class communicationModule : public jarvisParser
         {
             args.erase(args.begin());
             doAction(args);
+        }else if(args[0] == C_GET_FREEM)
+        {
+           sendFreeMem();
         }
     }
 //Funciones para facilitar las repuestas:
@@ -277,6 +293,22 @@ class communicationModule : public jarvisParser
       args.push_back(source);
       args.push_back(String(event));
       send(encodeJarvisMsg(args));
+    }
+
+    void sendId()
+    {
+        std::vector<String> args;
+        args.push_back(C_ID);
+        args.push_back(m_id);
+        send(encodeJarvisMsg(args));
+    }
+
+    void sendFreeMem()
+    {
+        std::vector<String> args;
+        args.push_back(C_FREEMEM);
+        args.push_back(String(getFreeMem()));
+        send(encodeJarvisMsg(args));      
     }
 
 //funciones para redireccionar el debug

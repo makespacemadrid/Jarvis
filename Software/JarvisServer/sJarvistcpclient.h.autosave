@@ -26,17 +26,17 @@ protected:
     quint64               m_tx_count;
     quint64               m_rx_count;
     static const quint16  m_keepAliveRate = KEEP_ALIVE_RATE;
-    //void ping();
-    //void pong();
+    vitual void void ping();
+    void pong();
 signals:
     void tx();
     void rx();
-    //void ping_time(quint16);
+    void ping_time(quint16);
     void socket_rx(const QByteArray& data);
 private slots:
     void readSocket();
     void socket_tx(const QByteArray& data);
-    //void keep_alive();
+    void keep_alive();
 
   public slots:
     void closeSocket();

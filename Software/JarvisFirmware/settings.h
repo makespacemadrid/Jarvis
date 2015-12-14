@@ -26,7 +26,8 @@ struct settingList
   char          remoteHost[17]  = "10.0.100.1";
   int           remotePort      = 31416;
   int           localPort       = 31416;
-  jarvisModules moduleType      = simplePowerControlModule;
+  //jarvisModules moduleType      = simplePowerControlModule;
+  jarvisModules moduleType      = makeSwitchModule;
 /**
 Tabla de correspondencia de pines nodemcu arduino
 0 [*]  GPIO16  

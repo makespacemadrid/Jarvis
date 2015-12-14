@@ -8,7 +8,7 @@
 #include "communication.h"
 #include "settings.h"
 #include "nodeComponent.h"
-
+#include "dataLogger.h"
 
 
 #ifdef ESP8266
@@ -22,7 +22,8 @@ class jarvisModule : public espProxy
 public:
   jarvisModule() : espProxy(EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin) ,
 #endif
-    m_speaker(m_EEPROM.settings().piezoPin)
+    m_speaker(m_EEPROM.settings().piezoPin),
+    m_dataLogger(&m_components)
   {
     if(m_ledStrip.isValid())
         m_components.push_back(&m_statusLed);
@@ -75,13 +76,14 @@ public:
       debugln(String(F("I:-Alive led")));
     }
 
+  m_dataLogger.setup();
   debugln(String(F("I:INIT OK")));
   m_statusLed.controllerOK();  
   }
 
   void update()
   {
-    checkFreeMem();
+//    checkFreeMem();
     imAlive();
   #ifdef ESP8266
     espNative::update();
@@ -99,6 +101,7 @@ public:
               sendEvent(comp->id(),events[e]);
         }
     }
+    m_dataLogger.update();
     delay(updateInterval);
   }
 
@@ -108,10 +111,10 @@ protected:
   EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
   uint8_t m_loopCount = 0;
 
-  std::vector<nodeComponent*>    m_components;
+  std::vector<nodeComponent*>   m_components;
+  piezoSpeaker                  m_speaker;   //(m_EEPROM.settings().piezoPin);
+  dataLogger                    m_dataLogger;
 
-  //SSR                   m_switch;//(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin);
-  piezoSpeaker          m_speaker;   //(m_EEPROM.settings().piezoPin);
   void checkFactoryReset()
   {
     if(m_EEPROM.settings().factoryResetPin != -1)
@@ -145,29 +148,18 @@ protected:
 
   void imAlive()
   {
-    if(m_loopCount == 150)
+    if(m_loopCount >= (1000/updateInterval))
     {
       digitalWrite(m_EEPROM.settings().alivePin, !digitalRead(m_EEPROM.settings().alivePin));
       m_loopCount = 0;
+      m_statusLed.controllerOK();
       debugln(String(F("D:ImAlive!")));
     }
     else
       m_loopCount++;
   }
+  
 
-
-  void checkFreeMem()
-  {
-    #ifndef ESP8266
-    int freem = freeMemory();
-    if(freem < 400)
-    {
-      debug(F("D:LOW RAM :"));
-      debug(freem);
-      debugln(F("bytes. Shit can happen anytime!"));
-    }
-    #endif
-  }
 
 
   virtual void sendEvent(String source,jarvisEvents event)
@@ -212,6 +204,8 @@ protected:
           args.push_back(String(comp->read()));  
         }
       }
+      args.push_back(F("FreeMem"));
+      args.push_back(String(getFreeMem()));
       send(encodeJarvisMsg(args));
   }
 
