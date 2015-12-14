@@ -1,15 +1,12 @@
 #ifndef COMM
 #define COMM
 
-#define I2C_TRANSPORT
-
-#include <Wire.h>
-
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include "webconfigurator.h"
 #include <WiFiClient.h> 
 #endif
+
 #include "jarvisParser.h"
 #include "ws2812led.h"
 
@@ -21,17 +18,25 @@
 //WL_CONNECTION_LOST  5
 //WL_DISCONNECTED   6
 
+extern uint8_t updateInterval;
 
 
 class communicationModule : public jarvisParser
 {
   public:
-    communicationModule(int localPort, bool bridgeMode =false) : jarvisParser(),  m_bridge(bridgeMode) , m_localPort(localPort) {};
+
+  enum commModes
+  {
+      nativeNode,
+      espRepeater,
+      arduinoThoughProxy
+  };
+    
+    communicationModule(commModes cmode, int localPort, int ledStripPin) : jarvisParser() , m_localPort(localPort),
+    m_commMode(cmode), m_ledStrip(ledStripPin), m_statusLed(&m_ledStrip,0,1,2) {} ;
 
     void setAP(String essid,String pass, uint8_t channel = 6)
     {
-     if(m_status_led) 
-        m_status_led->setColor(10,10,0);
 
       m_essid = essid, m_pass = pass, m_channel = channel;
       connectAP();
@@ -39,8 +44,6 @@ class communicationModule : public jarvisParser
 
     void setStation(String essid,String pass)
     {
-      if(m_status_led) 
-        m_status_led->setColor(10,10,0);
 
       m_essid = essid, m_pass = pass;
       connectStation();
@@ -49,56 +52,67 @@ class communicationModule : public jarvisParser
     virtual void setBridge(bool enabled)
     {
       m_bridge = enabled;
+#ifdef DEBUG_STRINGS
       if(enabled)
         debugln(String(F("D:Bridge enabled")));
       else
         debugln(String(F("D:Bridge disabled")));
+#endif
     }
 
     virtual void setup()
     {
-      if(m_bridge)
+      if(m_commMode == espRepeater)
       {// Si estamos en modo puente dejamos que sea el arduino el que haga el bucle de conexion.
         return;
       }
+      m_statusLed.wifiInit();
       int i = 0;
       while (connectionStatus() != 3)
       {
-        debugln(F("D:Waiting for connection..."));
-        if(i == 300)
+#ifdef VERBOSE_DEBUG
+        debug(F("."));
+#endif
+        if(i >= 15000/(updateInterval+1)) // Esperamos 15 segundos para que se establezca la conexion por defecto
           break;
-        update();//al hacer el update duerme 50ms;
+        update();;
         i++;
       }
       if(connectionStatus() != 3)
       {
         setAP(F("ConfigureMe"),F("configureme"));
+#ifdef VERBOSE_DEBUG
         debugln(String(F("I:ConfigurationAP:")));
+#endif
+        m_statusLed.wifiAutoConfig();
       }
       else
       {
+#ifdef VERBOSE_DEBUG
         debugln(String(F("I:Wificlient:")));
+#endif
+        m_statusLed.wifiClient();
       }
+#ifdef VERBOSE_DEBUG
       debug(localIP());
       debug(String(F("  p:")));
       debugln(m_localPort);
+#endif
     }
     
     virtual void update()
     {
       read();
       parseBuffer(m_rxBuffer);
-    }
-
-    void setStatusLed(ws2812Strip::led* statusLed) 
-    {
-      m_status_led= statusLed;
-      m_status_led->setColor(0,0,10); 
+      if(connectionStatus() == 3)
+          m_statusLed.wifiOK();
+      else
+          m_statusLed.wifiError();
     }
 
     void softReset()
     {
-      debugln(String(F("I:RESET!")));
+      debugln(String(F("\nRESET\n")));
       delay(5);
       #ifdef ESP8266
       ESP.reset();
@@ -115,7 +129,10 @@ class communicationModule : public jarvisParser
     virtual int  connectionStatus() = 0;
     virtual void send(String str)   = 0;
     virtual void read()             = 0;
+
   protected:
+    commModes m_commMode;
+
     bool     m_bridge;
     
     String   m_rxBuffer;
@@ -131,11 +148,138 @@ class communicationModule : public jarvisParser
     String   m_remotehost;
     int      m_remotePort;
 
-    ws2812Strip::led*  m_status_led = 0;
+    ws2812Strip           m_ledStrip;//(m_EEPROM.settings().ledStripPin);
+    ledStatusTrio         m_statusLed;
     
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;
 
+
+//parseado del protocolo
+
+//protocolo ESP
+    virtual void processEspMsg(std::vector<String>& args)
+    {
+      if(args.size()<=0) return; // si no hay nada que procesar no hacemos nada
+
+      if     (args[0] == C_SETAP)
+      {
+        if(args.size() != 3) return;
+        setAP(args[1],args[2]);
+      }
+      else if(args[0] == C_SETCLIENT)
+      {
+        if(args.size() != 3) return;
+        setStation(args[1],args[2]);
+      }
+      else if(args[0] == C_WSTATUS)
+      {
+        std::vector<String> args;
+        args.push_back(C_WSTATUS);
+        args.push_back(String(connectionStatus()));
+        send(encodeEspMsg(args));
+      }
+      else if(args[0] == C_LOCALIP)
+      {
+        std::vector<String> args;
+        args.push_back(C_LOCALIP);
+        args.push_back(localIP());
+        send(encodeEspMsg(args));
+      }
+      else if(args[0] == C_RESET)
+      {
+        softReset();
+      }
+      else if(args[0] == C_BRIDGEMODE)
+      {
+        if(args.size() != 2) return;
+        if(args[1] == C_ENABLE)
+          setBridge(true);
+        else if(args[1] == C_DISABLE)
+          setBridge(false);
+      }
+      else if(args[0] == C_PING)
+      {
+        std::vector<String> args;
+        args.push_back(C_PONG);
+        send(encodeEspMsg(args));
+      }
+    }
+//Protocolo de nodo
+    virtual void processNodeMsg(std::vector<String>& args)
+    {
+        if(args.size()<=0) return; // si no hay nada que procesar no hacemos nada
+        if(m_commMode == espRepeater) return; //En modo repetidor no escuchamos este protocolo
+
+        if     (args[0] == C_SETAP)
+        {
+          if(args.size() != 3) return;
+          setAP(args[1],args[2]);
+        }
+        else if(args[0] == C_SETCLIENT)
+        {
+          if(args.size() != 3) return;
+          setStation(args[1],args[2]);
+        }
+        else if(args[0] == C_WSTATUS)
+        {
+          std::vector<String> args;
+          args.push_back(C_WSTATUS);
+          args.push_back(String(connectionStatus()));
+          send(encodeNodeMsg(args));
+        }
+        else if(args[0] == C_LOCALIP)
+        {
+          std::vector<String> args;
+          args.push_back(C_LOCALIP);
+          args.push_back(localIP());
+          send(encodeNodeMsg(args));
+        }
+        else if(args[0] == C_RESET)
+        {
+          softReset();
+        }
+        else if(args[0] == C_PING)
+        {
+          std::vector<String> args;
+          args.push_back(C_PONG);
+          send(encodeNodeMsg(args));
+        }
+        else if(args[0] == C_GETCOMPONENTS)
+        {
+            sendComponents();
+        }
+        else if(args[0] == C_READSENSOR)
+        {
+            if(args.size() != 2 ) return;
+            sendSensor(args[1]);
+        }
+        else if(args[0] == C_READSENSORS)
+        {
+            sendSensors();
+        }
+        else if(args[0] == C_DOACTION)
+        {
+            args.erase(args.begin());
+            doAction(args);
+        }
+    }
+//Funciones para facilitar las repuestas:
+    virtual void sendComponents()                   = 0;
+    virtual void sendSensors()                      = 0;
+    virtual void sendSensor(String id)              = 0;
+    virtual void doAction(std::vector<String> args) = 0;
+
+    void sendEvent(String source,jarvisEvents event)
+    {
+      std::vector<String> args;
+      args.push_back(E_EVENT);
+      args.push_back(source);
+      args.push_back(String(event));
+      send(encodeJarvisMsg(args));
+    }
+
+//funciones para redireccionar el debug
     void debug(String str)
     {
       Serial.print(str);
@@ -153,14 +297,27 @@ class communicationModule : public jarvisParser
     {
       Serial.println(number);
     }
-
+    void debug(float number)
+    {
+      Serial.print(number);      
+    }
+    void debugln(float number)
+    {
+      Serial.println(number);
+    }
 };
 
 #ifdef ESP8266
 class espNative : public communicationModule
 {
   public:
-    espNative(int localPort, bool bridge = false) :communicationModule(localPort,bridge), m_server(localPort), m_webServer(80) {;}
+    espNative(commModes mode, int localPort, int ledStripPin) :communicationModule(mode,localPort,ledStripPin), m_server(localPort), m_webServer(80)
+    {
+        if(mode == nativeNode)
+            m_bridge = false;
+        else
+            m_bridge = true;
+    }
 
     bool isConnected()      {return WiFi.status() != WL_CONNECTED;}
 
@@ -207,16 +364,18 @@ class espNative : public communicationModule
 
     void send(String str)//envia por wifi
     {
+      m_statusLed.wifiTX();
       int len = str.length();
       char sbuf[len+1];
       str.toCharArray(sbuf,len+1);
       for(uint8_t i = 0; i < m_max_clients; i++){
         if (m_server_clients[i] && m_server_clients[i].connected()){
-          m_server_clients[i].write(sbuf, len);
-          if(m_status_led) 
-            m_status_led->setColor(20,0,0);    
+          m_server_clients[i].write(sbuf, len);   
           delay(1);
         }
+      #ifdef EXTRA_CARRIAGE_RETURN
+      m_server_clients[i].write("\n", 1);   
+      #endif
       }
     }
 
@@ -227,8 +386,8 @@ class espNative : public communicationModule
         if (m_server_clients[i] && m_server_clients[i].connected()){
           if(m_server_clients[i].available()){
             //get data from the telnet client and push it to the UART
-            if(m_status_led && m_server_clients[i].available())
-              m_status_led->setColor(0,20,0);
+            if(m_server_clients[i].available())
+              m_statusLed.wifiRX();
             String buff;
             while(m_server_clients[i].available())
             {
@@ -261,8 +420,6 @@ class espNative : public communicationModule
 
     void readSerial()
     {
-      if(m_status_led && Serial.available())
-          m_status_led->setColor(0,20,0);
       while(Serial.available())
       {
         size_t len = Serial.available();
@@ -306,47 +463,7 @@ class espNative : public communicationModule
     WiFiClient       m_server_clients[2];
     webConfigurator  m_webServer;
 
-    void processEspMsg(std::vector<String>& args)
-    {
-      if(args.size()<=0) return;
-      
-      if     (args[0] == C_SETAP)
-      {
-        if(args.size() != 3) return;
-        setAP(args[1],args[2]);
-      } 
-      else if(args[0] == C_SETCLIENT)
-      {
-        if(args.size() != 3) return;
-        setStation(args[1],args[2]);
-      } 
-      else if(args[0] == C_WSTATUS)
-      {
-        std::vector<String> args;
-        args.push_back(C_WSTATUS);
-        args.push_back(String(connectionStatus()));
-        sendSerial(encodeEspMsg(args));
-      }
-      else if(args[0] == C_LOCALIP)
-      {
-        std::vector<String> args;
-        args.push_back(C_LOCALIP);
-        args.push_back(localIP());
-        sendSerial(encodeEspMsg(args));
-      }
-      else if(args[0] == C_RESET)
-      {
-        softReset();
-      }
-      else if(args[0] == C_BRIDGEMODE)
-      {
-        if(args.size() != 2) return;
-        if(args[1] == C_ENABLE)
-          setBridge(true);
-        else
-          setBridge(false);
-      }
-    }
+
     
     void connectAP()
     {
@@ -392,10 +509,10 @@ class espNative : public communicationModule
 class espProxy : public communicationModule
 {
   public:
-    espProxy(int localPort,bool bridge=false) : communicationModule(localPort,bridge) {;}
+    espProxy(int localPort, int ledStripPin, commModes mode = arduinoThoughProxy ) : communicationModule(mode, localPort,ledStripPin) {;}
     bool isConnected()      {return m_lastStatus == 3;}
 
-    int  connectionStatus() 
+    int  connectionStatus()
     {
       updateConnectionStatus();
       return m_lastStatus;
@@ -435,13 +552,14 @@ class espProxy : public communicationModule
 #else
     void send(String str)
     {
-      Serial.print(str);
+        m_statusLed.wifiTX();
+        Serial.print(str);
     }
 
     void read()
     {
-      if(m_status_led && Serial.available())
-          m_status_led->setColor(0,20,0);
+      if(Serial.available())
+          m_statusLed.wifiRX();
       while(Serial.available())
       {
         size_t len = Serial.available();

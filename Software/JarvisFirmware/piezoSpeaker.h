@@ -2,20 +2,34 @@
 //https://arduino-tone.googlecode.com/svn/trunk/examples/RTTTL/RTTTL.pde
 
 #include "notes.h"
+#include "nodeComponent.h"
 
 #define isdigit(n) (n >= '0' && n <= '9')
 
-class piezoSpeaker
+class piezoSpeaker : public nodeComponent
 {
   public:
-    piezoSpeaker(int pinNr = -1):m_pin(pinNr){};
+    piezoSpeaker(int pinNr = -1): nodeComponent(pinNr)
+    {
+      if(isValid())
+      {
+        //pinMode(m_pin,INPUT);
+      }
+      m_id = "Piezo";
+      m_actions.push_back(A_BEEP);
+    };
 
     bool isValid() {return m_pin != -1;}
 
     void setup()
     {
-      if(isValid()) beep();
+      if(isValid())
+      {
+        beep();
+      }
     }
+
+    void update() {;}
 
     void playTone(int note, int duration)
     {

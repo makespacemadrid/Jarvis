@@ -3,20 +3,46 @@
 
 #include <EEPROM.h> //WTF hay que hacer el include en el main!
 
+
+
 #ifndef ESP8266
 #include <avr/wdt.h>
 #endif
+enum jarvisModules
+{
+    unknownModule,
+    espRepeaterModule,
+    simpleSwitchModule,
+    makeSwitchModule,
+    airQualityModule,
+    simplePowerControlModule,
+    advancedPowerControlModule
+};
 
 struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
-  char    id[15]          = "Configureme";
-  char    remoteHost[17]  = "10.0.100.1";
-  int     remotePort      = 31416;
-  int     localPort       = 31416;
-
-
-  
+  char          id[15]          = "Configureme";
+  char          remoteHost[17]  = "10.0.100.1";
+  int           remotePort      = 31416;
+  int           localPort       = 31416;
+  jarvisModules moduleType      = simplePowerControlModule;
+/**
+Tabla de correspondencia de pines nodemcu arduino
+0 [*]  GPIO16  
+1  GPIO5 
+2  GPIO4
+3  GPIO0
+4  GPIO2
+5  GPIO14 (SPI CLK)    
+6  GPIO12 (SPI MISO)   
+7  GPIO13 (SPI MOSI)   
+8  GPIO15 (SPI CS)
+9  GPIO3 (UART RX)
+10 GPIO1 (UART TX)
+11 GPIO9
+12  GPIO10
+**/  
   #ifdef ESP8266
   //Pineado por defecto del ESP8266
   int   alivePin               =  2;
@@ -24,9 +50,9 @@ struct settingList
   int   currentMeterPin        = -1;
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
-  int   piezoPin               = -1;
-  int   ledStripPin            = -1;
-  int   factoryResetPin        = -1;
+  int   piezoPin               =  0;
+  int   ledStripPin            =  4;
+  int   factoryResetPin        =  2;
   #else
   //Pineado por defecto del arduino
   int   alivePin               = 13;

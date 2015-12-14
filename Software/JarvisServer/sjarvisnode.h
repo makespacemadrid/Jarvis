@@ -2,9 +2,11 @@
 #define SJARVISNODE_H
 
 #include "sjarvistcpclient.h"
+#include "jarvisParser.h"
 
-class sJarvisNode : public sJarvisTcpClient
+class sJarvisNode : public QObject, jarvisParser
 {
+    Q_OBJECT
 public:
     sJarvisNode();
 };
