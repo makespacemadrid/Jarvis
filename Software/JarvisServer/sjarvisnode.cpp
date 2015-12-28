@@ -7,15 +7,29 @@ sJarvisNode::sJarvisNode(QObject* parent) : QObject(parent)
 {
     connect(&m_tcpClient,SIGNAL(tx()),this,SIGNAL(tx()));
     connect(&m_tcpClient,SIGNAL(rx()),this,SIGNAL(rx()));
+    connect(&m_pingTimer,SIGNAL(timeout()),this,SLOT(ping()));
+    connect(&m_initTimer,SIGNAL(timeout()),this,SLOT(initDone()));
+//Slots del nodo tcp
+    connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
+    connect(this,SIGNAL(writeData(QByteArray)),&m_tcpClient,SLOT(socket_tx(QByteArray)));
+    connect(&m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
+    connect(&m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
+
+    m_pingTimer.setInterval(10000);
 }
 
 
 void sJarvisNode::connectTCP(QString host, quint16 port)
 {
-    connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
-    connect(this,SIGNAL(writeData(QByteArray)),&m_tcpClient,SLOT(socket_tx(QByteArray)));
-    connect(&m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
+
     m_tcpClient.connectToHost(host,port);
+}
+
+void sJarvisNode::closeTCP()
+{
+    m_tcpClient.close();
+    m_pingTimer.stop();
+    deleteComponents();
 }
 
 //protected:
@@ -50,11 +64,11 @@ void sJarvisNode::parseBuffer(QString& buf)
 
 void sJarvisNode::parsePacket(QString& packet)
 {
-    //qDebug() << "Packet:" << packet;
+//    qDebug() << "Packet:" << packet;
     QStringList args;
     args = packet.split(P_PACKETSEPARATOR);
     if(args.count() < 2) return;
-
+//    qDebug() << "Packet:" << args;
     if (args[0] != M_JARVISMSG) return;
     args.removeFirst();
     QString arg = args[0];
@@ -66,13 +80,13 @@ void sJarvisNode::parsePacket(QString& packet)
 
     }else if(arg == C_PONG)
     {
-
+        pong();
     }else if(arg == C_COMPONENT)
     {
         parseComponent(args);
-    }else if(arg == C_SENSOR)
-    {
-        parseSensor(args);
+//    }else if(arg == C_SENSOR)
+//    {
+//        parseSensor(args);
 
     }else if(arg == C_SENSORS)
     {
@@ -81,6 +95,9 @@ void sJarvisNode::parsePacket(QString& packet)
     }else if(arg == E_EVENT)
     {
         parseEvent(args);
+    }else
+    {
+        qDebug() << "[sJarvisNode::parsePacket]daFuckIsThis:"<< args;
     }
 }
 
@@ -91,10 +108,10 @@ void sJarvisNode::parseComponent(QStringList args)
     emit newComponent(m_components.last());
 }
 
-void sJarvisNode::parseSensor(QStringList args)
-{
-
-}
+//void sJarvisNode::parseSensor(QStringList args)
+//{
+//
+//}
 
 void sJarvisNode::parseSensors(QStringList args)
 {
@@ -172,17 +189,28 @@ void sJarvisNode::sendGetComponents()
     send(encodeNodeMsg(QStringList(QString(C_GETCOMPONENTS))));
 }
 
-void sJarvisNode::sendReadSensor(QString sen)
+void sJarvisNode::sendPollSensor(QString sen, int interval)
 {
     QStringList args;
-    args.append(C_READSENSOR);
+    args.append(C_POLLSENSOR);
     args.append(sen);
+    if(interval)
+        args.append(QString(interval));
     send(encodeNodeMsg(args));
 }
 
-void sJarvisNode::sendReadSensors()
+void sJarvisNode::sendPollSensors(int interval)
 {
-    send(encodeNodeMsg(QStringList(QString(C_READSENSORS))));
+    QStringList args;
+    args.append(C_POLLSENSORS);
+    if(interval >= 0)
+        args.append(QString::number(interval,'f',0));
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::sendStopPolling()
+{
+    send(encodeNodeMsg(QStringList(QString(C_STOP_POLLING))));
 }
 
 void sJarvisNode::sendDoAction(QString componentId,jarvisActions action, QStringList arguments)
@@ -209,6 +237,53 @@ void sJarvisNode::initNode()
 {
     sendGetID();
     sendGetComponents();
+    // le damos un segundo para que reciba de vuelta la informacion, al cumplir el segundo se llama a la funcion initDone()
+    m_initTimer.start(1000);
+}
+
+void sJarvisNode::ping()
+{
+    sendPing();
+    qDebug() << "KeepATimer:" <<m_keepAliveTimer.elapsed();
+    if(m_keepAliveTimer.elapsed() > 25000)
+    {
+        emit rawInput("Timeout, Disconnected!");
+        this->closeTCP();
+    }
+}
+
+void sJarvisNode::pong()
+{
+    m_keepAliveTimer.restart();
+    qDebug() << ":" <<m_keepAliveTimer.elapsed();
+
+}
+
+void sJarvisNode::initDone()
+{
+    m_initTimer.stop();
+    m_keepAliveTimer.start();
+    ping();
+    m_pingTimer.start();
+    emit ready();
+}
+
+void sJarvisNode::socketDisconected()
+{
+    m_pingTimer.stop();
+    m_initTimer.stop();
+
+    emit disconnected();
+}
+
+
+void sJarvisNode::deleteComponents()
+{
+    for(int i = 0 ; i < m_components.count() ; i++)
+    {
+        m_components[i]->deleteLater();
+    }
+    m_components.clear();
 }
 
 //public Slots
@@ -218,7 +293,10 @@ void sJarvisNode::doAction(QString Component, jarvisActions action, QStringList 
     sendDoAction(Component,action,args);
 }
 
-void sJarvisNode::readSensors()
+void sJarvisNode::pollSensor(QString sen, int interval)
 {
-    sendReadSensors();
+    if(sen == "ALL")
+        sendPollSensors(interval);
+    else
+        sendPollSensor(sen,interval);
 }

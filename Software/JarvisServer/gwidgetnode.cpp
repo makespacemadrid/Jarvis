@@ -15,6 +15,8 @@ gWidgetNode::gWidgetNode(sJarvisNode* node,QWidget* parent) :
         m_sharedNode = false;
     }
     connectNodeSignals(m_node);
+    this->setStyleSheet("QGroupBox { border: 1px solid gray; border-radius: 9px; margin-top: 0.5em; }");
+    this->setStyleSheet("QGroupBox::title {subcontrol-origin: margin;left: 10px;padding: 0 3px 0 3px;}");
 }
 
 gWidgetNode::~gWidgetNode()

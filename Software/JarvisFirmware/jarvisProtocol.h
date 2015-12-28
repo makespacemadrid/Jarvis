@@ -1,54 +1,70 @@
 #ifndef JPROTOCOL
 #define JPROTOCOL
 
+#define PROTOCOL_VERSION 02
+
 //Separadores de paquete
 #define P_PACKETSTART       "["
 #define P_PACKETSEPARATOR   "|"
 #define P_PACKETTERMINATOR  "]"
 
 //Etiquetas de protocolo
-#define M_NODEMSG         F("NODE")
-#define M_JARVISMSG       F("JARVIS")
-#define M_ESPMSG          F("ESP")
+#define M_NODEMSG         F("N")
+#define M_JARVISMSG       F("J")
+#define M_ESPMSG          F("E")
 
-#define C_GET_FREEM     F("getfreemem")
-#define C_FREEMEM       F("freemem")
+#define M_NODE_GREETING     F("your wish is my command")
+#define M_JARVIS_GREETING   F("obey the overmind")
 
-#define C_SETAP         F("setap")
-#define C_SETCLIENT     F("setclient")
-#define C_WSTATUS       F("wifistatus")
-#define C_LOCALIP       F("localip")
-#define C_BRIDGEMODE    F("bridgemode")
-#define C_RESET         F("reset")
-#define C_ENABLE        F("enable")
-#define C_DISABLE       F("disable")
+#define C_GET_PROTOCOL_VERSION  F("gpv")
+#define C_PROTOCOL_VERSION      F("pv")
+
+#define M_ESPMSG          F("E")
+
+#define C_GET_FREEM     F("gfm")
+#define C_FREEMEM       F("fm")
+
+#define C_SETAP         F("sap")
+#define C_SETCLIENT     F("scl")
+#define C_WSTATUS       F("ws")
+#define C_LOCALIP       F("lip")
+#define C_BRIDGEMODE    F("bm")
+#define C_RESET         F("rst")
+#define C_ENABLE        F("en")
+#define C_DISABLE       F("dis")
 #define C_PING          F("ping")
 #define C_PONG          F("pong")
 
-#define C_GETID         F("getid")
+#define C_GETID         F("gid")
 #define C_ID            F("id")
 
-#define C_GETCOMPONENTS F("getcomponents")
-#define C_COMPONENT     F("component")
+#define C_GETCOMPONENTS F("gcomps")
+#define C_COMPONENT     F("comps")
 
-#define C_READSENSOR    F("readsensor")//pregunta
-#define C_SENSOR        F("sensor")//respuesta
+#define C_POLLSENSOR    F("psen")//pregunta
+#define C_SENSOR        F("sen")//respuesta
 
-#define C_READSENSORS   F("readsensors")//pregunta
-#define C_SENSORS       F("sensors")//respuesta
+#define C_POLLSENSORS   F("psens")//pregunta
+#define C_SENSORS       F("sens")//respuesta
 
-#define C_DOACTION      F("doaction")
+#define C_STOP_POLLING  F("spsens")
 
-#define E_EVENT       F("event")
-#define E_ACTION      F("action")
+#define C_DOACTION      F("da")
+
+#define C_SET_UPDATE_INTERVAL F("sui")
+
+#define E_EVENT       F("ev")
+#define E_ACTION      F("act")
 
 //Acciones y eventos
 enum jarvisEvents
 {
     E_ENABLED,
-    E_DISABLED,    
+    E_DISABLED,
     E_ACTIVATED,
     E_DEACTIVATED,
+    E_RAW_READ,
+    E_DATA_READ,
     E_GLOBAL_POWERON,
     E_GLOBAL_SHUTDOWN,
     E_COFFEE_MAKING,
@@ -61,10 +77,16 @@ enum jarvisActions
     A_DISABLE,
     A_ACTIVATE,
     A_DEACTIVATE,
+    A_TOGGLE,
+    A_READ_RAW,
+    A_READ_DATA,
     A_DIMM,
     A_BLINK,
+    A_GLOW,
     A_SET_COLOR,
     A_CYLON,
+    A_SET_LEDS,
+    A_SET_LED,
     A_BEEP,
     A_MAKE_COFFEE
 };

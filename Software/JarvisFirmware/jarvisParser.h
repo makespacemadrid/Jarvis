@@ -6,7 +6,7 @@
 
 #include <vector>
 
-static std::vector<String> splitStr(String str,String sep){
+static std::vector<String> splitStr(String& str,String sep){
 	std::vector<String> result;
   if(str.length() < 1) return result;
   int sep_index = str.indexOf(sep);
@@ -31,7 +31,7 @@ class jarvisParser {
 public:
   jarvisParser() {}
 
-  static String encodeJarvisMsg(std::vector<String> args)
+  static String encodeJarvisMsg(std::vector<String>& args)
   {
 	  String result;
 	  result += P_PACKETSTART;
@@ -42,7 +42,7 @@ public:
 	  return result;
   }
   
-  static String encodeEspMsg(std::vector<String> args)
+  static String encodeEspMsg(std::vector<String>& args)
   {
 	  String result;
 	  result += P_PACKETSTART;
@@ -53,7 +53,7 @@ public:
 	  return result;
   }
   
-  static String encodeNodeMsg(std::vector<String> args)
+  static String encodeNodeMsg(std::vector<String>& args)
   {
 	  String result;
 	  result += P_PACKETSTART;
@@ -67,7 +67,7 @@ public:
 
 protected:
 
-	static String encodeArgs(std::vector<String> args)
+    static String encodeArgs(std::vector<String>& args)
 	{	
 		String result;
 		result += args[0];

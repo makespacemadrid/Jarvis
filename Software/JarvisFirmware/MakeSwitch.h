@@ -1,20 +1,22 @@
 #ifndef MAKESWITCH_H
 #define MAKESWITCH_H
 
-#include "jarvisModule.h"
+#include "jarvisNode.h"
 #include "buttons.h"
 #include "temperatureSensor.h"
-class simpleSwitch : public jarvisModule
+class simpleSwitch : public jarvisNode
 {
 public:
-    simpleSwitch(int pin =16) : jarvisModule(), m_switch(pin)
+    simpleSwitch(int pin =16) : jarvisNode(), m_switch(pin)
     {
         m_components.push_back(&m_switch);
+        m_id = "simpleSwitch";
+
     }
 
     virtual void setup()
     {
-      jarvisModule::setup();
+      jarvisNode::setup();
     }
 
 protected:
@@ -48,37 +50,38 @@ public:
         m_switch.addCapableEvent(E_GLOBAL_POWERON);
         m_switch.addCapableEvent(E_GLOBAL_SHUTDOWN);
         m_switch.setId("GlobalSwitch");
+        m_id = "makeSwitch";
     }
 
-    virtual void sendEvent(String source,jarvisEvents event)
+    virtual void sendEvent(String source,nodeComponent::event e)
     {//sobrecargar esta funcion para reaccionar a los eventos salientes.
         if(source == "GlobalSwitch")
         {
-            if(event == E_ACTIVATED)
+            if(e.jevent == E_ACTIVATED)
             {
                 m_speaker.beep();
                 startPowerOn();
-            }else if (event == E_DEACTIVATED)
+            }else if (e.jevent == E_DEACTIVATED)
             {
                 m_speaker.beep();
                 startShutDown();
             }
         }
-        communicationModule::sendEvent(source,event);
+        jarvisNode::sendEvent(source,e);
     }
 
     virtual void setup()
     {
       simpleSwitch::setup();
-      m_makeLed.setColor(100,100,0);
-      m_offLed.setColor(100,100,0);
+      m_makeLed.setColor(200,200,0);
+      m_offLed.setColor(200,200,0);
       m_makeLed.glow();
       m_offLed.glow();
     }
 
     virtual void update()
     {
-      jarvisModule::update();
+      jarvisNode::update();
       
       if(m_status == PowerOnRequested)
       {
@@ -107,8 +110,9 @@ public:
       {
           m_status = Off;
           m_makeLed.off();
+          m_makeLed.setColor(0,0,50);
           m_makeLed.glow();
-          m_offLed.setColor(100,0,0);
+          m_offLed.setColor(200,0,0);
       }
     }
 

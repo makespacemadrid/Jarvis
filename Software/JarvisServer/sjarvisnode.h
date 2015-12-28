@@ -8,6 +8,7 @@
 #include <QString>
 #include <QList>
 #include <QStringList>
+#include <QTimer>
 
 class sJarvisNodeComponent;
 
@@ -22,6 +23,7 @@ public:
     QList<sJarvisNodeComponent*> components() {return m_components;}
 
     void connectTCP(QString host, quint16 port);
+    void closeTCP();
     void send(QByteArray data) {emit writeData(data);}
 protected:
     QString          m_id;
@@ -29,11 +31,14 @@ protected:
     QString          m_rxBuffer;
     QString          m_commLog;
     QList<sJarvisNodeComponent*> m_components;
+    QTimer           m_pingTimer;
+    QTimer           m_initTimer;
+    QTime            m_keepAliveTimer;
 
     void parseBuffer(QString& buf);
     void parsePacket(QString& packet);
     void parseComponent(QStringList args);
-    void parseSensor(QStringList args);
+    //void parseSensor(QStringList args);
     void parseSensors(QStringList args);
     void parseEvent(QStringList args);
 
@@ -42,9 +47,11 @@ protected:
     void sendPing();
     void sendGetID();
     void sendGetComponents();
-    void sendReadSensor(QString sen);
-    void sendReadSensors();
+    void sendPollSensor(QString sen,int interval = -1);
+    void sendPollSensors(int interval = -1);
+    void sendStopPolling();
     void sendDoAction(QString componentId,jarvisActions action,QStringList arguments = QStringList());
+    void deleteComponents();
 signals:
     void tx();
     void rx();
@@ -53,12 +60,18 @@ signals:
     void newComponent(sJarvisNodeComponent* ncomp);
     void writeData(QByteArray data);
     void sensorReads(QVector<QString> fields,QVector<double> data);
+    void ready();
+    void disconnected();
 protected slots:
     void data_rx(QByteArray data);
     void initNode();
-    void readSensors();
+    void ping();
+    void pong();
+    void initDone();
+    void socketDisconected();
 public slots:
     void doAction(QString Component, jarvisActions action, QStringList args = QStringList());
+    void pollSensor(QString sen = "ALL",int interval = -1);
 
 };
 

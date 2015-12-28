@@ -46,6 +46,16 @@ void sJarvisNodeComponent::deactivate()
     m_parentNode->doAction(m_id,A_DEACTIVATE);
 }
 
+void sJarvisNodeComponent::readRaw()
+{
+    m_parentNode->doAction(m_id,A_READ_RAW);
+}
+
+void sJarvisNodeComponent::readData()
+{
+    m_parentNode->doAction(m_id,A_READ_DATA);
+}
+
 void sJarvisNodeComponent::dimm(uint power)
 {
     m_parentNode->doAction(m_id,A_DIMM, QStringList(QString(power)));
@@ -58,10 +68,15 @@ void sJarvisNodeComponent::blink(int freq, int r,int g,int b)
     m_parentNode->doAction(m_id,A_BLINK,args);
 }
 
+void sJarvisNodeComponent::glow()
+{
+    m_parentNode->doAction(m_id,A_GLOW);
+}
+
 void sJarvisNodeComponent::setColor(int r,int g,int b)
 {
     QStringList args;
-    args << QString(r) << QString(g) << QString(b);
+    args << QString::number(r) << QString::number(g) << QString::number(b);
     m_parentNode->doAction(m_id,A_SET_COLOR,args);
 }
 
@@ -82,6 +97,16 @@ void sJarvisNodeComponent::makeCoffe()
     m_parentNode->doAction(m_id,A_MAKE_COFFEE);
 }
 
+void sJarvisNodeComponent::setLeds(QStringList args)
+{
+    m_parentNode->doAction(m_id,A_SET_LEDS,args);
+}
+
+void sJarvisNodeComponent::setLed(QStringList args)
+{
+    m_parentNode->doAction(m_id,A_SET_LED,args);
+}
+
 void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QStringList args)
 {
     if(component != m_id) return;
@@ -97,6 +122,14 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
     }else if(event == E_DEACTIVATED)
     {
         emit deactivated();
+    }else if(event == E_RAW_READ)
+    {
+        emit rawRead();
+        emit rawRead(args);
+    }else if(event == E_DATA_READ)
+    {
+        emit dataRead();
+        emit dataRead(args);
     }else if(event == E_GLOBAL_POWERON)
     {
         emit globalPowerOn();
@@ -111,3 +144,5 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
         emit coffeeMade();
     }
 }
+
+

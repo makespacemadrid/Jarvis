@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     sjarvisnodecomponent.cpp \
     gnodecomponentwidget.cpp \
     gblinkwidget.cpp \
-    gsimplegraph.cpp
+    gsimplegraph.cpp \
+    qimageselectionwidget.cpp
 
 HEADERS  += gjarvisgui.h \
     ../JarvisFirmware/jarvisParser.h \
@@ -44,11 +45,13 @@ HEADERS  += gjarvisgui.h \
     sjarvisnodecomponent.h \
     gnodecomponentwidget.h \
     gblinkwidget.h \
-    gsimplegraph.h
+    gsimplegraph.h \
+    qimageselectionwidget.h
 
 FORMS    += gjarvisgui.ui \
     gwidgetnode.ui \
     gnodetestwidget.ui \
     gnodecomponentwidget.ui \
     gblinkwidget.ui \
-    gsimplegraph.ui
+    gsimplegraph.ui \
+    qimageselectionwidget.ui

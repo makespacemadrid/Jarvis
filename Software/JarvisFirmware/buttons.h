@@ -10,6 +10,8 @@ public:
   {
       m_capableEvents.push_back(E_ACTIVATED);
       m_capableEvents.push_back(E_DEACTIVATED);
+      m_actions.push_back(A_READ_RAW);
+      m_capableEvents.push_back(E_RAW_READ);
       m_id = F("switch");
   }
   

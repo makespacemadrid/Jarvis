@@ -1,14 +1,14 @@
 #ifndef spc
 #define spc
 
-#include "jarvisModule.h"
+#include "jarvisNode.h"
 #include "relay.h"
 
 
-class simplePowerControl : public jarvisModule
+class simplePowerControl : public jarvisNode
 {
 public:
-    simplePowerControl(int relayPin) : jarvisModule(), m_relay(relayPin)
+    simplePowerControl(int relayPin) : jarvisNode(), m_relay(relayPin)
     {
         m_components.push_back(&m_relay);
         m_id = "simplePowerControl";
@@ -16,35 +16,38 @@ public:
 
     void setup()
     {
-        jarvisModule::setup();
-        m_statusLed.extraLedIdle();
+        jarvisNode::setup();
+        if(m_relay.getStatus())
+          m_statusLed.extraLedOK();
+        else
+          m_statusLed.extraLedIdle();
     }
 
-    virtual void sendEvent(String source,jarvisEvents event)
+    virtual void sendEvent(String source,nodeComponent::event e)
     {//sobrecargar esta funcion para reaccionar a los eventos salientes.
         if(source == "relay")
         {
-            if(event == E_ENABLED)
+            if(e.jevent == E_ENABLED)
             {
                 m_speaker.beep();
                 m_statusLed.extraLedIdle();
             }
-            else if(event == E_DISABLED)
+            else if(e.jevent == E_DISABLED)
             {
                 m_speaker.beep();
                 m_statusLed.extraLedError();
             }
-            else if(event == E_ACTIVATED)
+            else if(e.jevent == E_ACTIVATED)
             {
                 m_speaker.beep();
                 m_statusLed.extraLedOK();
-            }else if (event == E_DEACTIVATED)
+            }else if (e.jevent == E_DEACTIVATED)
             {
                 m_speaker.beep();
                 m_statusLed.extraLedIdle();
             }
         }
-        communicationModule::sendEvent(source,event);
+        jarvisNode::sendEvent(source,e);
     }
 protected:
     relay m_relay;

@@ -2,6 +2,8 @@
 #include "ui_gnodecomponentwidget.h"
 #include <QToolButton>
 #include <QHBoxLayout>
+#include "qimageselectionwidget.h"
+#include <QColorDialog>
 
 gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *parent) :
     QGroupBox(parent), m_component(comp),
@@ -33,17 +35,37 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         }else if(action == A_DEACTIVATE){
             connect(b,SIGNAL(clicked()),m_component,SLOT(deactivate()));
             b->setText("DEA");
+        }else if(action == A_TOGGLE){
+            //connect(b,SIGNAL(clicked()),m_component,SLOT(toggle()));
+            b->setText("TOGGLE");
+        }else if(actions[i] == A_READ_RAW){
+            connect(b,SIGNAL(clicked()),m_component,SLOT(readRaw()));
+            b->setText("READR");
+        }else if(actions[i] == A_READ_DATA){
+            connect(b,SIGNAL(clicked()),m_component,SLOT(readData()));
+            b->setText("READ");
+        }else if(actions[i] == A_DIMM){
+            //connect(b,SIGNAL(clicked()),m_component,SLOT(dimm(50)));
+            b->setText("DIMM");
+        }else if(actions[i] == A_BLINK){
+            //connect(b,SIGNAL(clicked()),m_component,SLOT(blink(50)));
+            b->setText("BLINK");
+        }else if(actions[i] == A_GLOW){
+            connect(b,SIGNAL(clicked()),m_component,SLOT(glow()));
+            b->setText("GLOW");
+        }else if(actions[i] == A_SET_COLOR){
+            connect(b,SIGNAL(clicked()),this,SLOT(selectComponentColor()));
+            b->setText("SCOLOR");
+        }else if(actions[i] == A_CYLON){
+            connect(b,SIGNAL(clicked()),m_component,SLOT(cylon()));
+            b->setText("CYLON");
+        }else if(actions[i] == A_SET_LEDS){
+            connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
+            b->setText("SET_IMG");
+        }else if(actions[i] == A_SET_LED){
+            //connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
+            b->setText("SLED");
         }
-//        else if(actions[i] == A_DIMM)
-//            connect(b,SIGNAL(clicked()),m_component,SLOT(enable()));
-//        else if(actions[i] == A_SET_COLOR)
-//            connect(b,SIGNAL(clicked()),m_component,SLOT(enable()));
-//        else if(actions[i] == A_CYLON)
-//            connect(b,SIGNAL(clicked()),m_component,SLOT(enable()));
-//        else if(actions[i] == A_BEEP)
-//            connect(b,SIGNAL(clicked()),m_component,SLOT(enable()));
-//        else if(actions[i] == A_MAKE_COFFEE)
-//            connect(b,SIGNAL(clicked()),m_component,SLOT(enable()));
     }
 
     QList<jarvisEvents> events = m_component->getCapableEvents();
@@ -63,6 +85,12 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         }else if(events[i] == E_DISABLED)
         {
             connect(m_component,SIGNAL(disabled()),w,SLOT(blink()));
+        }else if(events[i] == E_RAW_READ)
+        {
+            connect(m_component,SIGNAL(rawRead()),w,SLOT(blink()));
+        }else if(events[i] == E_DATA_READ)
+        {
+            connect(m_component,SIGNAL(dataRead()),w,SLOT(blink()));
         }else if(events[i] == E_GLOBAL_POWERON)
         {
             connect(m_component,SIGNAL(globalPowerOn()),w,SLOT(blink()));
@@ -78,4 +106,38 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
 gNodeComponentWidget::~gNodeComponentWidget()
 {
     delete ui;
+}
+
+void gNodeComponentWidget::sendImage()
+{
+    qImageSelectionWidget w;
+    if(w.exec())
+    {
+        QImage img = w.scaledImage.convertToFormat(QImage::Format_RGB888);
+        uchar *bits = img.bits();
+        QStringList args;
+        for (int i = 0; i < (img.width() * img.height() * 3); i = i+3)
+        {
+            args.append(QString::number(i/3,'f',0));
+            args.append(QString::number((int) bits[i],'f',0));
+            args.append(QString::number((int) bits[i+1],'f',0));
+            args.append(QString::number((int) bits[i+2],'f',0));
+            if(i%16==0)
+            {
+                m_component->setLed(args);
+                args.clear();
+            }
+
+        }
+        if(args.size())
+            m_component->setLed(args);
+    }
+}
+
+void gNodeComponentWidget::selectComponentColor()
+{
+   QColorDialog w;
+   if(!w.exec())return;
+   QColor q = w.selectedColor();
+   m_component->setColor(q.red(),q.green(),q.blue());
 }

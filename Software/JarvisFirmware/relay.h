@@ -11,20 +11,40 @@ class relay : public nodeComponent
       m_id = "relay";
       m_actions.push_back(A_ACTIVATE);
       m_actions.push_back(A_DEACTIVATE);
+      m_actions.push_back(A_TOGGLE);
+      m_actions.push_back(A_READ_RAW);
       m_capableEvents.push_back(E_ACTIVATED);
       m_capableEvents.push_back(E_DEACTIVATED);
+      m_capableEvents.push_back(E_RAW_READ);
+    }
+
+    void setInvertedLogic(bool inverted)
+    {
+        m_invertedLogic = inverted;
+    }
+
+    float read()
+    {
+        return m_status;
     }
 
     virtual void activate()
     {
-        setStatus(true);
+        if(!m_status)
+          setStatus(true);
     }
 
     virtual void deactivate()
     {
-        setStatus(false);
+        if(m_status)
+          setStatus(false);
     }
 
+    virtual void toggle()
+    {
+      setStatus(!m_status);
+    }
+    
     bool getStatus()
     {
         return m_status;

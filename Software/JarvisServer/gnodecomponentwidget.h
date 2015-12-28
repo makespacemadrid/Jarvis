@@ -20,6 +20,10 @@ public:
 private:
     Ui::gNodeComponentWidget *ui;
     sJarvisNodeComponent*     m_component;
+
+private slots:
+    void sendImage();
+    void selectComponentColor();
 };
 
 #endif // GNODECOMPONENTWIDGET_H

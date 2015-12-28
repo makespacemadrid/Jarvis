@@ -3,6 +3,7 @@
 
 #include <QGroupBox>
 #include "sjarvisnode.h"
+#include "gnodecomponentwidget.h"
 #include "gsimplegraph.h"
 
 namespace Ui {
@@ -25,18 +26,23 @@ private:
     sJarvisNode*         m_node;
     bool                 m_sharedNode;
     QTimer               m_sensorsTimer;
-    bool                 m_graphInit =false;
-    QVector<gSimpleGraph*> m_graphs;
+    bool                 m_graphInit;
+    QVector<gSimpleGraph*>       m_graphs;
+    QList<gNodeComponentWidget*> m_componentWidgets;
+
     void connectNodeSignals(sJarvisNode* node);
 private slots:
-    void addComponent(sJarvisNodeComponent* ncomp);
+    void nodeConnected();
+    void nodeDisconnected();
 
 public slots:
+    void on_readSenBtn_clicked();
     void on_connectBtn_clicked();
     void on_sendBtn_clicked();
     void console_log(QByteArray data);
     void eventLog(QString component,jarvisEvents event,QStringList args);
     void sensorRead(QVector<QString> fields,QVector<double> data);
+    void timedCmd();
 };
 
 #endif // GNODETESTWIDGET_H

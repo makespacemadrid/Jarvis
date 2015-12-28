@@ -21,7 +21,13 @@
   <property name="title">
    <string>GroupBox</string>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,0,3">
+  <property name="flat">
+   <bool>false</bool>
+  </property>
+  <property name="checkable">
+   <bool>false</bool>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0,0">
    <property name="spacing">
     <number>0</number>
    </property>
