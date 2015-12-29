@@ -18,7 +18,8 @@ enum jarvisModules
     simplePowerControlModule,
     advancedPowerControlModule,
     coffeeMakerModule,
-    ledPanelModule
+    ledPanelModule,
+    testNodeModule
 };
 
 struct settingList
@@ -31,7 +32,8 @@ struct settingList
   //jarvisModules moduleType      = simplePowerControlModule;
   //jarvisModules moduleType      = makeSwitchModule;
   //jarvisModules moduleType      = coffeeMakerModule;
-  jarvisModules moduleType      = ledPanelModule;
+  //jarvisModules moduleType      = ledPanelModule;
+  jarvisModules moduleType = testNodeModule;//Selecciona el tipo de modulo
 /**
 Tabla de correspondencia de pines nodemcu arduino
 0 [*]  GPIO16  

@@ -45,7 +45,7 @@ uint8_t updateInterval = 25;
 #include "MakeSwitch.h"
 #include "coffeeMaker.h"
 #include "ledPanelNode.h"
-
+#include "testNode.h"
 
 jarvisNode* node;
 
@@ -85,6 +85,8 @@ void setup()
     }else if(type == ledPanelModule)
     {
         node = new ledPanelNode();
+    }else if(type == testNodeModule){
+        node = new testNode();
     }
 
     node->setup();
