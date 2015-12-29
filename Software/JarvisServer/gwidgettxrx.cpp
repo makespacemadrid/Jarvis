@@ -33,7 +33,7 @@ void gWidgetTxRx::paintEvent(QPaintEvent* pe)
     l_center.setX(l_center.x()/2);
     r_center.setX(center.x()+ l_center.x());
     quint16 radius_x = l_center.x()*0.9;
-    quint16 radius_y = l_center.y()*0.9;
+    //quint16 radius_y = l_center.y()*0.9;
     QColor rx_color(m_rx_color);
     rx_color.setAlpha(255);
     p.setPen(rx_color);

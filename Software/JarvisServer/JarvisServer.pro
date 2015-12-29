@@ -24,21 +24,34 @@ SOURCES += main.cpp\
     gwidgettxrx.cpp \
     gwidgetnode.cpp \
     gnodetestwidget.cpp \
-    stringCompatibility.cpp
+    sjarvisnodecomponent.cpp \
+    gnodecomponentwidget.cpp \
+    gblinkwidget.cpp \
+    gsimplegraph.cpp \
+    qimageselectionwidget.cpp
 
 HEADERS  += gjarvisgui.h \
     ../JarvisFirmware/jarvisParser.h \
     ../JarvisFirmware/jarvisProtocol.h \
     sjarvistcpserver.h \
-    sjarvistcpclient.h \
     sjarvisnodeserver.h \
     sjarvis.h \
     sjarvisnode.h \
     gwidgettxrx.h \
     gwidgetnode.h \
     gnodetestwidget.h \
-    stringCompatibility.h
+    arduinoCompat.h \
+    sjarvistcpclient.h \
+    sjarvisnodecomponent.h \
+    gnodecomponentwidget.h \
+    gblinkwidget.h \
+    gsimplegraph.h \
+    qimageselectionwidget.h
 
 FORMS    += gjarvisgui.ui \
     gwidgetnode.ui \
-    gnodetestwidget.ui
+    gnodetestwidget.ui \
+    gnodecomponentwidget.ui \
+    gblinkwidget.ui \
+    gsimplegraph.ui \
+    qimageselectionwidget.ui

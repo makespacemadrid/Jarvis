@@ -8,32 +8,41 @@
 #include "communication.h"
 #include "settings.h"
 #include "nodeComponent.h"
-
+#include "dataLogger.h"
 
 
 #ifdef ESP8266
-class jarvisModule : public espNative
+class jarvisNode : public espNative
 {
 public:
-  jarvisModule(commModes cmode = nativeNode) : espNative(cmode , EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin) ,
+  jarvisNode(commModes cmode = nativeNode) : espNative(cmode , EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin,EEPROMStorage::getSettings().ledStripLedNr) ,
 #else 
-class jarvisModule : public espProxy
+class jarvisNode : public espProxy
 {
 public:
-  jarvisModule() : espProxy(EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin) ,
+  jarvisNode() : espProxy(EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin,EEPROMStorage::getSettings().ledStripLedNr) ,
 #endif
-    m_speaker(m_EEPROM.settings().piezoPin)
+    m_speaker(m_EEPROM.settings().piezoPin),
+    m_dataLogger(&m_components)
   {
-    if(m_ledStrip.isValid())
+      if(m_ledStrip.isValid())
+      {
+        debugln(String(F("I:-WS2812")));
+        m_ledStrip.setup();
+        m_ledStrip.off();
+        m_statusLed.controllerInit();
         m_components.push_back(&m_statusLed);
+      }
+
     if(m_speaker.isValid())
         m_components.push_back(&m_speaker);
+    m_id = "jarvisNode";
   }
 
   void setup()
   {
     Serial.begin(115200);
-    delay(10);
+    yield();
     debugln(String(F("I:INIT")));
     
     if(m_EEPROM.hasSettings())
@@ -44,14 +53,6 @@ public:
     ///////////
     //if(m_EEPROM.settings().factoryResetPin != -1) debugln(String(F("I:-Factory reset button")));
     //checkFactoryReset();
-
-    if(m_ledStrip.isValid())
-    {
-      debugln(String(F("I:-WS2812")));
-      m_ledStrip.setup();
-      m_ledStrip.off();
-      m_statusLed.controllerInit();
-    }
   
   #ifdef ESP8266
     debugln(String(F("I:-ESP8266")));
@@ -75,13 +76,14 @@ public:
       debugln(String(F("I:-Alive led")));
     }
 
+  m_dataLogger.setup();
   debugln(String(F("I:INIT OK")));
   m_statusLed.controllerOK();  
   }
 
   void update()
   {
-    checkFreeMem();
+//    checkFreeMem();
     imAlive();
   #ifdef ESP8266
     espNative::update();
@@ -92,26 +94,45 @@ public:
     {
         nodeComponent* comp = m_components[c];
         comp->update();
+        yield();
         if(comp->hasEvents())
         {
-            std::vector<jarvisEvents> events = comp->getEvents();
+            std::vector<nodeComponent::event> events = comp->getEvents();
             for(int e = 0 ; e <  events.size() ; e++)
               sendEvent(comp->id(),events[e]);
         }
     }
+
+    if(m_pollingSensors.size())
+    {
+        std::vector<String> args;
+        args.push_back(C_SENSORS);
+        for(int c = 0 ; c<m_pollingSensors.size() ; c++ )
+            for(int i  = 0 ; i < m_components.size() ; i++ )
+            {
+              nodeComponent* comp = m_components[i];
+              if(comp->id() == m_pollingSensors[c])
+              {
+                args.push_back(comp->id());
+                args.push_back(String(comp->read()));
+              }
+            }
+        send(encodeJarvisMsg(args));
+    }
+
+    m_dataLogger.update();
     delay(updateInterval);
   }
-
 
 protected:
   jarvisModules         m_type;
   EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
   uint8_t m_loopCount = 0;
+  std::vector<String>           m_pollingSensors;
+  std::vector<nodeComponent*>   m_components;
+  piezoSpeaker                  m_speaker;   //(m_EEPROM.settings().piezoPin);
+  dataLogger                    m_dataLogger;
 
-  std::vector<nodeComponent*>    m_components;
-
-  //SSR                   m_switch;//(m_EEPROM.settings().relayPin ,m_EEPROM.settings().currentMeterPin,m_EEPROM.settings().relayMaxAmps,m_EEPROM.settings().relayDimmable,m_EEPROM.settings().relayTemperatureSensor,m_EEPROM.settings().fanPin);
-  piezoSpeaker          m_speaker;   //(m_EEPROM.settings().piezoPin);
   void checkFactoryReset()
   {
     if(m_EEPROM.settings().factoryResetPin != -1)
@@ -145,35 +166,22 @@ protected:
 
   void imAlive()
   {
-    if(m_loopCount == 150)
+    if(m_loopCount >= (1000/updateInterval))
     {
       digitalWrite(m_EEPROM.settings().alivePin, !digitalRead(m_EEPROM.settings().alivePin));
       m_loopCount = 0;
+      m_statusLed.controllerOK();
       debugln(String(F("D:ImAlive!")));
     }
     else
       m_loopCount++;
   }
+  
 
-
-  void checkFreeMem()
-  {
-    #ifndef ESP8266
-    int freem = freeMemory();
-    if(freem < 400)
-    {
-      debug(F("D:LOW RAM :"));
-      debug(freem);
-      debugln(F("bytes. Shit can happen anytime!"));
-    }
-    #endif
-  }
-
-
-  virtual void sendEvent(String source,jarvisEvents event)
+  virtual void sendEvent(String source,nodeComponent::event e)
   {
       //sobrecargar esta funcion para reaccionar a los eventos salientes.
-      communicationModule::sendEvent(source,event);
+      communicationModule::sendEvent(source,e);
   }
 
 // Implementaciones del protocolo
@@ -199,36 +207,61 @@ protected:
       }
   }
 
-  virtual void sendSensors()
+  virtual void pollSensors(int delay = -1)
   {
-      std::vector<String> args;
-      args.push_back(C_SENSORS);
+      if(delay != -1)
+          setUpdateInterval(delay);
+
       for(int i  = 0 ; i < m_components.size() ; i++ )
       {
         nodeComponent* comp = m_components[i];
         if(comp->canRead())
         {
-          args.push_back(comp->id());
-          args.push_back(String(comp->read()));  
+            m_pollingSensors.push_back(comp->id());
         }
       }
-      send(encodeJarvisMsg(args));
+
+//      std::vector<String> args;
+//      args.push_back(C_SENSORS);
+//      for(int i  = 0 ; i < m_components.size() ; i++ )
+//      {
+//        nodeComponent* comp = m_components[i];
+//        if(comp->canRead())
+//        {
+//          args.push_back(comp->id());
+//          args.push_back(String(comp->read()));
+//        }
+//      }
+//      args.push_back(F("FreeMem"));
+//      args.push_back(String(getFreeMem()));
+//      args.push_back(F("BufferSize"));
+//      args.push_back(String(bufferCount()));
+//      send(encodeJarvisMsg(args));
   }
 
-  virtual void sendSensor(String id)
+  virtual void pollSensor(String id,int delay = -1)
   {
-      std::vector<String> args;
-      args.push_back(C_SENSOR);
-      for(int i  = 0 ; i < m_components.size() ; i++ )
-      {
-        nodeComponent* comp = m_components[i];
-        if(comp->id() == id)
-        {
-          args.push_back(comp->id());
-          args.push_back(String(comp->read()));
-        }
-      }
-      send(encodeJarvisMsg(args));
+      if(delay != -1)
+          setUpdateInterval(delay);
+      m_pollingSensors.push_back(id);
+
+//      std::vector<String> args;
+//      args.push_back(C_SENSOR);
+//      for(int i  = 0 ; i < m_components.size() ; i++ )
+//      {
+//        nodeComponent* comp = m_components[i];
+//        if(comp->id() == id)
+//        {
+//          args.push_back(comp->id());
+//          args.push_back(String(comp->read()));
+//        }
+//      }
+//      send(encodeJarvisMsg(args));
+  }
+
+  virtual void stopPolling()
+  {
+      m_pollingSensors.clear();
   }
 
   virtual void doAction(std::vector<String> args)

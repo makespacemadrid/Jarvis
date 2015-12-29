@@ -6,7 +6,7 @@
 
 #include <vector>
 
-static std::vector<String> splitStr(String str,String sep){
+static std::vector<String> splitStr(String& str,String sep){
 	std::vector<String> result;
   if(str.length() < 1) return result;
   int sep_index = str.indexOf(sep);
@@ -31,7 +31,7 @@ class jarvisParser {
 public:
   jarvisParser() {}
 
-  static String encodeJarvisMsg(std::vector<String> args)
+  static String encodeJarvisMsg(std::vector<String>& args)
   {
 	  String result;
 	  result += P_PACKETSTART;
@@ -42,7 +42,7 @@ public:
 	  return result;
   }
   
-  static String encodeEspMsg(std::vector<String> args)
+  static String encodeEspMsg(std::vector<String>& args)
   {
 	  String result;
 	  result += P_PACKETSTART;
@@ -53,7 +53,7 @@ public:
 	  return result;
   }
   
-  static String encodeNodeMsg(std::vector<String> args)
+  static String encodeNodeMsg(std::vector<String>& args)
   {
 	  String result;
 	  result += P_PACKETSTART;
@@ -67,7 +67,7 @@ public:
 
 protected:
 
-	static String encodeArgs(std::vector<String> args)
+    static String encodeArgs(std::vector<String>& args)
 	{	
 		String result;
 		result += args[0];
@@ -87,8 +87,8 @@ protected:
     //saneado del buffer
     if(s_index < 0)
     {// si no hay inicio de paquete lo que hay en el buffer tiene que ser basura.
-    buf = "";
-    return;
+        buf = "";
+        return;
     }
     //extraccion de comandos
     while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
@@ -104,8 +104,8 @@ protected:
 	void parsePacket(String& str)
 	{
 		std::vector<String> args;
-		args = splitStr(str, P_PACKETSEPARATOR);
-		if(args.size() < 2) return;
+        args = splitStr(str, P_PACKETSEPARATOR);
+        if(args.size() < 2) return;
 		String arg = args[0];
 		args.erase(args.begin());
 

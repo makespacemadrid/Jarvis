@@ -9,9 +9,12 @@ public:
   dhtTemperatureSensor(DHT* dhts) : nodeComponent(0), m_dht(dhts)
   {
     m_id = F("dhtTemp");
+    m_actions.push_back(A_READ_DATA);
+    m_capableEvents.push_back(E_DATA_READ);
   }
 
   bool     canRead()  {return true;}
+
 
   virtual float      read()
   {
@@ -21,6 +24,7 @@ public:
 
 protected:
   DHT* m_dht;
+
 };
 
 class dhtHumiditySensor : public nodeComponent
@@ -29,6 +33,8 @@ public:
   dhtHumiditySensor(DHT* dhts) : nodeComponent(0), m_dht(dhts)
   {
     m_id = F("dhtHumid");
+    m_actions.push_back(A_READ_DATA);
+    m_capableEvents.push_back(E_DATA_READ);
   }
 
   bool     canRead()  {return true;}

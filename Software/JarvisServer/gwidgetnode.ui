@@ -61,7 +61,7 @@
     </widget>
    </item>
    <item>
-    <widget class="gWidgetTxRx" name="widget" native="true"/>
+    <widget class="gWidgetTxRx" name="txwidget" native="true"/>
    </item>
   </layout>
  </widget>
