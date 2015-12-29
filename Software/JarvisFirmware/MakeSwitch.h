@@ -73,8 +73,8 @@ public:
     virtual void setup()
     {
       simpleSwitch::setup();
-      m_makeLed.setColor(200,200,0);
-      m_offLed.setColor(200,200,0);
+      m_makeLed.setColor(250,250,0);
+      m_offLed.setColor(250,250,0);
       m_makeLed.glow();
       m_offLed.glow();
     }
@@ -104,15 +104,15 @@ public:
       }else if(m_status == PoweringOn)
       {
           m_status = On;
-          m_makeLed.setColor(0,200,0);
+          m_makeLed.setColor(0,250,0);
           m_offLed.off();
       }else if(m_status == ShuttingDown)
       {
           m_status = Off;
           m_makeLed.off();
-          m_makeLed.setColor(0,0,50);
+          m_makeLed.setColor(0,0,250);
           m_makeLed.glow();
-          m_offLed.setColor(200,0,0);
+          m_offLed.setColor(250,0,0);
       }
     }
 
@@ -122,14 +122,14 @@ public:
         {
             m_activationCounter = 0;
             m_status = PowerOnRequested;
-            m_makeLed.setColor(100,100,0);
+            m_makeLed.setColor(250,250,0);
             m_makeLed.glow();
-            m_offLed.setColor(100,0,0);
+            m_offLed.setColor(250,0,0);
         }else if(m_status == ShutDownRequested)
         {
             m_deActivationCounter = 0;
             m_status = On;
-            m_makeLed.setColor(0,200,0);
+            m_makeLed.setColor(0,250,0);
             m_offLed.off();
         }
     }
@@ -140,16 +140,16 @@ public:
         {
             m_deActivationCounter = 0;
             m_status = ShutDownRequested;
-            m_makeLed.setColor(100,100,0);
+            m_makeLed.setColor(250,250,0);
             m_makeLed.glow();
-            m_offLed.setColor(200,0,0);
+            m_offLed.setColor(250,0,0);
             m_offLed.glow();
         }else if(m_status == PowerOnRequested)
         {
             m_activationCounter = 0;
             m_status = Off;
             m_makeLed.off();
-            m_offLed.setColor(100,0,0);
+            m_offLed.setColor(250,0,0);
             m_makeLed.glow();
         }
     }

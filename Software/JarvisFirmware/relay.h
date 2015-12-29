@@ -23,6 +23,11 @@ class relay : public nodeComponent
         m_invertedLogic = inverted;
     }
 
+    float readRaw()
+    {
+        return m_status;
+    }
+
     float read()
     {
         return m_status;
