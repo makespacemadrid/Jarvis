@@ -21,7 +21,7 @@
 extern uint8_t updateInterval;
 
 
-class communicationModule : public jarvisParser
+class communicationModule : public jarvisParser , public nodeComponent
 {
   public:
 
@@ -114,15 +114,15 @@ class communicationModule : public jarvisParser
           Serial.println(connstatus);
           if(connstatus == 3)
           {
-              wifiConnected();
+              i_wifiConnected();
           }
           else if (connstatus == 0)
           {
-              wifiConnected();
+              i_wifiConnected();
           }
           else
           {
-              wifiDisConnected();
+              i_wifiDisConnected();
           }
 
 
@@ -170,7 +170,7 @@ class communicationModule : public jarvisParser
     
     String   m_rxBuffer;
 
-    String   m_id;
+    //String   m_id;
 
     String   m_essid;
     String   m_pass;
@@ -188,7 +188,11 @@ class communicationModule : public jarvisParser
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;
 
-    virtual void wifiConnected()
+
+
+    virtual void connectToJarvis() {;}
+
+    void i_wifiConnected()
     {
         if(m_lastConnectionStatus == 3)
         {
@@ -196,25 +200,32 @@ class communicationModule : public jarvisParser
         }else{
             m_statusLed.wifiAutoConfig();
         }
+        wifiConnected();
         connectToJarvis();
     }
 
-    virtual void wifiDisConnected()
+    void i_wifiDisConnected()
     {
         m_statusLed.wifiError();
+        wifiDisConnected();
     }
 
-    virtual void connectToJarvis() {;}
-
-    virtual void jarvisConnected()
+    void i_jarvisConnected()
     {
-        ;
+        jarvisConnected();
     }
 
-    virtual void jarvisDisConnected()
+    void i_jarvisDisConnected()
     {
-        ;
+        i_wifiConnected();
+        jarvisDisConnected();
     }
+
+
+    virtual void wifiConnected()        {;}
+    virtual void wifiDisConnected()     {;}
+    virtual void jarvisConnected()      {;}
+    virtual void jarvisDisConnected()   {;}
 
 
 //parseado del protocolo
@@ -336,7 +347,7 @@ class communicationModule : public jarvisParser
         }else if(args[0] == C_DOACTION)
         {
             args.erase(args.begin());
-            doAction(args);
+            processDoAction(args);
         }else if(args[0] == C_GET_FREEM)
         {
            sendFreeMem();
@@ -360,7 +371,7 @@ class communicationModule : public jarvisParser
     virtual void pollSensors(int delay = -1)          = 0;
     virtual void pollSensor(String id,int delay = -1) = 0;
     virtual void stopPolling()                      = 0;
-    virtual void doAction(std::vector<String> args) = 0;
+    virtual void processDoAction(std::vector<String> args) = 0;
 
     void sendEvent(String source,nodeComponent::event e)
     {
@@ -479,10 +490,10 @@ class espNative : public communicationModule
         {
             if(m_validatingConns[i].connected())
             {
-                if(true)
+                if(true)//mecanismo de validacion
                 {
                     debugln(String(F("D:New client!")));
-                    jarvisConnected();
+                    i_jarvisConnected();
                     m_validatedConns.push_back(m_validatingConns[i]);
                     m_validatingConns.erase(m_validatingConns.begin()+i);
                 }
@@ -510,7 +521,7 @@ class espNative : public communicationModule
               //comprobamos si era el ultimo cliente conectado.
               if(m_validatedConns.size() == 0)
               {
-                  jarvisDisConnected();
+                  i_jarvisDisConnected();
                   debugln("D:All clients left");
               }
            }

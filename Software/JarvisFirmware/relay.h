@@ -15,7 +15,12 @@ class relay : public nodeComponent
       m_actions.push_back(A_READ_RAW);
       m_capableEvents.push_back(E_ACTIVATED);
       m_capableEvents.push_back(E_DEACTIVATED);
-      m_capableEvents.push_back(E_RAW_READ);
+      m_capableEvents.push_back(E_DATA_READ);
+    }
+
+    bool canRead()
+    {
+        return true;
     }
 
     void setInvertedLogic(bool inverted)
@@ -23,12 +28,12 @@ class relay : public nodeComponent
         m_invertedLogic = inverted;
     }
 
-    float readRaw()
+    uint16_t readRaw()
     {
         return m_status;
     }
 
-    float read()
+    float readData()
     {
         return m_status;
     }
@@ -82,10 +87,9 @@ class relay : public nodeComponent
         pinMode(m_pin, OUTPUT);
     }
 
-    virtual void update()
-    {
-
-    }
+//    virtual void update()
+//    {
+//    }
 
   protected:
 

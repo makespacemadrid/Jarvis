@@ -16,7 +16,7 @@ public:
   bool     canRead()  {return true;}
 
 
-  virtual float      read()
+  virtual float      readData()
   {
     if(!m_enabled){return 0;} // si el dispositivo no esta habilitado ni se intenta acceder al hardware
     return m_dht->readTemperature();
@@ -39,7 +39,7 @@ public:
 
   bool     canRead()  {return true;}
 
-  virtual float      read()
+  virtual float      readData()
   {
     if(!m_enabled){return 0;}
     return m_dht->readHumidity();

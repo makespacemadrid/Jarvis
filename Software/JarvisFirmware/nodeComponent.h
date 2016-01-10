@@ -42,7 +42,7 @@ public:
 
     virtual bool     canRead()  {return false;}
     virtual uint16_t readRaw()  {return 666;}
-    virtual float    read()     {return 666;}
+    virtual float    readData() {return 666;}
 
     //interfaces para las acciones:
     virtual void enable()
@@ -68,21 +68,23 @@ public:
         m_events.push_back(e);
     }
 
-    virtual void sendRead()
+    virtual void sendDataRead()
     {
         event e(E_DATA_READ);
-        e.args.push_back(String(read()));
+        e.args.push_back(String(readData()));
         m_events.push_back(e);
     }
 
     virtual void dimm(uint8_t power)                      {;}
     virtual void blink()                                  {;}
     virtual void glow()                                   {;}
+    virtual void fade()                                   {;}
     virtual void setColor(uint8_t r, uint8_t g,uint8_t b) {;}
     virtual void cylon()                                  {;}
     virtual void setLeds(std::vector<String>&  args)      {;}
     virtual void setLed(std::vector<String>&  args)       {;}
     virtual void beep(int tone,int toneDuration)          {;}
+    virtual void makeCoffee()                             {;}
 
 
     //Acciones y eventos
@@ -102,6 +104,8 @@ public:
             enable();
         } else if   (act == A_DISABLE) {
             disable();
+        } else if   (!m_enabled) {//si esta deshabilitado solo se procesa el enable/disable
+            return;
         } else if   (act == A_ACTIVATE) {
             activate();
         } else if   (act == A_DEACTIVATE) {
@@ -111,7 +115,7 @@ public:
         } else if   (act == A_READ_RAW) {
             sendRawRead();
         } else if   (act == A_READ_DATA) {
-            sendRead();
+            sendDataRead();
         } else if   (act == A_DIMM) {
             if(args.size() != 1) return;
             dimm(args[0].toInt());
@@ -119,6 +123,8 @@ public:
             blink();
         } else if   (act == A_GLOW) {
             glow();
+        } else if   (act == A_FADE) {
+            fade();
         } else if   (act == A_SET_COLOR) {
             if(args.size() != 3) return;
             setColor(args[0].toInt(),args[1].toInt(),args[2].toInt());
@@ -131,6 +137,8 @@ public:
         } else if   (act == A_BEEP) {
             if(args.size() != 2) return;
             beep(args[0].toInt(),args[1].toInt());
+        } else if   (act == A_MAKE_COFFEE) {
+            makeCoffee();
         }
     }
 

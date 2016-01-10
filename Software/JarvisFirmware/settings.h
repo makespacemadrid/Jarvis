@@ -29,8 +29,8 @@ struct settingList
   int           remotePort      = 31416;
   int           localPort       = 31416;
   //jarvisModules moduleType      = simplePowerControlModule;
-  jarvisModules moduleType      = makeSwitchModule;
-  //jarvisModules moduleType      = coffeeMakerModule;
+  //jarvisModules moduleType      = makeSwitchModule;
+  jarvisModules moduleType      = coffeeMakerModule;
   //jarvisModules moduleType      = ledPanelModule;
 /**
 Tabla de correspondencia de pines nodemcu arduino
@@ -73,7 +73,8 @@ Tabla de correspondencia de pines nodemcu arduino
 
   //Configuracion
   //int   ledStripLedNr          = 3;
-  int   ledStripLedNr          = 25;
+  int   ledStripLedNr            = 50;
+  //int   ledStripLedNr          = 25;
   //int   ledStripLedNr          = 256;
   bool  bridgeMode             = false;
   float currentMeterFactor     = 29.296875f;
