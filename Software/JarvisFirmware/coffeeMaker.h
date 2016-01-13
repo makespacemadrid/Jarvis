@@ -7,9 +7,10 @@
 class coffeeMaker : public simplePowerControl
 {
 public:
-    coffeeMaker(int relayPin) : simplePowerControl(relayPin), m_leds(&m_ledStrip), m_heating(false)
+    coffeeMaker(int relayPin) : simplePowerControl(relayPin,15), m_leds(&m_ledStrip), m_heating(false)
     {
         m_relay.setup();
+        m_button.setId("button");
         heat();
         //m_relay.setInvertedLogic(true);
         m_timeout = 0.0;
@@ -37,7 +38,7 @@ public:
     void update()
     {
         simplePowerControl::update();
-        if(m_timeout < 600.0)
+        if(m_timeout < 300.0)
         {
             m_timeout += updateInterval/1000.0f;
         }else
