@@ -41,22 +41,30 @@ public:
     makeSwitch() : simpleSwitch(), m_makeLed(&m_ledStrip), m_offLed(&m_ledStrip) , m_dhtSensor(5)
     {//inicializar los componentes extra y anadirlos a los arrays de sensores y actuadores.
         m_makeLed.addLed(3,6);
+        m_makeLed.setId("makeLed");
         m_offLed.addLed(9,6);
+        m_offLed.setId("offLed");
         m_components.push_back(&m_makeLed);
         m_components.push_back(&m_offLed);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
 
-        m_switch.addCapableEvent(E_GLOBAL_POWERON);
-        m_switch.addCapableEvent(E_GLOBAL_SHUTDOWN);
-        m_switch.setId("GlobalSwitch");
+        addCapableEvent(E_GLOBAL_POWERON);
+        addCapableEvent(E_GLOBAL_SHUTDOWN);
         m_id = "makeSwitch";
+        disable();
     }
 
     virtual void sendEvent(String source,nodeComponent::event e)
     {//sobrecargar esta funcion para reaccionar a los eventos salientes.
-        if(source == "GlobalSwitch")
+        if(source == "switch")
         {
+            if(!m_enabled)
+            {
+                jarvisNode::sendEvent(source,e);
+                return;
+            }
+
             if(e.jevent == E_ACTIVATED)
             {
                 m_speaker.beep();
@@ -79,27 +87,62 @@ public:
       m_offLed.glow();
     }
 
+    void wifiConnected()
+    {
+        m_makeLed.setColor(0,0,255);
+        m_offLed.setColor(0,0,255);
+    }
+
+    void wifiDisConnected()
+    {
+        m_makeLed.setColor(255,0,0);
+        m_offLed.setColor(255,0,0);
+    }
+
+    void jarvisConnected()
+    {
+        enable();
+        if(m_status == On)
+        {
+            m_makeLed.setColor(0,250,0);
+            m_offLed.off();
+        }else {
+            m_makeLed.off();
+            m_makeLed.setColor(0,0,250);
+            m_makeLed.glow();
+            m_offLed.setColor(250,0,0);
+        }
+    }
+
+    void jarvisDisConnected()
+    {
+        wifiConnected();
+        disable();
+    }
+
     virtual void update()
     {
       jarvisNode::update();
+
+      if(!m_enabled) return;
       
       if(m_status == PowerOnRequested)
       {
-        m_activationCounter++;
-        if(m_activationCounter >= 5000/(updateInterval+1))
+        m_activationCounter += (updateInterval+1.0)/1000.0f;
+        if(m_activationCounter >= 5.0f)
         {
             m_status = PoweringOn;
-            m_activationCounter = 0;
-            m_switch.addEvent(E_GLOBAL_POWERON);
+            m_activationCounter = 0.0;
+            addEvent(E_GLOBAL_POWERON);
         }
       }else if(m_status == ShutDownRequested)
       {
-          m_deActivationCounter++;
-          if(m_deActivationCounter >= 5000/(updateInterval+1))
+          m_deActivationCounter += (updateInterval+1.0)/1000.0f;
+          if(m_deActivationCounter >= 5.0f)
           {
               m_status = ShuttingDown;
-              m_deActivationCounter = 0;
-              m_switch.addEvent(E_GLOBAL_SHUTDOWN);
+              m_deActivationCounter = 0.0;
+              addEvent(E_GLOBAL_SHUTDOWN);
           }
       }else if(m_status == PoweringOn)
       {
@@ -159,8 +202,8 @@ protected:
     ledBar       m_offLed;
     dhtSensor    m_dhtSensor;
     switchStatus m_status              = Off;
-    uint16_t     m_activationCounter   = 0 ;
-    uint16_t     m_deActivationCounter = 0 ;
+    float       m_activationCounter   = 0.0 ;
+    float       m_deActivationCounter = 0.0 ;
 };
 
 #endif // MAKESWITCH_H
