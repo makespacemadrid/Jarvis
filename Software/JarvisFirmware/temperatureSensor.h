@@ -71,5 +71,50 @@ protected:
 
 };
 
+class ntc100kTemperatureSensor : public nodeComponent
+{
+public:
+  ntc100kTemperatureSensor(int pin) : nodeComponent(pin)
+  {
+    m_id = F("Temp");
+    m_actions.push_back(A_READ_RAW);
+    m_capableEvents.push_back(E_RAW_READ);
+    m_actions.push_back(A_READ_DATA);
+    m_capableEvents.push_back(E_DATA_READ);
+  }
+
+  void setup()
+  {
+
+  }
+
+  bool isValid()
+  {
+      return true;
+  }
+
+  bool     canRead()  {return true;}
+
+  uint16_t readRaw()
+  {
+      return 1024;
+  }
+
+  virtual float      readData()
+  {
+    if(!m_enabled){return 0;} // si el dispositivo no esta habilitado ni se intenta acceder al hardware
+    return convertRead(readRaw());
+  }
+
+
+  static float convertRead(uint16_t raw)
+  {
+      return raw * 0.20f;
+  }
+
+protected:
+
+
+};
 
 #endif // TEMPERATURESENSOR_H

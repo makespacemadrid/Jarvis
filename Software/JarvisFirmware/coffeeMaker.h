@@ -2,12 +2,13 @@
 #define COFFEEMAKER_H
 
 #include "simplePowerControl.h"
+#include "temperatureSensor.h"
 
 
 class coffeeMaker : public simplePowerControl
 {
 public:
-    coffeeMaker(int relayPin) : simplePowerControl(relayPin,15), m_leds(&m_ledStrip), m_heating(false)
+    coffeeMaker(int relayPin,int buttonPin = -1,int tempSensorPin = -1) : simplePowerControl(relayPin,buttonPin), m_leds(&m_ledStrip), m_heating(false), m_tempSensor(tempSensorPin)
     {
         m_relay.setup();
         m_button.setId("button");
@@ -17,6 +18,7 @@ public:
         m_id = "coffeeMaker";
         m_leds.addLed(3,47);
         m_components.push_back(&m_leds);
+        m_components.push_back(&m_tempSensor);
 
         m_actions.push_back(A_MAKE_COFFEE);
         m_actions.push_back(A_ACTIVATE);
@@ -53,8 +55,7 @@ public:
 
         if(m_heating)
         {
-            //if(isHot())
-            if(m_timeout > 10)
+            if(isHot())
             {
                 m_heating = false;
                 m_leds.setColor(0,0,150);
@@ -65,9 +66,6 @@ public:
         {
             if(m_timeout > 20)
             {
-                m_makingCoffee = false;
-                m_leds.setColor(0,150,0);
-                m_leds.glow();
                 stop();
             }
         }
@@ -134,24 +132,32 @@ public:
 
     bool isHot()
     {
-        return false;
+        return m_timeout > 10;
+        //return m_tempSensor.readData() > 200;
     }
 
     void makeCoffee()
     {
-        if(!isHot()) heat();
-        m_events.push_back(E_COFFEE_MAKING);
         m_makingCoffee = true;
+        m_events.push_back(E_COFFEE_MAKING);
+        if(!isHot()) heat();
+        while(!isHot() && m_makingCoffee)
+        {
+            update();
+        }
         m_leds.setColor(100,100,0);
         m_leds.glow();
+        //activar la cafetera
     }
 
     void stop()
     {
         m_makingCoffee = false;
+        m_leds.setColor(0,150,0);
     }
 
 protected:
+    ntc100kTemperatureSensor m_tempSensor;
     float   m_timeout;
     ledBar  m_leds;
     bool    m_heating;
