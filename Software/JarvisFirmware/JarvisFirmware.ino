@@ -1,8 +1,9 @@
 // Arduino IDE WTF #1 hay que hacer el include de las librerias en el .ino! No vale si las haces en el .c
 #include <Adafruit_NeoPixel.h>
 #include <EEPROM.h>
-//#include <Wire.h>
+#include <Wire.h>
 #include <DHT.h>
+#include <RTClib.h>
 
 #ifdef ESP8266
   #include <ESP8266WiFi.h>
