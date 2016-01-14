@@ -16,7 +16,7 @@ public:
   bool     canRead()  {return true;}
 
 
-  virtual float      read()
+  virtual float      readData()
   {
     if(!m_enabled){return 0;} // si el dispositivo no esta habilitado ni se intenta acceder al hardware
     return m_dht->readTemperature();
@@ -39,7 +39,7 @@ public:
 
   bool     canRead()  {return true;}
 
-  virtual float      read()
+  virtual float      readData()
   {
     if(!m_enabled){return 0;}
     return m_dht->readHumidity();
@@ -71,5 +71,81 @@ protected:
 
 };
 
+class ntc100kTemperatureSensor : public nodeComponent
+{
+public:
+  ntc100kTemperatureSensor(int pin) : nodeComponent(pin)
+  {
+    m_id = F("Temp");
+    m_actions.push_back(A_READ_RAW);
+    m_capableEvents.push_back(E_RAW_READ);
+    m_actions.push_back(A_READ_DATA);
+    m_capableEvents.push_back(E_DATA_READ);
+  }
+
+  void setup()
+  {
+
+  }
+
+  bool isValid()
+  {
+      return true;
+  }
+
+  bool     canRead()  {return true;}
+
+  uint16_t readRaw()
+  {
+      if(!m_enabled){return 0;}
+      return analogRead(m_pin);
+  }
+
+  virtual float      readData()
+  {
+    if(!m_enabled){return 0;} // si el dispositivo no esta habilitado ni se intenta acceder al hardware
+    return convertRead(readRaw());
+  }
+
+
+  static float convertRead(uint16_t raw)
+  {
+
+    #define THERMISTORNOMINAL 80000
+    // temp. for nominal resistance (almost always 25 C)
+    #define TEMPERATURENOMINAL 25
+    // how many samples to take and average, more takes longer
+    // but is more 'smooth'
+    //#define NUMSAMPLES 5
+    // The beta coefficient of the thermistor (usually 3000-4000)
+    #define BCOEFFICIENT 3950
+    // the value of the 'other' resistor
+    #define SERIESRESISTOR 160000
+
+      float average = raw;
+      // convert the value to resistance
+      average = 1023 / average - 1;
+      average = SERIESRESISTOR / average;
+      Serial.print("Thermistor resistance ");
+      Serial.println(average);
+
+      float steinhart;
+      steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
+      steinhart = log(steinhart);                  // ln(R/Ro)
+      steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
+      steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
+      steinhart = 1.0 / steinhart;                 // Invert
+      steinhart -= 273.15;                         // convert to C
+
+      Serial.print("Temperature ");
+      Serial.print(steinhart);
+      Serial.println(" *C");
+      return steinhart;
+  }
+
+protected:
+
+
+};
 
 #endif // TEMPERATURESENSOR_H

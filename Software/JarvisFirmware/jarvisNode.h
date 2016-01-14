@@ -90,6 +90,13 @@ public:
   #else
     espProxy::update();
   #endif
+    if(this->hasEvents())
+    {
+        std::vector<nodeComponent::event> events = this->getEvents();
+        for(int e = 0 ; e <  events.size() ; e++)
+          sendEvent(m_id,events[e]);
+    }
+
     for(int c = 0 ; c<m_components.size() ; c++ )
     {
         nodeComponent* comp = m_components[c];
@@ -114,7 +121,7 @@ public:
               if(comp->id() == m_pollingSensors[c])
               {
                 args.push_back(comp->id());
-                args.push_back(String(comp->read()));
+                args.push_back(String(comp->readData()));
               }
             }
         send(encodeJarvisMsg(args));
@@ -187,24 +194,27 @@ protected:
 // Implementaciones del protocolo
   virtual void sendComponents()
   {
+      sendComponent(this);
       for(int i  = 0 ; i < m_components.size() ; i++ )
+        sendComponent(m_components[i]);
+  }
+
+  virtual void sendComponent(nodeComponent* comp)
+  {
+      std::vector<String> args;
+      args.push_back(C_COMPONENT);
+      args.push_back(comp->id());
+      args.push_back(E_EVENT);
+      for (int i = 0 ; i < comp->capableEvents().size() ; i++)
       {
-        std::vector<String> args;
-        args.push_back(C_COMPONENT);
-        nodeComponent* comp = m_components[i];
-        args.push_back(comp->id());
-        args.push_back(E_EVENT);
-        for (int i = 0 ; i < comp->capableEvents().size() ; i++)
-        {
-            args.push_back(String(comp->capableEvents()[i]));
-        }
-        args.push_back(E_ACTION);
-        for (int i = 0 ; i < comp->getActions().size() ; i++)
-        {
-            args.push_back(String(comp->getActions()[i]));
-        }
-            send(encodeJarvisMsg(args));
+          args.push_back(String(comp->capableEvents()[i]));
       }
+      args.push_back(E_ACTION);
+      for (int i = 0 ; i < comp->getActions().size() ; i++)
+      {
+          args.push_back(String(comp->getActions()[i]));
+      }
+          send(encodeJarvisMsg(args));
   }
 
   virtual void pollSensors(int delay = -1)
@@ -264,19 +274,27 @@ protected:
       m_pollingSensors.clear();
   }
 
-  virtual void doAction(std::vector<String> args)
+  virtual void processDoAction(std::vector<String> args)
   {
       if(args.size() < 2) return;
+      String dest = args[0];
+      args.erase(args.begin());
+      jarvisActions action = jarvisActions(args[0].toInt());
+      args.erase(args.begin());
+
+      if(m_id == dest)
+      {
+          doAction(action,args);
+          return;
+      }
+
       for(int i = 0 ; i < m_components.size() ; i++)
       {
         nodeComponent* comp = m_components[i];
-        std::vector<String> arguments = args;
-        if(comp->id() == arguments[0])
+        if(comp->id() == dest)
         {
-            arguments.erase(arguments.begin());
-            jarvisActions action = jarvisActions(arguments[0].toInt());
-            arguments.erase(arguments.begin());
-            comp->doAction(action,arguments);
+            comp->doAction(action,args);
+            return;
         }
       }
   }

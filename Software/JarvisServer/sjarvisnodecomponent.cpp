@@ -46,6 +46,11 @@ void sJarvisNodeComponent::deactivate()
     m_parentNode->doAction(m_id,A_DEACTIVATE);
 }
 
+void sJarvisNodeComponent::toggle()
+{
+    m_parentNode->doAction(m_id,A_TOGGLE);
+}
+
 void sJarvisNodeComponent::readRaw()
 {
     m_parentNode->doAction(m_id,A_READ_RAW);
@@ -71,6 +76,11 @@ void sJarvisNodeComponent::blink(int freq, int r,int g,int b)
 void sJarvisNodeComponent::glow()
 {
     m_parentNode->doAction(m_id,A_GLOW);
+}
+
+void sJarvisNodeComponent::fade()
+{
+    m_parentNode->doAction(m_id,A_FADE);
 }
 
 void sJarvisNodeComponent::setColor(int r,int g,int b)

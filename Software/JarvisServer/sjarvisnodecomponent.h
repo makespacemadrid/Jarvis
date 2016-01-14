@@ -47,10 +47,12 @@ public slots:
     void disable();
     void activate();
     void deactivate();
+    void toggle();
     void readRaw();
     void readData();
     void dimm(uint power = 128);
     void glow();
+    void fade();
     void blink(int freq, int r=0, int g=0, int b=0);
     void cylon();
     void beep(int freq = 300, int dur = 300);

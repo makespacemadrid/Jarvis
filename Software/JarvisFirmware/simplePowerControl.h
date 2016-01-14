@@ -3,14 +3,15 @@
 
 #include "jarvisNode.h"
 #include "relay.h"
-
+#include "buttons.h"
 
 class simplePowerControl : public jarvisNode
 {
 public:
-    simplePowerControl(int relayPin) : jarvisNode(), m_relay(relayPin)
+    simplePowerControl(int relayPin,int buttonPin = -1) : jarvisNode(), m_relay(relayPin), m_button(buttonPin)
     {
         m_components.push_back(&m_relay);
+        m_components.push_back(&m_button);
         m_id = "simplePowerControl";
     }
 
@@ -46,11 +47,18 @@ public:
                 m_speaker.beep();
                 m_statusLed.extraLedIdle();
             }
+        } else if(source == "button")
+        {
+            if(e.jevent == E_ACTIVATED)
+            {
+                m_relay.toggle();
+            }
         }
         jarvisNode::sendEvent(source,e);
     }
 protected:
-    relay m_relay;
+    relay   m_relay;
+    button  m_button;
 };
 
 

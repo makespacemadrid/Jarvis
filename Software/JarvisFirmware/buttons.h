@@ -26,7 +26,7 @@ public:
         return digitalRead(m_pin);
   }
 
-  virtual float     read()
+  virtual float     readData()
   {
       return readRaw();
   }

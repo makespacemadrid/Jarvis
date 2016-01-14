@@ -83,6 +83,7 @@ enum jarvisActions
     A_DIMM,
     A_BLINK,
     A_GLOW,
+    A_FADE,
     A_SET_COLOR,
     A_CYLON,
     A_SET_LEDS,

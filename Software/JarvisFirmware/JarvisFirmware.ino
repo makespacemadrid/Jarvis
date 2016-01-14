@@ -81,7 +81,7 @@ void setup()
 
     }else if(type == coffeeMakerModule)
     {
-        node = new coffeeMaker(14);
+        node = new coffeeMaker(14,15,A0);
     }else if(type == ledPanelModule)
     {
         node = new ledPanelNode();

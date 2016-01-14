@@ -36,7 +36,7 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
             connect(b,SIGNAL(clicked()),m_component,SLOT(deactivate()));
             b->setText("DEA");
         }else if(action == A_TOGGLE){
-            //connect(b,SIGNAL(clicked()),m_component,SLOT(toggle()));
+            connect(b,SIGNAL(clicked()),m_component,SLOT(toggle()));
             b->setText("TOGGLE");
         }else if(actions[i] == A_READ_RAW){
             connect(b,SIGNAL(clicked()),m_component,SLOT(readRaw()));
@@ -53,6 +53,9 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         }else if(actions[i] == A_GLOW){
             connect(b,SIGNAL(clicked()),m_component,SLOT(glow()));
             b->setText("GLOW");
+        }else if(actions[i] == A_FADE){
+            connect(b,SIGNAL(clicked()),m_component,SLOT(fade()));
+            b->setText("FADE");
         }else if(actions[i] == A_SET_COLOR){
             connect(b,SIGNAL(clicked()),this,SLOT(selectComponentColor()));
             b->setText("SCOLOR");
@@ -65,6 +68,9 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         }else if(actions[i] == A_SET_LED){
             //connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
             b->setText("SLED");
+        }else if(actions[i] == A_MAKE_COFFEE){
+            connect(b,SIGNAL(clicked()),m_component,SLOT(makeCoffe()));
+            b->setText("MAKE_COFFEE");
         }
     }
 
@@ -97,6 +103,12 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         }else if(events[i] == E_GLOBAL_SHUTDOWN)
         {
             connect(m_component,SIGNAL(globalShutDown()),w,SLOT(blink()));
+        }else if(events[i] == E_COFFEE_MAKING)
+        {
+            connect(m_component,SIGNAL(coffeeMaking()),w,SLOT(blink()));
+        }else if(events[i] == E_COFFEE_MADE)
+        {
+            connect(m_component,SIGNAL(coffeeMade()),w,SLOT(blink()));
         }
         w->setMinimumSize(32,32);
         w->setMaximumSize(32,32);

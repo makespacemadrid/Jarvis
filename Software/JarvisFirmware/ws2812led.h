@@ -12,16 +12,32 @@ class ws2812Strip {
 public:
     class led{ // clase led dentro de la clase Strip
     public:
-      led(): r(0), g(0), b(0) {;}
+      led(): r(0), g(0), b(0), bright(1.0) {;}
       void setColor(uint8_t red =0,uint8_t green=0,uint8_t blue=0)
         {
-          r=red,g=green,b=blue;
+          r=red   * bright;
+          g=green * bright;
+          b=blue  * bright;
         }
+
+      void dimm(float factor = 0.5f)
+      {
+          r *= factor;
+          g *= factor;
+          b *= factor;
+      }
+
+      void setBrightness(float b)
+      {
+          bright = b;
+      }
+
       void off()   {setColor(0,0,0);}
       void white() {setColor(200,200,200);}
       uint8_t r;
       uint8_t g;
       uint8_t b;
+      float bright;
     };
   
   ws2812Strip(int pin = -1, int lednr = 25) : m_pin(pin) , m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
@@ -110,7 +126,7 @@ class ledGadget :  public nodeComponent
         animationCylon
     };
 
-    ledGadget(ws2812Strip* m_parentStrip): m_strip(m_parentStrip)
+    ledGadget(ws2812Strip* m_parentStrip): m_strip(m_parentStrip) , m_bright(1.0)
     {
       m_capableEvents.push_back(E_ACTIVATED);
       m_capableEvents.push_back(E_DEACTIVATED);
@@ -154,10 +170,21 @@ class ledGadget :  public nodeComponent
         m_strip->update();
     }
 
+    void setBrightness(float b = 1.0)
+    {
+        m_bright = b;
+        for(int i = 0 ; i < m_leds.size() ; i++)
+        {
+            m_leds[i]->setBrightness(b);
+        }
+        m_strip->update();
+    }
+
 
     void setLed(std::vector<String>&  args)
     {
         if((args.size() < 4) || !m_enabled ) return;
+        m_animationType = animationNone;
         for(int p = 0 ; p < args.size() ; p+=4)
         {
             int ledPos = args[p].toInt();
@@ -230,6 +257,7 @@ class ledGadget :  public nodeComponent
     ws2812Strip*                    m_strip;
     std::vector<ws2812Strip::led*>  m_leds;
     animationType                   m_animationType = animationNone;
+    float m_bright;
 };
 
 class ledBar : public ledGadget
@@ -240,6 +268,7 @@ public:
       m_id = "ledBar";
       m_actions.push_back(A_CYLON);
       m_actions.push_back(A_GLOW);
+      m_actions.push_back(A_FADE);
     }
     void setReversed(bool reversed) {m_reversed = reversed;}
 
@@ -302,28 +331,22 @@ protected:
     uint8_t m_counter2;
     uint8_t m_counter3;
 
+
     virtual void animateFade()
     {
         bool all_off = true;
         for(int i = 0 ; i < m_leds.size() ; i++)
         {
-            if(m_leds[i]->r > 0)
+            m_leds[i]->dimm(0.8);
+            if ( (m_leds[i]->r > 0) ||
+                 (m_leds[i]->g > 0) ||
+                 (m_leds[i]->b > 0) )
             {
                 all_off = false;
-                m_leds[i]->r -= 1;
-            }
-            if(m_leds[i]->g > 0)
-            {
-                all_off = false;
-                m_leds[i]->g -= 1;
-            }
-            if(m_leds[i]->b > 0)
-            {
-                all_off = false;
-                m_leds[i]->b -= 1;
             }
         }
-        if(all_off) m_animationType == animationNone;
+        if(all_off)
+            deactivate();
     }
 
     virtual void animateGlow()
@@ -338,12 +361,13 @@ protected:
                 }
                 if((m_leds[i]->g > 0) && (m_leds[i]->g < 250))
                 {
-                    m_leds[i]->g += 5;
-                }
-                if((m_leds[i]->b > 0) && (m_leds[i]->b < 250))
-                {
-                    m_leds[i]->b += 5;
-                }
+                   m_leds[i]->g += 5;
+               }
+               if((m_leds[i]->b > 0) && (m_leds[i]->b < 250))
+               {
+                   m_leds[i]->b += 5;
+               }
+//                m_leds[i]->setBrightness(m_counter3*100.0f/m_counter1/100.0f);
             }
             m_counter1++;
             if(m_counter1 == m_counter3)
@@ -357,7 +381,7 @@ protected:
                 {
                     m_leds[i]->r -= 5;
                 }
-                if(m_leds[i]->g > 5)
+               if(m_leds[i]->g > 5)
                 {
                     m_leds[i]->g -= 5;
                 }
@@ -365,6 +389,7 @@ protected:
                 {
                     m_leds[i]->b -= 5;
                 }
+//                m_leds[i]->setBrightness(m_counter3*100.0f/m_counter1/100.0f);
             }
             m_counter1--;
             if(m_counter1 == 0)
@@ -396,13 +421,14 @@ protected:
             int i = 0;
             for(int l = min ; l < max ; l++ )
             {
+                ws2812Strip::led *led = m_leds[l];
                 if(i == m_counter1)
                 {
-                   m_leds[l]->setColor(255,0,0);
+                   led->setColor(255,0,0);
                 }
                 else
                 {
-                    m_leds[l]->off();
+                    led->dimm();
                 }
 
                 if(m_counter1 >= max)
@@ -422,13 +448,14 @@ protected:
             int i = count;
             for(int l = max-1 ; l >= min ; l-- )
             {
+                ws2812Strip::led *led = m_leds[l];
                 if(i == m_counter1)
                 {
-                   m_leds[l]->setColor(255,0,0);
+                   led->setColor(255,0,0);
                 }
                 else
                 {
-                    m_leds[l]->off();
+                    led->dimm();
                 }
 
                 if(m_counter1 <= min)
@@ -467,35 +494,14 @@ class ledStatusTrio : public ledBar
     void animate()
     {
         if(!m_enabled) return;
-        ledGadget::animate();
+        ledBar::animate();
 
         if(m_statusDecay)
-        {
-            if(m_controllerLed->r > 0)
-              m_controllerLed->r-=10;
-            if(m_controllerLed->g > 0)
-              m_controllerLed->g-=10;
-            if(m_controllerLed->b > 0)
-              m_controllerLed->b-=10;
-        }
+            m_controllerLed->dimm();
         if(m_wifiStatusDecay)
-        {
-            if(m_wifiLed->r > 0)
-              m_wifiLed->r-=10;
-            if(m_wifiLed->g > 0)
-              m_wifiLed->g-=10;
-            if(m_wifiLed->b > 0)
-              m_wifiLed->b-=10;
-        }
+            m_wifiLed->dimm();
         if(m_extraLedDecay)
-        {
-            if(m_extraLed->r > 0)
-              m_extraLed->r-=10;
-            if(m_extraLed->g > 0)
-              m_extraLed->g-=10;
-            if(m_extraLed->b > 0)
-              m_extraLed->b-=10;
-        }
+            m_extraLed->dimm();
         m_strip->update();
     }
 
@@ -552,8 +558,7 @@ class ledStatusTrio : public ledBar
 
     void wifiOK()
     {
-//        *m_wifiLed = m_wifiStatusColor;
-
+        *m_wifiLed = m_wifiStatusColor;
     }
 
     void wifiError()
@@ -613,66 +618,66 @@ protected:
         setLeds(ledMatrixIcons::cylonIcon16x16());
         m_animationType = animationCylon;
         //contador 1 para la iteracion, 2 para la direccion
-                int min = 33;
-                int max = 47;
-                int count = max - min;
-                Serial.println(m_counter1);
-                if(m_counter2 == 0)//incrementando
+        int min = 33;
+        int max = 47;
+        int count = max - min;
+        //Serial.println(m_counter1);
+        if(m_counter2 == 0)//incrementando
+        {
+            int i = 0;
+            for(int l = min ; l < max ; l++ )
+            {
+                if(i == m_counter1)
                 {
-                    int i = 0;
-                    for(int l = min ; l < max ; l++ )
-                    {
-                        if(i == m_counter1)
-                        {
-                           m_leds[l]->setColor(255,0,0);
-                           m_leds[l+16]->setColor(255,0,0);
-                           m_leds[l+32]->setColor(255,0,0);
-                        }
-                        else
-                        {
-                            m_leds[l]->off();
-                        }
-
-                        if(m_counter1 >= count)
-                        {
-                            m_counter1 = count;
-                            m_counter2 = 1;
-                            return;
-                        }
-                        else
-                        {
-                            i++;
-                        }
-                    }
-                    m_counter1++;
-                }else //decrementando
-                {
-                    int i = count;
-                    for(int l = max-1 ; l >= min ; l-- )
-                    {
-                        if(i == m_counter1)
-                        {
-                            m_leds[l]->setColor(255,0,0);
-                            m_leds[l+16]->setColor(255,0,0);
-                            m_leds[l+32]->setColor(255,0,0);                        }
-                        else
-                        {
-                            m_leds[l]->off();
-                        }
-
-                        if(m_counter1 <= 0)
-                        {
-                            m_counter1 = 0;
-                            m_counter2 = 0;
-                            return;
-                        }
-                        else
-                        {
-                            i--;
-                        }
-                    }
-                    m_counter1--;
+                   m_leds[l]->setColor(255,0,0);
+                   m_leds[l+16]->setColor(255,0,0);
+                   m_leds[l+32]->setColor(255,0,0);
                 }
+                else
+                {
+                    m_leds[l]->dimm();
+                }
+
+                if(m_counter1 >= count)
+                {
+                    m_counter1 = count;
+                    m_counter2 = 1;
+                    return;
+                }
+                else
+                {
+                    i++;
+                }
+            }
+            m_counter1++;
+        }else //decrementando
+        {
+            int i = count;
+            for(int l = max-1 ; l >= min ; l-- )
+            {
+                if(i == m_counter1)
+                {
+                    m_leds[l]->setColor(255,0,0);
+                    m_leds[l+16]->setColor(255,0,0);
+                    m_leds[l+32]->setColor(255,0,0);                        }
+                else
+                {
+                    m_leds[l]->dimm();
+                }
+
+                if(m_counter1 <= 0)
+                {
+                    m_counter1 = 0;
+                    m_counter2 = 0;
+                    return;
+                }
+                else
+                {
+                    i--;
+                }
+            }
+            m_counter1--;
+        }
     }
 };
 
