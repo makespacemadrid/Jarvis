@@ -42,7 +42,7 @@ public:
         simplePowerControl::update();
         if(m_timeout < 300.0)
         {
-            m_timeout += updateInterval/1000.0f;
+            m_timeout += (updateInterval+1)/1000.0f;
         }else
         {
             m_timeout = 0;
@@ -58,13 +58,12 @@ public:
             if(isHot())
             {
                 m_heating = false;
-                m_leds.setColor(0,0,150);
-                m_leds.glow();
+                m_leds.setColor(0,150,0);
             }
         }
         if(m_makingCoffee)
         {
-            if(m_timeout > 20)
+            if(m_timeout > 60)
             {
                 stop();
             }
@@ -132,8 +131,8 @@ public:
 
     bool isHot()
     {
-        return m_timeout > 10;
-        //return m_tempSensor.readData() > 200;
+        //return m_timeout > 10;
+        return m_tempSensor.readRaw() <= 150;
     }
 
     void makeCoffee()
@@ -154,14 +153,16 @@ public:
     {
         m_makingCoffee = false;
         m_leds.setColor(0,150,0);
+        deactivate();
     }
 
 protected:
-    ntc100kTemperatureSensor m_tempSensor;
-    float   m_timeout;
-    ledBar  m_leds;
-    bool    m_heating;
-    bool    m_makingCoffee;
+    ntc100kTemperatureSensor    m_tempSensor;
+    float                       m_timeout;
+    ledBar                      m_leds;
+    bool                        m_heating;
+    bool                        m_makingCoffee;
+
 };
 
 

@@ -97,7 +97,8 @@ public:
 
   uint16_t readRaw()
   {
-      return 1024;
+      if(!m_enabled){return 0;}
+      return analogRead(m_pin);
   }
 
   virtual float      readData()
@@ -109,7 +110,37 @@ public:
 
   static float convertRead(uint16_t raw)
   {
-      return raw * 0.20f;
+
+    #define THERMISTORNOMINAL 80000
+    // temp. for nominal resistance (almost always 25 C)
+    #define TEMPERATURENOMINAL 25
+    // how many samples to take and average, more takes longer
+    // but is more 'smooth'
+    //#define NUMSAMPLES 5
+    // The beta coefficient of the thermistor (usually 3000-4000)
+    #define BCOEFFICIENT 3950
+    // the value of the 'other' resistor
+    #define SERIESRESISTOR 160000
+
+      float average = raw;
+      // convert the value to resistance
+      average = 1023 / average - 1;
+      average = SERIESRESISTOR / average;
+      Serial.print("Thermistor resistance ");
+      Serial.println(average);
+
+      float steinhart;
+      steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
+      steinhart = log(steinhart);                  // ln(R/Ro)
+      steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
+      steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
+      steinhart = 1.0 / steinhart;                 // Invert
+      steinhart -= 273.15;                         // convert to C
+
+      Serial.print("Temperature ");
+      Serial.print(steinhart);
+      Serial.println(" *C");
+      return steinhart;
   }
 
 protected:

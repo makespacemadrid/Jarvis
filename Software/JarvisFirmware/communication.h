@@ -725,6 +725,7 @@ class espProxy : public communicationModule
 
     void read()
     {
+
     }
 
 #else
