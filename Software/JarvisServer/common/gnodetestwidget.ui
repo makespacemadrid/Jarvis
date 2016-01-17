@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>562</width>
-    <height>450</height>
+    <width>568</width>
+    <height>421</height>
    </rect>
   </property>
   <property name="font">
@@ -167,7 +167,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton">
+         <widget class="QToolButton" name="rstBtn">
           <property name="text">
            <string>Reset</string>
           </property>
@@ -176,7 +176,7 @@
         <item>
          <widget class="QToolButton" name="readSenBtn">
           <property name="text">
-           <string>ReadSensors</string>
+           <string>pollSensors</string>
           </property>
           <property name="checkable">
            <bool>true</bool>
@@ -191,70 +191,6 @@
          <enum>Qt::Vertical</enum>
         </property>
        </widget>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_4">
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>TimedCommands</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="readSensorsCheck">
-          <property name="text">
-           <string>ReadSensors</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="consoleCommandCheck">
-          <property name="text">
-           <string>ConsoleCommand</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_8">
-        <item>
-         <widget class="QLabel" name="TimerInterval">
-          <property name="text">
-           <string>Timerconfig</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDial" name="readFreqSlider">
-          <property name="minimum">
-           <number>50</number>
-          </property>
-          <property name="maximum">
-           <number>1000</number>
-          </property>
-          <property name="value">
-           <number>500</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="wrapping">
-           <bool>false</bool>
-          </property>
-          <property name="notchTarget">
-           <double>100.000000000000000</double>
-          </property>
-          <property name="notchesVisible">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLCDNumber" name="lcdNumber"/>
-        </item>
-       </layout>
       </item>
       <item>
        <widget class="Line" name="line_2">
@@ -321,8 +257,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>115</width>
-            <height>258</height>
+            <width>133</width>
+            <height>241</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -435,8 +371,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>413</width>
-             <height>76</height>
+             <width>409</width>
+             <height>68</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -483,22 +419,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>readFreqSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>lcdNumber</receiver>
-   <slot>display(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>334</x>
-     <y>140</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>334</x>
-     <y>97</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

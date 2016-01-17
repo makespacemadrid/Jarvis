@@ -2,7 +2,7 @@
 #include "ui_gblinkwidget.h"
 
 gBlinkWidget::gBlinkWidget(QWidget *parent) :
-    QFrame(parent),
+    QLCDNumber(parent),
     ui(new Ui::gBlinkWidget)
 {
     ui->setupUi(this);
@@ -18,7 +18,7 @@ gBlinkWidget::~gBlinkWidget()
 
 void gBlinkWidget::paintEvent(QPaintEvent *pe)
 {
-    QFrame::paintEvent(pe);
+    QLCDNumber::paintEvent(pe);
     QPainter p(this);
     p.setBrush(QColor(m_color));
     QRect rect = this->rect();
@@ -28,6 +28,7 @@ void gBlinkWidget::paintEvent(QPaintEvent *pe)
 
 void gBlinkWidget::blink(QColor color)
 {
+    display(value()+1);
     m_color = color;
     m_color.setAlpha(255);
     m_timer.start();
@@ -46,4 +47,9 @@ void gBlinkWidget::decay_animation()
         m_color.setAlpha(m_color.alpha()-m_decay_step);
     }
     update();
+}
+
+void gBlinkWidget::displayRead(QStringList args)
+{
+    display(args[0]);
 }

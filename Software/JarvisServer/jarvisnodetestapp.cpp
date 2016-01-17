@@ -1,14 +1,14 @@
-#include "gnodetestwidget.h"
-#include "ui_gnodetestwidget.h"
-#include <QVBoxLayout>
+#include "jarvisnodetestapp.h"
+#include "ui_jarvisnodetestapp.h"
 
-
-
-gNodeTestWidget::gNodeTestWidget(sJarvisNode* node, QWidget *parent) :
-    QGroupBox(parent),
-    ui(new Ui::gNodeTestWidget)
+jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::jarvisNodeTestApp)
 {
     ui->setupUi(this);
+    ui->statusbar->addWidget(&m_rxWidget);
+    m_statusLabel.setText("Idle");
+    ui->statusbar->addWidget(&m_statusLabel);
     if(node != 0)
     {
         m_sharedNode = true;
@@ -20,33 +20,30 @@ gNodeTestWidget::gNodeTestWidget(sJarvisNode* node, QWidget *parent) :
     m_graphInit =false;
     connectNodeSignals(m_node);
     m_sensorsTimer.setInterval(500);
-    ui->nodeComponents->setLayout(new QVBoxLayout());
-    ui->nodeComponents->layout()->setSizeConstraint(QLayout::SetMinimumSize);
-    ui->sensorBox->setLayout(new QVBoxLayout());
-    ui->sensorBox->layout()->setSizeConstraint(QLayout::SetMinimumSize);
-    connect(ui->readFreqSlider,SIGNAL(valueChanged(int)),&m_sensorsTimer,SLOT(start(int)));
 }
 
-gNodeTestWidget::~gNodeTestWidget()
+jarvisNodeTestApp::~jarvisNodeTestApp()
 {
     delete ui;
 }
 
-void gNodeTestWidget::connectNodeSignals(sJarvisNode* node)
+
+void jarvisNodeTestApp::connectNodeSignals(sJarvisNode* node)
 {
-    connect(node,SIGNAL(tx()),ui->txwidget,SLOT(tx()));
-    connect(node,SIGNAL(rx()),ui->txwidget,SLOT(rx()));
+    connect(node,SIGNAL(tx()),&m_rxWidget,SLOT(tx()));
+    connect(node,SIGNAL(rx()),&m_rxWidget,SLOT(rx()));
     connect(node,SIGNAL(rawInput(QByteArray)),this,SLOT(console_log(QByteArray)));
     connect(node,SIGNAL(writeData(QByteArray)),this,SLOT(console_log(QByteArray)));
     connect(node,SIGNAL(incomingEvent(QString,jarvisEvents,QStringList)),this,SLOT(eventLog(QString,jarvisEvents,QStringList)));
     //connect(node,SIGNAL(newComponent(sJarvisNodeComponent*)),this,SLOT(addComponent(sJarvisNodeComponent*)));
-    connect(&m_sensorsTimer,SIGNAL(timeout()),this,SLOT(timedCmd()));
+    //connect(&m_sensorsTimer,SIGNAL(timeout()),this,SLOT(timedCmd()));
     connect(node,SIGNAL(sensorReads(QVector<QString>,QVector<double>)),this,SLOT(sensorRead(QVector<QString>,QVector<double>)));
     connect(node,SIGNAL(ready()),this,SLOT(nodeConnected()));
     connect(node,SIGNAL(disconnected()),this,SLOT(nodeDisconnected()));
+    connect(ui->sliderUpdateInterval,SIGNAL(sliderMoved(int)),m_node,SLOT(setUpdateInterval(int)));
 }
 
-sJarvisNode* gNodeTestWidget::newNode()
+sJarvisNode* jarvisNodeTestApp::newNode()
 {
     if(!m_sharedNode)
         m_node->deleteLater();
@@ -56,7 +53,7 @@ sJarvisNode* gNodeTestWidget::newNode()
     return m_node;
 }
 
-void gNodeTestWidget::setNode(sJarvisNode *nNode)
+void jarvisNodeTestApp::setNode(sJarvisNode *nNode)
 {
     if(!m_sharedNode)
         m_node->deleteLater();
@@ -65,20 +62,20 @@ void gNodeTestWidget::setNode(sJarvisNode *nNode)
     connectNodeSignals(m_node);
 }
 
-void gNodeTestWidget::nodeConnected()
+void jarvisNodeTestApp::nodeConnected()
 {
     QList<sJarvisNodeComponent*> comps = m_node->components();
-    ui->idLabel->setText(m_node->getId());
+    ui->labelID->setText(m_node->getId());
     for(int i = 0 ; i < comps.count() ; i++ )
     {
         sJarvisNodeComponent* ncomp = comps[i];
-        gNodeComponentWidget* w = new gNodeComponentWidget(ncomp,ui->nodeComponents);
-        ui->nodeComponents->layout()->addWidget(w);
+        gNodeComponentWidget* w = new gNodeComponentWidget(ncomp,ui->scrollComponents);
+        ui->scrollComponentsContents->layout()->addWidget(w);
         m_componentWidgets.append(w);
     }
 }
 
-void gNodeTestWidget::nodeDisconnected()
+void jarvisNodeTestApp::nodeDisconnected()
 {
     for(int i = 0;  i < m_componentWidgets.count() ; i++)
     {
@@ -86,64 +83,61 @@ void gNodeTestWidget::nodeDisconnected()
     }
     m_componentWidgets.clear();
     m_sensorsTimer.stop();
-    ui->connectBtn->setText("Connect");
     ui->connectBtn->setChecked(false);
 }
 
-void gNodeTestWidget::on_connectBtn_clicked()
+void jarvisNodeTestApp::on_connectBtn_clicked()
 {
     if(ui->connectBtn->isChecked())
     {
-        int port = 31416;//ui->ipEdit->text().toInt();
-        qDebug() << "Connecting-" << ui->ipEdit->text() << ":" << QString::number(port);
-        m_node->connectTCP(ui->ipEdit->text(),port);
-        ui->connectBtn->setText("Disconnect");
+        int port = ui->editPort->text().toInt();
+        qDebug() << "Connecting-" << ui->editIP->text() << ":" << QString::number(port);
+        m_node->connectTCP(ui->editIP->text(),port);
     }
     else
     {
         m_node->closeTCP();
-        ui->connectBtn->setText("Connect");
     }
 }
 
-void gNodeTestWidget::on_readSenBtn_clicked()
+void jarvisNodeTestApp::on_readComponentsBtn_clicked()
 {
     m_node->pollSensor();
 }
 
-void gNodeTestWidget::on_sendBtn_clicked()
+void jarvisNodeTestApp::on_sendCmdBtn_clicked()
 {
-    m_node->send(ui->cmdEdit->text().toUtf8());
+    m_node->send(ui->editCommand->text().toUtf8());
 }
 
-void gNodeTestWidget::console_log(QByteArray data)
+void jarvisNodeTestApp::console_log(QByteArray data)
 {
-    ui->consoleOutputEdit->append(data);
+    ui->editConsole->appendPlainText(data);
 }
 
-void gNodeTestWidget::eventLog(QString component, jarvisEvents event, QStringList args)
+void jarvisNodeTestApp::eventLog(QString component, jarvisEvents event, QStringList args)
 {
     QString result;
     result.append("Source:");
     result.append(component);
-    result.append("Event:");
+    result.append(":Event:");
     result.append(QString::number(event,'f',0));
     for(int i = 0 ; i < args.count() ; i++ )
     {
+        result.append(";");
         result.append(args[i]);
     }
-    ui->eventLogEdit->append(result);
+    ui->editEventlog->append(result);
 }
 
-void gNodeTestWidget::sensorRead(QVector<QString> fields,QVector<double> data)
+void jarvisNodeTestApp::sensorRead(QVector<QString> fields,QVector<double> data)
 {
     if(!m_graphInit)
     {
         for(int i = 0; i < fields.count() ; i++ )
         {
-            gSimpleGraph* g = new gSimpleGraph(ui->sensorBox);
-            ui->sensorBox->layout()->addWidget(g);
-            ui->sensorBox->layout()->setSizeConstraint(QLayout::SetMinimumSize);
+            gSimpleGraph* g = new gSimpleGraph(ui->scrollGraphs);
+            ui->scrollGraphContents->layout()->addWidget(g);
             QVector<QString> f;
             QVector<double> d;
             f.append(fields[i]);
@@ -160,10 +154,4 @@ void gNodeTestWidget::sensorRead(QVector<QString> fields,QVector<double> data)
         d.append(data[i]);
         m_graphs[i]->appendData(d);
     }
-}
-
-void gNodeTestWidget::timedCmd()
-{
-    if(ui->consoleCommandCheck->checkState())
-        m_node->send(ui->cmdEdit->text().toUtf8());
 }

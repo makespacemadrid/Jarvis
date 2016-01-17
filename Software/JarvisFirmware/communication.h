@@ -437,6 +437,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     }
 };
 
+#define ESP8266
 
 #ifdef ESP8266
 class espNative : public communicationModule
@@ -478,10 +479,19 @@ class espNative : public communicationModule
 
     void initConn(WiFiClient conn)
     {
+        m_validatedConns.push_back(conn);
+
         std::vector<String> args;
         args.push_back(M_NODE_GREETING);
         conn.print(encodeJarvisMsg(args));
-        m_validatingConns.push_back(conn);
+        args.clear();
+
+        sendId();
+        sendProtocolVersion();
+        sendComponents();
+
+        i_jarvisConnected();
+
     }
 
     void validateNewClients()
@@ -490,19 +500,45 @@ class espNative : public communicationModule
         {
             if(m_validatingConns[i].connected())
             {
-                if(true)//mecanismo de validacion
+                if(!m_validatingConns[i].available()) return;
+                String last_char;
+                last_char = (char)m_validatingConns[i].read();
+                String buff;
+                Serial.println("D:Validating client");
+                while(m_validatingConns[i].available() && (last_char != P_PACKETTERMINATOR))
+                {
+                  yield();
+                  last_char = (char)m_validatingConns[i].read();
+                  buff += last_char;
+                }
+                buff.remove(buff.length()-1);
+                Serial.println(buff);
+                std::vector<String> args = splitStr(buff,P_PACKETSEPARATOR);
+                if((args.size() == 2) &&
+                   (args[0] == M_NODEMSG) &&
+                   (args[1] == M_JARVIS_GREETING) )
                 {
                     debugln(String(F("D:New client!")));
-                    i_jarvisConnected();
-                    m_validatedConns.push_back(m_validatingConns[i]);
+                    initConn(m_validatingConns[i]);
                     m_validatingConns.erase(m_validatingConns.begin()+i);
+                }
+                else
+                {
+                    debugln(F("D:Disconnecting"));
+                    m_validatingConns[i].print("What!?\n");
+                    m_validatingConns[i].stop();
+                    m_validatingConns.erase(m_validatingConns.begin()+i);
+                    debugln(String(F("D:bad client Disconected")));
+                    yield();
                 }
             }
             else
             {
+                debugln(String(F("D:unvalidated client Disconected")));
+                m_validatingConns[i].print("What!?\n");
                 m_validatingConns[i].stop();
                 m_validatingConns.erase(m_validatingConns.begin()+i);
-                debugln(String(F("D:unvalidatedClient Disconected")));
+                yield();
             }
         }
     }
@@ -532,7 +568,7 @@ class espNative : public communicationModule
             WiFiClient serverClient = m_server.available();
             if(m_validatedConns.size()+m_validatingConns.size() < m_max_clients)
             {
-                initConn(serverClient);
+                m_validatingConns.push_back(serverClient);
             }
             else
             {//si ya se ha alcanzado el maximo se rechazan los nuevos clientes

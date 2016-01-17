@@ -45,7 +45,7 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
             connect(b,SIGNAL(clicked()),m_component,SLOT(readData()));
             b->setText("READ");
         }else if(actions[i] == A_DIMM){
-            //connect(b,SIGNAL(clicked()),m_component,SLOT(dimm(50)));
+            connect(b,SIGNAL(clicked()),m_component,SLOT(dimm()));
             b->setText("DIMM");
         }else if(actions[i] == A_BLINK){
             //connect(b,SIGNAL(clicked()),m_component,SLOT(blink(50)));
@@ -82,36 +82,47 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         if(events[i] == E_ACTIVATED)
         {
             connect(m_component,SIGNAL(activated()),w,SLOT(blink()));
+
         }else if(events[i] == E_DEACTIVATED)
         {
             connect(m_component,SIGNAL(deactivated()),w,SLOT(blink()));
+
         }else if(events[i] == E_ENABLED)
         {
             connect(m_component,SIGNAL(enabled()),w,SLOT(blink()));
+
         }else if(events[i] == E_DISABLED)
         {
             connect(m_component,SIGNAL(disabled()),w,SLOT(blink()));
+
         }else if(events[i] == E_RAW_READ)
         {
             connect(m_component,SIGNAL(rawRead()),w,SLOT(blink()));
+            connect(m_component,SIGNAL(rawRead(QStringList)),w,SLOT(displayRead(QStringList)));
+
         }else if(events[i] == E_DATA_READ)
         {
             connect(m_component,SIGNAL(dataRead()),w,SLOT(blink()));
+            connect(m_component,SIGNAL(dataRead(QStringList)),w,SLOT(displayRead(QStringList)));
+
         }else if(events[i] == E_GLOBAL_POWERON)
         {
             connect(m_component,SIGNAL(globalPowerOn()),w,SLOT(blink()));
+
         }else if(events[i] == E_GLOBAL_SHUTDOWN)
         {
             connect(m_component,SIGNAL(globalShutDown()),w,SLOT(blink()));
+
         }else if(events[i] == E_COFFEE_MAKING)
         {
             connect(m_component,SIGNAL(coffeeMaking()),w,SLOT(blink()));
+
         }else if(events[i] == E_COFFEE_MADE)
         {
             connect(m_component,SIGNAL(coffeeMade()),w,SLOT(blink()));
         }
-        w->setMinimumSize(32,32);
-        w->setMaximumSize(32,32);
+        //w->setMinimumSize(32,32);
+        //w->setMaximumSize(32,32);
     }
 }
 

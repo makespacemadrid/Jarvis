@@ -18,8 +18,8 @@ public:
     ~gNodeComponentWidget();
 
 private:
-    Ui::gNodeComponentWidget *ui;
     sJarvisNodeComponent*     m_component;
+    Ui::gNodeComponentWidget *ui;
 
 private slots:
     void sendImage();

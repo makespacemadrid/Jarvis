@@ -124,6 +124,8 @@ public:
                 args.push_back(String(comp->readData()));
               }
             }
+        args.push_back("Freemem:");
+        args.push_back(String(getFreeMem()));
         send(encodeJarvisMsg(args));
     }
 
