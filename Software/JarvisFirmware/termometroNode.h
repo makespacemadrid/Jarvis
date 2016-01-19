@@ -13,20 +13,7 @@ public:
 
         m_id = "termometro";
         disable();
-    }
-
-    virtual void sendEvent(String source,nodeComponent::event e)
-    {//sobrecargar esta funcion para reaccionar a los eventos salientes.
-        if(source == "switch"){
-            if(!m_enabled){
-                jarvisNode::sendEvent(source,e);
-                return;
-            }
-
-
-        }
-        jarvisNode::sendEvent(source,e);
-    }
+    }   
 
     void setup(){
         jarvisNode::setup();
@@ -38,6 +25,11 @@ public:
     {
         wifiConnected();
         disable();
+    }
+
+    void jarvisConnected(){
+        enable();
+
     }
 
     virtual void update(){
