@@ -77,16 +77,16 @@ Tabla de correspondencia de pines nodemcu arduino
 
   //Configuracion
   //int   ledStripLedNr          = 3;
-  int   ledStripLedNr            = 50;
-  //int   ledStripLedNr          = 25;
+  //int   ledStripLedNr            = 50;
+  int   ledStripLedNr          = 25;
   //int   ledStripLedNr          = 256;
   bool  bridgeMode             = false;
-  float currentMeterFactor     = 29.296875f;
-  int   currentMeterVolts      = 220;
-  int   relayMaxAmps           = 15;
-  bool  relayDimmable          = false;
-  int   relayMaxTemp           = 60;
-  int   ledNumber              =  3;
+  //float currentMeterFactor     = 29.296875f;
+  //int   currentMeterVolts      = 220;
+  //int   relayMaxAmps           = 15;
+  //bool  relayDimmable          = false;
+  //int   relayMaxTemp           = 60;
+  //int   ledNumber              =  3;
   int   magicNumber            = 31416; 
 };
 

@@ -25,6 +25,11 @@ public:
     void connectTCP(QString host, quint16 port);
     void closeTCP();
     void send(QByteArray data) {emit writeData(data);}
+    bool isValid()
+    {
+        return (m_tcpClient.isOpen() && m_valid);
+    }
+
 protected:
     QString          m_id;
     sJarvisTcpClient m_tcpClient;
@@ -34,6 +39,8 @@ protected:
     QTimer           m_pingTimer;
     QTimer           m_initTimer;
     QTime            m_keepAliveTimer;
+    bool             m_initDone;
+    bool             m_valid;
 
     void parseBuffer(QString& buf);
     void parsePacket(QString& packet);
@@ -64,11 +71,13 @@ signals:
     void disconnected();
 protected slots:
     void data_rx(QByteArray data);
+    void validateClient(QByteArray data);
     void initNode();
     void ping();
     void pong();
     void initDone();
     void socketDisconected();
+    void setUpdateInterval(int interval);
 public slots:
     void doAction(QString Component, jarvisActions action, QStringList args = QStringList());
     void pollSensor(QString sen = "ALL",int interval = -1);

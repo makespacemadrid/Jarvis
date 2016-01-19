@@ -5,12 +5,13 @@
 #include <QTimer>
 #include <QPainter>
 #include <QDebug>
+#include <QLCDNumber>
 
 namespace Ui {
 class gBlinkWidget;
 }
 
-class gBlinkWidget : public QFrame
+class gBlinkWidget : public QLCDNumber
 {
     Q_OBJECT
 
@@ -29,8 +30,11 @@ signals:
 private slots:
     void decay_animation();
 
+
+
 public slots:
     void blink(QColor color = QColor(0,255,0));
+    void displayRead(QStringList args);
 
 };
 

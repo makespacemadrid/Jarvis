@@ -10,7 +10,7 @@ sJarvisNode::sJarvisNode(QObject* parent) : QObject(parent)
     connect(&m_pingTimer,SIGNAL(timeout()),this,SLOT(ping()));
     connect(&m_initTimer,SIGNAL(timeout()),this,SLOT(initDone()));
 //Slots del nodo tcp
-    connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
+    //connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
     connect(this,SIGNAL(writeData(QByteArray)),&m_tcpClient,SLOT(socket_tx(QByteArray)));
     connect(&m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
     connect(&m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
@@ -21,7 +21,6 @@ sJarvisNode::sJarvisNode(QObject* parent) : QObject(parent)
 
 void sJarvisNode::connectTCP(QString host, quint16 port)
 {
-
     m_tcpClient.connectToHost(host,port);
 }
 
@@ -73,6 +72,7 @@ void sJarvisNode::parsePacket(QString& packet)
     args.removeFirst();
     QString arg = args[0];
     args.removeFirst();
+
     if      (arg == C_ID)
     {
         if(args.count() == 1)
@@ -103,6 +103,7 @@ void sJarvisNode::parsePacket(QString& packet)
 
 void sJarvisNode::parseComponent(QStringList args)
 {
+    if(m_initDone) return;
     m_components.append(new sJarvisNodeComponent(this,args));
     connect(this,SIGNAL(incomingEvent(QString,jarvisEvents,QStringList)),m_components.last(),SLOT(parseEvent(QString,jarvisEvents,QStringList)));
     emit newComponent(m_components.last());
@@ -235,10 +236,30 @@ void sJarvisNode::data_rx(QByteArray data)
 
 void sJarvisNode::initNode()
 {
-    sendGetID();
-    sendGetComponents();
+    m_initDone =false;
+    connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
+    send(encodeNodeMsg(QStringList(QString(M_JARVIS_GREETING))));
     // le damos un segundo para que reciba de vuelta la informacion, al cumplir el segundo se llama a la funcion initDone()
-    m_initTimer.start(1000);
+    m_initTimer.start(750);
+}
+
+
+void sJarvisNode::validateClient(QByteArray data)
+{
+    QString greet;
+    greet += P_PACKETSTART ;
+    greet += M_JARVISMSG;
+    greet += P_PACKETSEPARATOR;
+    greet += M_NODE_GREETING;
+    greet += P_PACKETTERMINATOR;
+    qDebug() << data << "/" << greet  ;
+    if(data == greet)
+    {
+        disconnect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
+        connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
+    }
+    else
+        closeTCP();
 }
 
 void sJarvisNode::ping()
@@ -261,18 +282,32 @@ void sJarvisNode::pong()
 
 void sJarvisNode::initDone()
 {
+
     m_initTimer.stop();
+
+    if(m_id.isEmpty() || m_components.isEmpty())
+    {
+        qDebug() << "Incompatible client or some problem on the init stage!";
+        m_valid = false;
+    }
+    else
+    {
+        m_valid = true;
+    }
+
     m_keepAliveTimer.start();
     ping();
     m_pingTimer.start();
+    m_initDone = true;
     emit ready();
 }
 
 void sJarvisNode::socketDisconected()
 {
+    disconnect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
     m_pingTimer.stop();
     m_initTimer.stop();
-
+    deleteComponents();
     emit disconnected();
 }
 
@@ -284,6 +319,14 @@ void sJarvisNode::deleteComponents()
         m_components[i]->deleteLater();
     }
     m_components.clear();
+}
+
+void sJarvisNode::setUpdateInterval(int interval)
+{
+    QStringList args;
+    args.append(C_SET_UPDATE_INTERVAL);
+    args.append(QString::number(interval));
+    send(encodeNodeMsg(args));
 }
 
 //public Slots

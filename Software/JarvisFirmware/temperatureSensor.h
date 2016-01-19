@@ -76,7 +76,7 @@ class ntc100kTemperatureSensor : public nodeComponent
 public:
   ntc100kTemperatureSensor(int pin) : nodeComponent(pin)
   {
-    m_id = F("Temp");
+    m_id = F("ntcTemp");
     m_actions.push_back(A_READ_RAW);
     m_capableEvents.push_back(E_RAW_READ);
     m_actions.push_back(A_READ_DATA);
@@ -88,12 +88,8 @@ public:
 
   }
 
-  bool isValid()
-  {
-      return true;
-  }
-
-  bool     canRead()  {return true;}
+  bool isValid()        {return true;}
+  bool     canRead()    {return true;}
 
   uint16_t readRaw()
   {
@@ -147,5 +143,69 @@ protected:
 
 
 };
+
+
+
+class tmp36Sensor : public nodeComponent
+{
+public:
+  tmp36Sensor(int pin) : nodeComponent(pin)
+  {
+    m_id = F("tmp36");
+    m_actions.push_back(A_READ_RAW);
+    m_capableEvents.push_back(E_RAW_READ);
+    m_actions.push_back(A_READ_DATA);
+    m_capableEvents.push_back(E_DATA_READ);
+  }
+
+  void setup()
+  {
+    pinMode(m_pin, INPUT);
+  }
+
+  bool isValid()        {return true;}
+  bool     canRead()    {return true;}
+
+  uint16_t readRaw()
+  {
+      if(!m_enabled){return 0;}
+      return analogRead(m_pin);
+  }
+
+  virtual float      readData()
+  {
+    if(!m_enabled){return 0;} // si el dispositivo no esta habilitado ni se intenta acceder al hardware
+    uint16_t value = readRaw();
+    uint8_t iterations = 10;// 64 es lo maximo que un uint16 puede albergar de forma segura para hacer la media (si todos son 1024...1024*64 = 16bits)
+    for(int i = 0 ; i < iterations ; i++)
+    {
+        value += readRaw();
+    }
+    return convertRead(value/iterations);
+  }
+
+
+  static float convertRead(uint16_t raw)
+  {
+      //Serial.print(raw); Serial.println(" raw");
+      // converting that reading to voltage, for 3.3v arduino use 3.3
+      float voltage = raw * 3.3;
+      voltage /= 1024.0;
+      float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
+                                                    //to degrees ((voltage - 500mV) times 100)
+
+      //Serial.print(temperatureC); Serial.println(" degrees C");
+      // now convert to Fahrenheit
+      //float temperatureF = (temperatureC * 9.0 / 5.0) + 32.0;
+      //Serial.print(temperatureF); Serial.println(" degrees F");
+
+      return temperatureC;
+  }
+
+protected:
+
+
+};
+
 
 #endif // TEMPERATURESENSOR_H

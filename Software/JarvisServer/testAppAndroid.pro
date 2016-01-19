@@ -8,11 +8,14 @@ QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = JarvisServer
+TARGET = JarvisTestAppAndroid
 TEMPLATE = app
 
-INCLUDEPATH+= ../JarvisFirmware/ \
-                common/
+INCLUDEPATH+= \
+    ../JarvisFirmware/ \
+    common/ \
+    testAppAndroid/
+
 
 
 SOURCES += \
@@ -26,11 +29,9 @@ SOURCES += \
     common/sjarvisnode.cpp \
     common/sjarvisnodecomponent.cpp \
     common/sjarvistcpclient.cpp \
-    jarvisServer/gjarvisgui.cpp \
-    jarvisServer/main.cpp \
-    jarvisServer/sjarvis.cpp \
-    jarvisServer/sjarvisnodeserver.cpp \
-    jarvisServer/sjarvistcpserver.cpp
+    testAppAndroid/main.cpp \
+    jarvisnodetestapp.cpp
+
 
 HEADERS += \
     ../JarvisFirmware/jarvisProtocol.h \
@@ -45,10 +46,8 @@ HEADERS += \
     common/sjarvisnode.h \
     common/sjarvisnodecomponent.h \
     common/sjarvistcpclient.h \
-    jarvisServer/gjarvisgui.h \
-    jarvisServer/sjarvis.h \
-    jarvisServer/sjarvisnodeserver.h \
-    jarvisServer/sjarvistcpserver.h
+    jarvisnodetestapp.h
+
 
 FORMS   += \
     common/gblinkwidget.ui \
@@ -57,4 +56,10 @@ FORMS   += \
     common/gsimplegraph.ui \
     common/gwidgetnode.ui \
     common/qimageselectionwidget.ui \
-    jarvisServer/gjarvisgui.ui
+    jarvisnodetestapp.ui
+
+DISTFILES +=
+
+RESOURCES += \
+    common/resources.qrc
+

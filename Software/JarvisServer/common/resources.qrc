@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>Iconos/connect-icon.png</file>
+        <file>Iconos/connected-icon.png</file>
+        <file>Iconos/cylon.bmp</file>
+        <file>Iconos/m.bmp</file>
+        <file>Iconos/warning.bmp</file>
+        <file>Iconos/wifi-amarillo.bmp</file>
+        <file>Iconos/wifi-rojo.bmp</file>
+        <file>Iconos/wifi-verde.bmp</file>
+        <file>Iconos/wifi.bmp</file>
+    </qresource>
+</RCC>

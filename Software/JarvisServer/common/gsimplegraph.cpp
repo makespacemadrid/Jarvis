@@ -85,7 +85,7 @@ void gSimpleGraph::draw_graph(QPainter *p, QRect rect)
     quint16 x_origin=rect.width()*0.1;
     quint16 x_length=rect.width()-x_origin;
     qint16 y_origin=rect.height()*0.9;
-    qint16 y_length=y_origin;
+    qint16 y_length=y_origin*0.95;
     QRect graph_rect(x_origin,0,x_length,y_length);
     p->drawRect(graph_rect);
     //dibujar los datos
@@ -93,12 +93,12 @@ void gSimpleGraph::draw_graph(QPainter *p, QRect rect)
     {
         p->setPen(QPen(m_colors[f]));
 
-        //hallar los maximos y minimos:
+        // maximos y minimos:
         qreal x_max=m_maxData,x_min=0;
         qreal y_max=0,y_min=0;
         for(int r = 0 ; r<m_data[f].count() ;r++)
         {
-            if(r==0) {y_max=m_data[f][r];y_min=m_data[f][r];}
+            if(r==0) {y_max=m_data[f][r];}//y_min=m_data[f][r];}
             if     (m_data[f][r]<y_min) y_min=m_data[f][r];
             else if(m_data[f][r]>y_max) y_max=m_data[f][r];
         }
@@ -125,7 +125,13 @@ void gSimpleGraph::draw_graph(QPainter *p, QRect rect)
             p->drawLine(px,0,px,rect.height());
         }
         //pintamos los textos
-        p->drawText(QRect(0,f*y_length/m_fields.count(),x_origin,abs(y_length/m_fields.count())),m_fields[f]);
+        p->drawText(QRect(0,f*y_length*3/m_fields.count(),x_origin,abs(y_length*3/m_fields.count())),m_fields[f]);
+        QString max_label = "max:";
+        max_label += QString::number(y_max);
+        p->drawText(QRect(0,(f*y_length*3/m_fields.count())+(y_length/m_fields.count()/3),x_origin,abs(y_length*3/m_fields.count())),max_label);
+        QString min_label = "min:";
+        min_label += QString::number(y_min);
+        p->drawText(QRect(0,(f*y_length*3/m_fields.count())+(y_length/m_fields.count()),x_origin,abs(y_length*3/m_fields.count())),min_label);
     }
 }
 
