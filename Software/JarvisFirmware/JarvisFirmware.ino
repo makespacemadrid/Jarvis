@@ -47,6 +47,7 @@ uint8_t updateInterval = 25;
 #include "coffeeMaker.h"
 #include "ledPanelNode.h"
 #include "testNode.h"
+#include "termometroNode.h"
 
 jarvisNode* node;
 
@@ -88,8 +89,9 @@ void setup()
         node = new ledPanelNode();
     }else if(type == testNodeModule){
         node = new testNode();
+    }else if(type == termometroNodeModule){
+        node = new termometroNode();
     }
-
     node->setup();
 }
 
