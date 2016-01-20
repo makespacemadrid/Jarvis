@@ -6,7 +6,7 @@
 
 class termometroNode : public jarvisNode{
 public:
-    termometroNode() : jarvisNode(), m_dhtSensor(4){
+    termometroNode() : jarvisNode(), m_dhtSensor(2){
 
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
