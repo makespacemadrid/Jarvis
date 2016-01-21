@@ -58,8 +58,17 @@ FORMS   += \
     common/qimageselectionwidget.ui \
     jarvisnodetestapp.ui
 
-DISTFILES +=
+DISTFILES += \
+    testAppAndroid/android/AndroidManifest.xml \
+    testAppAndroid/android/gradle/wrapper/gradle-wrapper.jar \
+    testAppAndroid/android/gradlew \
+    testAppAndroid/android/res/values/libs.xml \
+    testAppAndroid/android/build.gradle \
+    testAppAndroid/android/gradle/wrapper/gradle-wrapper.properties \
+    testAppAndroid/android/gradlew.bat
 
 RESOURCES += \
     common/resources.qrc
+
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/testAppAndroid/android
 

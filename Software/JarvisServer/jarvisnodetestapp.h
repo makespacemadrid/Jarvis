@@ -46,6 +46,9 @@ public slots:
     void on_readComponentsBtn_clicked();
     void on_connectBtn_clicked();
     void on_sendCmdBtn_clicked();
+    void on_stopReadBtn_clicked();
+    void on_btnGetComps_clicked();
+    void on_btnClearGraphs_clicked();
     void console_log(QByteArray data);
     void eventLog(QString component,jarvisEvents event,QStringList args);
     void sensorRead(QVector<QString> fields,QVector<double> data);

@@ -9,6 +9,7 @@ sJarvisNode::sJarvisNode(QObject* parent) : QObject(parent)
     connect(&m_tcpClient,SIGNAL(rx()),this,SIGNAL(rx()));
     connect(&m_pingTimer,SIGNAL(timeout()),this,SLOT(ping()));
     connect(&m_initTimer,SIGNAL(timeout()),this,SLOT(initDone()));
+    connect(&m_initTimeout,SIGNAL(timeout()),this,SLOT(initTimeout()));
 //Slots del nodo tcp
     //connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
     connect(this,SIGNAL(writeData(QByteArray)),&m_tcpClient,SLOT(socket_tx(QByteArray)));
@@ -104,6 +105,7 @@ void sJarvisNode::parsePacket(QString& packet)
 void sJarvisNode::parseComponent(QStringList args)
 {
     if(m_initDone) return;
+    m_initTimer.start(200);
     m_components.append(new sJarvisNodeComponent(this,args));
     connect(this,SIGNAL(incomingEvent(QString,jarvisEvents,QStringList)),m_components.last(),SLOT(parseEvent(QString,jarvisEvents,QStringList)));
     emit newComponent(m_components.last());
@@ -187,6 +189,8 @@ void sJarvisNode::sendGetID()
 
 void sJarvisNode::sendGetComponents()
 {
+    deleteComponents();
+    m_initDone = false;
     send(encodeNodeMsg(QStringList(QString(C_GETCOMPONENTS))));
 }
 
@@ -240,7 +244,7 @@ void sJarvisNode::initNode()
     connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
     send(encodeNodeMsg(QStringList(QString(M_JARVIS_GREETING))));
     // le damos un segundo para que reciba de vuelta la informacion, al cumplir el segundo se llama a la funcion initDone()
-    m_initTimer.start(750);
+    m_initTimeout.start(5000);
 }
 
 
@@ -284,6 +288,7 @@ void sJarvisNode::initDone()
 {
 
     m_initTimer.stop();
+    m_initTimeout.stop();
 
     if(m_id.isEmpty() || m_components.isEmpty())
     {
@@ -300,6 +305,12 @@ void sJarvisNode::initDone()
     m_pingTimer.start();
     m_initDone = true;
     emit ready();
+}
+
+void sJarvisNode::initTimeout()
+{
+    closeTCP();
+    m_initTimeout.stop();
 }
 
 void sJarvisNode::socketDisconected()
@@ -342,4 +353,16 @@ void sJarvisNode::pollSensor(QString sen, int interval)
         sendPollSensors(interval);
     else
         sendPollSensor(sen,interval);
+}
+
+void sJarvisNode::stopPollingSensors()
+{
+    sendStopPolling();
+}
+
+void sJarvisNode::resetNode()
+{
+    QStringList args;
+    args.append(C_RESET);
+    send(encodeNodeMsg(args));
 }

@@ -1,5 +1,6 @@
 #include "jarvisnodetestapp.h"
 #include "ui_jarvisnodetestapp.h"
+#include <QGridLayout>
 
 jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
     QMainWindow(parent),
@@ -40,7 +41,8 @@ void jarvisNodeTestApp::connectNodeSignals(sJarvisNode* node)
     connect(node,SIGNAL(sensorReads(QVector<QString>,QVector<double>)),this,SLOT(sensorRead(QVector<QString>,QVector<double>)));
     connect(node,SIGNAL(ready()),this,SLOT(nodeConnected()));
     connect(node,SIGNAL(disconnected()),this,SLOT(nodeDisconnected()));
-    connect(ui->sliderUpdateInterval,SIGNAL(sliderMoved(int)),m_node,SLOT(setUpdateInterval(int)));
+    connect(ui->sliderUpdateInterval,SIGNAL(sliderMoved(int)),node,SLOT(setUpdateInterval(int)));
+    connect(ui->btnReset,SIGNAL(clicked()),node,SLOT(resetNode()));
 }
 
 sJarvisNode* jarvisNodeTestApp::newNode()
@@ -70,9 +72,12 @@ void jarvisNodeTestApp::nodeConnected()
     {
         sJarvisNodeComponent* ncomp = comps[i];
         gNodeComponentWidget* w = new gNodeComponentWidget(ncomp,ui->scrollComponents);
-        ui->scrollComponentsContents->layout()->addWidget(w);
+        QGridLayout* l = (QGridLayout*)ui->scrollComponentsContents->layout();
+        l->addWidget(w);
+        //l->addWidget(w,l->count()/2,l->count()%2);
         m_componentWidgets.append(w);
     }
+    m_statusLabel.setText("Node connected!");
 }
 
 void jarvisNodeTestApp::nodeDisconnected()
@@ -84,6 +89,7 @@ void jarvisNodeTestApp::nodeDisconnected()
     m_componentWidgets.clear();
     m_sensorsTimer.stop();
     ui->connectBtn->setChecked(false);
+    m_statusLabel.setText("Node disconnected!");
 }
 
 void jarvisNodeTestApp::on_connectBtn_clicked()
@@ -91,7 +97,9 @@ void jarvisNodeTestApp::on_connectBtn_clicked()
     if(ui->connectBtn->isChecked())
     {
         int port = ui->editPort->text().toInt();
-        qDebug() << "Connecting-" << ui->editIP->text() << ":" << QString::number(port);
+        QString status;
+        status += "Connecting-" + ui->editIP->text() + ":" + QString::number(port);
+        m_statusLabel.setText(status);
         m_node->connectTCP(ui->editIP->text(),port);
     }
     else
@@ -108,6 +116,31 @@ void jarvisNodeTestApp::on_readComponentsBtn_clicked()
 void jarvisNodeTestApp::on_sendCmdBtn_clicked()
 {
     m_node->send(ui->editCommand->text().toUtf8());
+}
+
+void jarvisNodeTestApp::on_stopReadBtn_clicked()
+{
+    m_node->stopPollingSensors();
+}
+
+void jarvisNodeTestApp::on_btnGetComps_clicked()
+{
+    for(int i = 0;  i < m_componentWidgets.count() ; i++)
+    {
+        m_componentWidgets[i]->deleteLater();
+    }
+    m_componentWidgets.clear();
+    m_node->getComponents();
+}
+
+void jarvisNodeTestApp::on_btnClearGraphs_clicked()
+{
+    for(int i = 0 ; i < m_graphs.count() ; i++)
+    {
+        m_graphs[i]->deleteLater();
+    }
+    m_graphInit = false;
+    m_graphs.clear();
 }
 
 void jarvisNodeTestApp::console_log(QByteArray data)
@@ -130,8 +163,9 @@ void jarvisNodeTestApp::eventLog(QString component, jarvisEvents event, QStringL
     ui->editEventlog->append(result);
 }
 
+
 void jarvisNodeTestApp::sensorRead(QVector<QString> fields,QVector<double> data)
-{
+{      
     if(!m_graphInit)
     {
         for(int i = 0; i < fields.count() ; i++ )
@@ -142,7 +176,6 @@ void jarvisNodeTestApp::sensorRead(QVector<QString> fields,QVector<double> data)
             QVector<double> d;
             f.append(fields[i]);
             g->setFields(f);
-            d.append(0);
             g->appendData(d);
             m_graphs.append(g);
         }
