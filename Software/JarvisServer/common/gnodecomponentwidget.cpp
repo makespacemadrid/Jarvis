@@ -4,6 +4,7 @@
 #include <QHBoxLayout>
 #include "qimageselectionwidget.h"
 #include <QColorDialog>
+#include <QLabel>
 
 gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *parent) :
     QGroupBox(parent), m_component(comp),
@@ -19,7 +20,8 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         jarvisActions action = actions[i];
         //qDebug() << QString::number(int(action));
         QToolButton* b = new QToolButton(ui->actionsBox);
-        ui->actionsBox->layout()->addWidget(b);
+        QGridLayout* l = (QGridLayout*)ui->actionsBox->layout();
+        l->addWidget(b,l->count()/2,l->count()%2);
         b->setText(QString::number(action,'f',0));
 
         if      (action == A_ENABLE){
@@ -78,48 +80,66 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
     for(int i = 0 ; i < events.count() ; i++)
     {
         gBlinkWidget* w = new gBlinkWidget(ui->eventsBox);
-        ui->eventsBox->layout()->addWidget(w);
+        QLabel* label = new QLabel(ui->eventsBox);
+        QGridLayout* l = (QGridLayout*)ui->eventsBox->layout();
+        l->addWidget(label,i,0);
+        l->addWidget(w,i,1);
+        w->setMaximumHeight(50);
         if(events[i] == E_ACTIVATED)
         {
             connect(m_component,SIGNAL(activated()),w,SLOT(blink()));
+            label->setText("Activated");
 
         }else if(events[i] == E_DEACTIVATED)
         {
             connect(m_component,SIGNAL(deactivated()),w,SLOT(blink()));
+            label->setText("Deactivated");
 
         }else if(events[i] == E_ENABLED)
         {
             connect(m_component,SIGNAL(enabled()),w,SLOT(blink()));
+            label->setText("Enabled");
 
         }else if(events[i] == E_DISABLED)
         {
             connect(m_component,SIGNAL(disabled()),w,SLOT(blink()));
+            label->setText("Disabled");
 
         }else if(events[i] == E_RAW_READ)
         {
             connect(m_component,SIGNAL(rawRead()),w,SLOT(blink()));
             connect(m_component,SIGNAL(rawRead(QStringList)),w,SLOT(displayRead(QStringList)));
+            label->setText("Raw");
 
         }else if(events[i] == E_DATA_READ)
         {
             connect(m_component,SIGNAL(dataRead()),w,SLOT(blink()));
             connect(m_component,SIGNAL(dataRead(QStringList)),w,SLOT(displayRead(QStringList)));
+            label->setText("Data");
 
         }else if(events[i] == E_GLOBAL_POWERON)
         {
             connect(m_component,SIGNAL(globalPowerOn()),w,SLOT(blink()));
+            label->setText("PowerOn");
 
         }else if(events[i] == E_GLOBAL_SHUTDOWN)
         {
             connect(m_component,SIGNAL(globalShutDown()),w,SLOT(blink()));
+            label->setText("PowerOff");
 
         }else if(events[i] == E_COFFEE_MAKING)
         {
             connect(m_component,SIGNAL(coffeeMaking()),w,SLOT(blink()));
+            label->setText("Coffee Making");
 
         }else if(events[i] == E_COFFEE_MADE)
         {
             connect(m_component,SIGNAL(coffeeMade()),w,SLOT(blink()));
+            label->setText("Cofee Made");
+        }
+        else
+        {
+            label->setText("Unknown");
         }
         //w->setMinimumSize(32,32);
         //w->setMaximumSize(32,32);

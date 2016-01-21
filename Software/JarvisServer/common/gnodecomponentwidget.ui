@@ -6,13 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>445</width>
-    <height>95</height>
+    <width>335</width>
+    <height>93</height>
    </rect>
   </property>
   <property name="font">
    <font>
     <pointsize>8</pointsize>
+    <weight>75</weight>
+    <bold>true</bold>
    </font>
   </property>
   <property name="windowTitle">
@@ -56,7 +58,7 @@
      <property name="title">
       <string>Actions</string>
      </property>
-     <layout class="QFormLayout" name="formLayout"/>
+     <layout class="QGridLayout" name="gridLayout_2"/>
     </widget>
    </item>
    <item>

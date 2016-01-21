@@ -38,6 +38,7 @@ protected:
     QList<sJarvisNodeComponent*> m_components;
     QTimer           m_pingTimer;
     QTimer           m_initTimer;
+    QTimer           m_initTimeout;
     QTime            m_keepAliveTimer;
     bool             m_initDone;
     bool             m_valid;
@@ -76,11 +77,15 @@ protected slots:
     void ping();
     void pong();
     void initDone();
+    void initTimeout();
     void socketDisconected();
     void setUpdateInterval(int interval);
 public slots:
     void doAction(QString Component, jarvisActions action, QStringList args = QStringList());
     void pollSensor(QString sen = "ALL",int interval = -1);
+    void stopPollingSensors();
+    void resetNode();
+    void getComponents() {sendGetComponents();}
 
 };
 
