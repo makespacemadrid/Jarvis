@@ -437,7 +437,8 @@ class communicationModule : public jarvisParser , public nodeComponent
     }
 };
 
-#define ESP8266
+//#define ESP8266 //Descomentar para que el qt creator pueda hacer autocompletado en esta zona del codigo
+//volver a comentar el terminar para que no interfiera con la compilacion para arduino.
 
 #ifdef ESP8266
 class espNative : public communicationModule
