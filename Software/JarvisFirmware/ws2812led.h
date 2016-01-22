@@ -602,17 +602,44 @@ class ledStatusTrio : public ledBar
 class ledMatrix : public ledBar
 {
 public:
-    ledMatrix(uint8_t firstLednr, uint8_t cols, uint8_t rows, ws2812Strip* parentStrip, bool invertEachRow = false) : ledBar(parentStrip)
+    ledMatrix(uint8_t firstLednr, uint8_t cols, uint8_t rows, ws2812Strip* parentStrip,bool mirror = false, bool invertEachRow = false) : ledBar(parentStrip)
     {
         for(int r = 0 ; r < rows ; r++)
         {
+            m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
-            addLed(r*cols+firstLednr,cols,invertedRow);
+            if(mirror) invertedRow = !invertEachRow;
+
+            int start = r*cols+firstLednr;
+            int count = cols;
+
+            if(invertedRow)
+            {
+                for(int i = start+count-1 ; i >= start ; i-- )
+                {
+                    ws2812Strip::led* l = m_strip->getLed(i);
+                    m_leds.push_back(l);
+                    m_matrix[r].push_back(l);
+                }
+            }
+            else
+            {
+                for(int i = start ; i < start+count ; i++ )
+                {
+                    ws2812Strip::led* l = m_strip->getLed(i);
+                    m_leds.push_back(l);
+                    m_matrix[r].push_back(l);
+                }
+            }
         }
-        m_id = "ws2812Matrix";
+        m_id = "ws2812Matrix-";
+        m_id +=cols;
+        m_id +="x";
+        m_id += rows;
     }
+
 protected:
-//    std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
+    std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
     void animateCylon()
     {
         setLeds(ledMatrixIcons::cylonIcon16x16());
