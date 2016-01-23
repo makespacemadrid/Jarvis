@@ -8,7 +8,7 @@
 class ledPanelNode : public jarvisNode
 {
 public:
-    ledPanelNode() : jarvisNode() ,m_ledMatrix(0,16,16,&m_ledStrip,true), m_tempSensor(A0)
+    ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,true), m_tempSensor(A0)
     {
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(&m_tempSensor);

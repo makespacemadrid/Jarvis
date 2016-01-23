@@ -42,7 +42,7 @@ public:
   
   ws2812Strip(int pin = -1, int lednr = 25) : m_pin(pin) , m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
   {
-    m_brightness = 0.2f;
+    m_brightness = 1.0f;
     if((isValid()))
     {
       for(int i = 0 ; i < lednr ; i++) m_leds.push_back(led());
@@ -62,6 +62,7 @@ public:
   {
     if(!isValid()) return;
     m_pixels.begin();
+    yield();
     test();
     off();
 
@@ -74,6 +75,7 @@ public:
       m_pixels.setPixelColor(i, m_leds[i].r*m_brightness,m_leds[i].g*m_brightness,m_leds[i].b*m_brightness);
     }
     m_pixels.show(); 
+    yield();
   }
 
   void off()
@@ -102,7 +104,6 @@ public:
     {
       m_leds[i].setColor(20,20,20);
       update();
-      //delay(5);
     }
   }
   
@@ -606,7 +607,7 @@ public:
     {
         for(int r = 0 ; r < rows ; r++)
         {
-            m_matrix.push_back(std::vector<ws2812Strip::led*>());
+            //m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
             if(mirror) invertedRow = !invertEachRow;
 
@@ -619,7 +620,7 @@ public:
                 {
                     ws2812Strip::led* l = m_strip->getLed(i);
                     m_leds.push_back(l);
-                    m_matrix[r].push_back(l);
+                    //m_matrix[r].push_back(l);
                 }
             }
             else
@@ -628,7 +629,7 @@ public:
                 {
                     ws2812Strip::led* l = m_strip->getLed(i);
                     m_leds.push_back(l);
-                    m_matrix[r].push_back(l);
+                    //m_matrix[r].push_back(l);
                 }
             }
         }
