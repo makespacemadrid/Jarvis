@@ -5,6 +5,8 @@
 #include <ESP8266WiFi.h>
 #include "webconfigurator.h"
 #include <WiFiClient.h> 
+#include <ESP8266mDNS.h>
+#include <ESP8266HTTPUpdateServer.h>
 #endif
 
 #include "jarvisParser.h"
@@ -437,7 +439,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     }
 };
 
-//#define ESP8266 //Descomentar para que el qt creator pueda hacer autocompletado en esta zona del codigo
+#define ESP8266 //Descomentar para que el qt creator pueda hacer autocompletado en esta zona del codigo
 //volver a comentar el terminar para que no interfiera con la compilacion para arduino.
 
 #ifdef ESP8266
@@ -465,6 +467,16 @@ class espNative : public communicationModule
       #ifdef I2C_TRANSPORT
       Wire.begin(0,2);// guardar los pines i2c en la eeprom!
       #endif
+
+      char c_id[sizeof(m_id)];
+      m_id.toCharArray(c_id, sizeof(c_id));
+      debugln("D: Starting mdns responder.");
+      MDNS.begin(c_id);
+      m_httpUpdater.setup(&m_webServer.webServer());
+      MDNS.addService("http", "tcp", 80);
+      debug("D: HTTPUpdateServer ready! Open http://");
+      debug(m_id);
+      debug(".local/update in your browser\n");
     }
 
     void update()
@@ -677,7 +689,8 @@ class espNative : public communicationModule
     std::vector<WiFiClient> m_validatedConns;
     std::vector<WiFiClient> m_validatingConns;
 
-    webConfigurator  m_webServer;
+    webConfigurator         m_webServer;
+    ESP8266HTTPUpdateServer m_httpUpdater;
 
 
     void connectAP()
