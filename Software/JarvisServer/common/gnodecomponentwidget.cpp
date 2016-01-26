@@ -5,6 +5,8 @@
 #include "qimageselectionwidget.h"
 #include <QColorDialog>
 #include <QLabel>
+#include <QApplication>
+
 
 gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *parent) :
     QGroupBox(parent), m_component(comp),
@@ -66,10 +68,10 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
             b->setText("CYLON");
         }else if(actions[i] == A_SET_LEDS){
             connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
-            b->setText("SET_IMG");
-        }else if(actions[i] == A_SET_LED){
-            //connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
-            b->setText("SLED");
+            b->setText("SET_LEDS");
+        }else if(actions[i] == A_DISPLAY){
+            connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
+            b->setText("DISPLAY");
         }else if(actions[i] == A_MAKE_COFFEE){
             connect(b,SIGNAL(clicked()),m_component,SLOT(makeCoffe()));
             b->setText("MAKE_COFFEE");
@@ -157,23 +159,30 @@ void gNodeComponentWidget::sendImage()
     if(w.exec())
     {
         QImage img = w.scaledImage.convertToFormat(QImage::Format_RGB888);
-        uchar *bits = img.bits();
         QStringList args;
-        for (int i = 0; i < (img.width() * img.height() * 3); i = i+3)
+        for(int x = 0 ; x < img.width() ; x++)
         {
-            args.append(QString::number(i/3,'f',0));
-            args.append(QString::number((int) bits[i],'f',0));
-            args.append(QString::number((int) bits[i+1],'f',0));
-            args.append(QString::number((int) bits[i+2],'f',0));
-            if(i%16==0)
+            for(int y = 0 ; y < img.height() ; y++)
             {
-                m_component->setLed(args);
-                args.clear();
-            }
+                QRgb colorRgb = img.pixel(QPoint(x,y));
+                QColor color(colorRgb);
 
+                //qDebug() << "x:" << x << " - y:" << y << " - r:" << color.red() << " - g:" << color.green() << " - b:" << color.blue();
+
+                args.append(QString::number(y,'f',0));
+                args.append(QString::number(x,'f',0));
+                args.append(QString::number(color.red() ,'f',0));
+                args.append(QString::number(color.green() ,'f',0));
+                args.append(QString::number(color.blue() ,'f',0));
+                qDebug() << " - args:" << args.size() ;
+                if( args.size() >= (32*5) )
+                {
+                    m_component->display(args);
+                    args.clear();
+                }
+            }
         }
-        if(args.size())
-            m_component->setLed(args);
+        if(args.size()) m_component->display(args);
     }
 }
 

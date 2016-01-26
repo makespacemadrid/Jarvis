@@ -68,67 +68,69 @@ public:
 protected:
 
     static String encodeArgs(std::vector<String>& args)
-	{	
-		String result;
-		result += args[0];
-		for (int i = 1 ; i < args.size() ; i++)
-		{
-			result += P_PACKETSEPARATOR;
-			result += args[i];
-		}
-		return result;
-	}
-
-	void parseBuffer(String& buf)
-	{
-    if(buf.length() == 0) return;
-    int s_index = buf.indexOf(P_PACKETSTART);
-    int e_index = buf.indexOf(P_PACKETTERMINATOR);
-    //saneado del buffer
-    if(s_index < 0)
-    {// si no hay inicio de paquete lo que hay en el buffer tiene que ser basura.
-        buf = "";
-        return;
+    {
+        String result;
+        result += args[0];
+        for (int i = 1 ; i < args.size() ; i++)
+        {
+                result += P_PACKETSEPARATOR;
+                result += args[i];
+        }
+        return result;
     }
-    //extraccion de comandos
-    while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
-    {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
-    String packet = buf.substring(s_index+1,e_index);
-    parsePacket(packet);
-    buf = buf.substring(e_index+1);
-    s_index = buf.indexOf(P_PACKETSTART);
-    e_index = buf.indexOf(P_PACKETTERMINATOR);
+
+
+    void parseBuffer(String& buf)
+    {
+        if(buf.length() == 0) return;
+        int s_index = buf.indexOf(P_PACKETSTART);
+        int e_index = buf.indexOf(P_PACKETTERMINATOR);
+        //saneado del buffer
+        if(s_index < 0)
+        {// si no hay inicio de paquete lo que hay en el buffer tiene que ser basura.
+            buf = "";
+            return;
+        }
+        //extraccion de comandos
+        while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
+        {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
+        String packet = buf.substring(s_index+1,e_index);
+        buf = buf.substring(e_index+1);
+        parsePacket(packet);
+        s_index = buf.indexOf(P_PACKETSTART);
+        e_index = buf.indexOf(P_PACKETTERMINATOR);
+        }
     }
-	}
 
-	void parsePacket(String& str)
-	{
-		std::vector<String> args;
-        args = splitStr(str, P_PACKETSEPARATOR);
-        if(args.size() < 2) return;
-		String arg = args[0];
-		args.erase(args.begin());
+    void parsePacket(String& str)
+    {
+    std::vector<String> args;
+    args = splitStr(str, P_PACKETSEPARATOR);
+    //str = "";
+    if(args.size() < 2) return;
+            String arg = args[0];
+            args.erase(args.begin());
 
-		if      (arg == M_NODEMSG)
-			processNodeMsg(args);
-		else if (arg == M_JARVISMSG)
-			processJarvisMsg(args);
-		else if (arg == M_ESPMSG)
-			processEspMsg(args);
-	}
-	
-	virtual void processNodeMsg(std::vector<String>& args)
-	{ // que cada cual implemente su parte en la herencia
-		
-	}
-	virtual void processJarvisMsg(std::vector<String>& args)
-	{
-		
-	}
-	virtual void processEspMsg(std::vector<String>& args)
-	{
-		
-	}
+            if      (arg == M_NODEMSG)
+                    processNodeMsg(args);
+            else if (arg == M_JARVISMSG)
+                    processJarvisMsg(args);
+            else if (arg == M_ESPMSG)
+                    processEspMsg(args);
+    }
+
+    virtual void processNodeMsg(std::vector<String>& args)
+    { // que cada cual implemente su parte en la herencia
+
+    }
+    virtual void processJarvisMsg(std::vector<String>& args)
+    {
+
+    }
+    virtual void processEspMsg(std::vector<String>& args)
+    {
+
+    }
 };
 
 #endif

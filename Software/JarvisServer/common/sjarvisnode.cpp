@@ -225,6 +225,7 @@ void sJarvisNode::sendDoAction(QString componentId,jarvisActions action, QString
     args.append(componentId);
     args.append(QString::number(action));
     args.append(arguments);
+    //m_tcpClient.write(encodeNodeMsg(args));
     send(encodeNodeMsg(args));
 }
 

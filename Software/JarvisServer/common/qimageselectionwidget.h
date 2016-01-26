@@ -24,6 +24,7 @@ signals:
 
 private slots:
     void on_selectFileBtn_clicked();
+    void resizeImg();
 };
 
 #endif // QIMAGESELECTIONWIDGET_H

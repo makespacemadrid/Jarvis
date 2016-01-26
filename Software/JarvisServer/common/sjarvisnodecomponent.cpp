@@ -23,7 +23,6 @@ void sJarvisNodeComponent::initArgs(QStringList args)
     {
         m_actions.append(jarvisActions(args[i].toInt()));
     }
-
 }
 
 void sJarvisNodeComponent::enable()
@@ -63,7 +62,7 @@ void sJarvisNodeComponent::readData()
 
 void sJarvisNodeComponent::dimm(uint power)
 {
-    m_parentNode->doAction(m_id,A_DIMM, QStringList(QString(power)));
+    m_parentNode->doAction(m_id,A_DIMM, QStringList(QString::number(power)));
 }
 
 void sJarvisNodeComponent::blink(int freq, int r,int g,int b)
@@ -112,9 +111,9 @@ void sJarvisNodeComponent::setLeds(QStringList args)
     m_parentNode->doAction(m_id,A_SET_LEDS,args);
 }
 
-void sJarvisNodeComponent::setLed(QStringList args)
+void sJarvisNodeComponent::display(QStringList args)
 {
-    m_parentNode->doAction(m_id,A_SET_LED,args);
+    m_parentNode->doAction(m_id,A_DISPLAY,args);
 }
 
 void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QStringList args)
@@ -154,5 +153,3 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
         emit coffeeMade();
     }
 }
-
-

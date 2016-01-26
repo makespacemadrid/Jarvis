@@ -8,12 +8,42 @@
 class ledPanelNode : public jarvisNode
 {
 public:
-    ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,true), m_dhtSensor(12)
+    ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,false,true), m_dhtSensor(12)
     {
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
+
         m_id = "ledPanel";
+        m_actions.push_back(A_ACTIVATE);
+        m_actions.push_back(A_DEACTIVATE);
+        m_actions.push_back(A_DIMM);
+        m_actions.push_back(A_DISPLAY);
+
+        m_capableEvents.push_back(E_ACTIVATED);
+        m_capableEvents.push_back(E_DEACTIVATED);
+        m_statusLed.disable();
+    }
+
+    void activate()
+    {
+        m_ledMatrix.activate();
+    }
+
+    void deactivate()
+    {
+        m_ledMatrix.deactivate();
+        m_events.push_back(E_DEACTIVATED);
+    }
+
+    void dimm(uint8_t power)
+    {
+        m_ledStrip.dimm(power);
+    }
+
+    void display(std::vector<String>& args)
+    {
+        m_ledMatrix.display(args);
     }
 
     void setup()
@@ -21,6 +51,11 @@ public:
         m_ledMatrix.setLeds(ledMatrixIcons::wifiYellowIcon16x16());
         m_ledMatrix.glow();
         jarvisNode::setup();
+    }
+
+    void update()
+    {
+        jarvisNode::update();
     }
 
     void wifiConnected()

@@ -60,7 +60,7 @@ public slots:
     void setColor(int r, int g, int b);
     void parseEvent(QString component, jarvisEvents event, QStringList args = QStringList());
     void setLeds(QStringList args);
-    void setLed(QStringList args);
+    void display(QStringList args);
 
 };
 #endif // SJARVISNODECOMPONENT_H

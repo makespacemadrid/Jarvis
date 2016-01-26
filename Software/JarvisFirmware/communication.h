@@ -105,9 +105,15 @@ class communicationModule : public jarvisParser , public nodeComponent
     
     virtual void update()
     {
+//      Serial.print("update called, fm:");
+//      Serial.println(getFreeMem());
       read();
+//      Serial.print("read done parsing, fm:");
+//      Serial.println(getFreeMem());
       parseBuffer(m_rxBuffer);
       yield();
+//      Serial.print("parse completed, fm:");
+//      Serial.println(getFreeMem());
       int connstatus = connectionStatus();
       if( connstatus != m_lastConnectionStatus)
       {
@@ -284,82 +290,82 @@ class communicationModule : public jarvisParser , public nodeComponent
     virtual void processNodeMsg(std::vector<String>& args)
     {
         if(args.size()<=0) return; // si no hay nada que procesar no hacemos nada
-        Serial.println(args[0]);
         if(m_commMode == espRepeater) return; //En modo repetidor no escuchamos este protocolo
+        String command = args[0];
+        args.erase(args.begin());
+        //Serial.println(args[0]);
 
-        if     (args[0] == C_SETAP)
+        if     (command == C_SETAP)
         {
-          if(args.size() != 3) return;
-          setAP(args[1],args[2]);
+          if(args.size() != 2) return;
+          setAP(args[0],args[1]);
         }
-        else if(args[0] == C_SETCLIENT)
+        else if(command == C_SETCLIENT)
         {
-          if(args.size() != 3) return;
-          setStation(args[1],args[2]);
+          if(args.size() != 2) return;
+          setStation(args[0],args[1]);
         }
-        else if(args[0] == C_WSTATUS)
+        else if(command == C_WSTATUS)
         {
           std::vector<String> args;
           args.push_back(C_WSTATUS);
           args.push_back(String(connectionStatus()));
           send(encodeJarvisMsg(args));
         }
-        else if(args[0] == C_LOCALIP)
+        else if(command == C_LOCALIP)
         {
           std::vector<String> args;
           args.push_back(C_LOCALIP);
           args.push_back(localIP());
           send(encodeJarvisMsg(args));
         }
-        else if(args[0] == C_RESET)
+        else if(command == C_RESET)
         {
           softReset();
         }
-        else if(args[0] == C_PING)
+        else if(command == C_PING)
         {
           std::vector<String> args;
           args.push_back(C_PONG);
           send(encodeJarvisMsg(args));
         }
-        else if(args[0] == C_GETID)
+        else if(command == C_GETID)
         {
             sendId();
         }
-        else if(args[0] == C_GETCOMPONENTS)
+        else if(command == C_GETCOMPONENTS)
         {
             sendComponents();
         }
-        else if(args[0] == C_POLLSENSOR)
+        else if(command == C_POLLSENSOR)
         {
-            if(args.size() == 2)
-                pollSensor(args[1]);
-            else if(args.size() == 3)
-                pollSensor(args[1],args[2].toInt());
+            if(args.size() == 1)
+                pollSensor(args[0]);
+            else if(args.size() == 2)
+                pollSensor(args[0],args[1].toInt());
         }
-        else if(args[0] == C_POLLSENSORS)
+        else if(command == C_POLLSENSORS)
         {
-            args.erase(args.begin());
             if(args.size())
                 pollSensors(args[0].toInt());
             else
                 pollSensors();
-        }else if(args[0] == C_STOP_POLLING)
+        }else if(command == C_STOP_POLLING)
         {
             stopPolling();
-        }else if(args[0] == C_DOACTION)
+        }else if(command == C_DOACTION)
         {
-            args.erase(args.begin());
             processDoAction(args);
-        }else if(args[0] == C_GET_FREEM)
+        }else if(command == C_GET_FREEM)
         {
            sendFreeMem();
-        }else if(args[0] == C_GET_PROTOCOL_VERSION)
+        }else if(command == C_GET_PROTOCOL_VERSION)
         {
            sendProtocolVersion();
-        }else if(args[0] == C_SET_UPDATE_INTERVAL)
+        }else if(command == C_SET_UPDATE_INTERVAL)
         {
-            if(args.size() == 2)
-                setUpdateInterval(args[1].toInt());
+            if(args.size() == 1)
+                setUpdateInterval(args[0].toInt());
         }
     }
 
@@ -373,7 +379,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     virtual void pollSensors(int delay = -1)          = 0;
     virtual void pollSensor(String id,int delay = -1) = 0;
     virtual void stopPolling()                      = 0;
-    virtual void processDoAction(std::vector<String> args) = 0;
+    virtual void processDoAction(std::vector<String>& args) = 0;
 
     void sendEvent(String source,nodeComponent::event e)
     {
@@ -439,7 +445,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     }
 };
 
-#define ESP8266 //Descomentar para que el qt creator pueda hacer autocompletado en esta zona del codigo
+//#define ESP8266 //Descomentar para que el qt creator pueda hacer autocompletado en esta zona del codigo
 //volver a comentar el terminar para que no interfiera con la compilacion para arduino.
 
 #ifdef ESP8266
