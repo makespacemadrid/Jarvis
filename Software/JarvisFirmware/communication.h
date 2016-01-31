@@ -83,7 +83,9 @@ class communicationModule : public jarvisParser , public nodeComponent
       }
       if(connectionStatus() != 3)
       {
-        setAP(F("ConfigureMe"),F("configureme"));
+        String name = F("ConfigureMe-");
+        name += ESP.getChipId();
+        setAP(name,F("configureme"));
 #ifdef VERBOSE_DEBUG
         debugln(String(F("I:ConfigAP:")));
 #endif
@@ -97,6 +99,7 @@ class communicationModule : public jarvisParser , public nodeComponent
         m_statusLed.wifiClient();
       }
 #ifdef VERBOSE_DEBUG
+      debug(String(F("D: IP:")));
       debug(localIP());
       debug(String(F("  p:")));
       debugln(m_localPort);
@@ -105,31 +108,34 @@ class communicationModule : public jarvisParser , public nodeComponent
     
     virtual void update()
     {
-//      Serial.print("update called, fm:");
-//      Serial.println(getFreeMem());
       read();
-//      Serial.print("read done parsing, fm:");
-//      Serial.println(getFreeMem());
       parseBuffer(m_rxBuffer);
       yield();
-//      Serial.print("parse completed, fm:");
-//      Serial.println(getFreeMem());
       int connstatus = connectionStatus();
       if( connstatus != m_lastConnectionStatus)
       {
           m_lastConnectionStatus = connstatus;
-          Serial.print("WifiStatus:");
-          Serial.println(connstatus);
+          debug("WifiStatus:");
+          debugln(connstatus);
           if(connstatus == 3)
           {
               i_wifiConnected();
+              debug(String(F("D: IP:")));
+              debug(localIP());
+              debug(String(F("  p:")));
+              debugln(m_localPort);
           }
           else if (connstatus == 0)
           {
               i_wifiConnected();
+              debug(String(F("D: IP:")));
+              debug(localIP());
+              debug(String(F("  p:")));
+              debugln(m_localPort);
           }
           else
           {
+              debugln(String(F("D: Wifi disconnected")));
               i_wifiDisConnected();
           }
 
@@ -523,7 +529,7 @@ class espNative : public communicationModule
                 String last_char;
                 last_char = (char)m_validatingConns[i].read();
                 String buff;
-                Serial.println("D:Validating client");
+                debugln("D:Validating client");
                 while(m_validatingConns[i].available() && (last_char != P_PACKETTERMINATOR))
                 {
                   yield();
@@ -531,13 +537,12 @@ class espNative : public communicationModule
                   buff += last_char;
                 }
                 buff.remove(buff.length()-1);
-                Serial.println(buff);
                 std::vector<String> args = splitStr(buff,P_PACKETSEPARATOR);
                 if((args.size() == 2) &&
                    (args[0] == M_NODEMSG) &&
                    (args[1] == M_JARVIS_GREETING) )
                 {
-                    debugln(String(F("D:New client!")));
+                    debugln(String(F("D:New tcp client!")));
                     initConn(m_validatingConns[i]);
                     m_validatingConns.erase(m_validatingConns.begin()+i);
                 }
@@ -673,15 +678,20 @@ class espNative : public communicationModule
 
     String localIP()
     {
-      IPAddress local = WiFi.localIP();
+      IPAddress ip;
+      if     (m_lastConnectionStatus == 3)
+        ip = WiFi.localIP();
+      else if(m_lastConnectionStatus == 0)
+        ip = WiFi.softAPIP();
+
       String result;
-      result += local[0];
+      result += ip[0];
       result += ".";
-      result += local[1];
+      result += ip[1];
       result += ".";
-      result += local[2];
+      result += ip[2];
       result += ".";
-      result += local[3];
+      result += ip[3];
       return result;
     }
     
