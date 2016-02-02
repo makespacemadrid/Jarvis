@@ -11,15 +11,23 @@ sJarvisTcpServer::sJarvisTcpServer(QObject *parent) :
 
 void sJarvisTcpServer::incomingConnection(int socketDescriptor)
 {
+    qDebug() << "[INFO]sJarvisTcpServer::incomingConnection-> incoming:" << socketDescriptor ;
     m_connection_attemps++;
     sJarvisTcpClient *client = new sJarvisTcpClient(this);
-    qDebug() << "[INFO]sJarvisTcpServer::incomingConnection-> incoming:" << socketDescriptor ;
-    m_connection_success++;
-    m_clients.append(client);
-    connect(client,SIGNAL(destroyed(QObject*)),this,SLOT(remove_client(QObject*)));
-    connect(client,SIGNAL(tx()),this,SIGNAL(tx()));
-    connect(client,SIGNAL(rx()),this,SIGNAL(rx()));
-    emit new_client(client);
+    if (client->setSocketDescriptor(socketDescriptor))
+    {
+        m_connection_success++;
+        m_clients.append(client);
+        connect(client,SIGNAL(destroyed(QObject*)),this,SLOT(remove_client(QObject*)));
+        connect(client,SIGNAL(tx()),this,SIGNAL(tx()));
+        connect(client,SIGNAL(rx()),this,SIGNAL(rx()));
+        emit new_TCPclient(client);
+    }
+    else
+    {
+        delete client;
+        m_connection_failed++;
+    }
 }
 
 

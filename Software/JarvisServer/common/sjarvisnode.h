@@ -18,7 +18,8 @@ class sJarvisNode :public QObject
     Q_OBJECT
 public:
 
-    sJarvisNode(QObject* parent = 0);
+    sJarvisNode(sJarvisTcpClient* tcpClient = 0, QObject* parent = 0);
+    ~sJarvisNode();
     QString getId() {return m_id;}
     QList<sJarvisNodeComponent*> components() {return m_components;}
 
@@ -27,12 +28,12 @@ public:
     void send(QByteArray data) {emit writeData(data);}
     bool isValid()
     {
-        return (m_tcpClient.isOpen() && m_valid);
+        return (m_tcpClient->isOpen() && m_valid);
     }
 
 protected:
     QString          m_id;
-    sJarvisTcpClient m_tcpClient;
+    sJarvisTcpClient *m_tcpClient;
     QString          m_rxBuffer;
     QString          m_commLog;
     QList<sJarvisNodeComponent*> m_components;

@@ -15,7 +15,7 @@ jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
         m_sharedNode = true;
         m_node = node;
     } else {
-        m_node = new sJarvisNode(this);
+        m_node = new sJarvisNode(0,this);
         m_sharedNode = false;
     }
     m_graphInit =false;
@@ -49,7 +49,7 @@ sJarvisNode* jarvisNodeTestApp::newNode()
 {
     if(!m_sharedNode)
         m_node->deleteLater();
-    m_node = new sJarvisNode(this);
+    m_node = new sJarvisNode(0,this);
     m_sharedNode = false;
     connectNodeSignals(m_node);
     return m_node;

@@ -12,7 +12,8 @@ TARGET = JarvisServer
 TEMPLATE = app
 
 INCLUDEPATH+= ../JarvisFirmware/ \
-                common/
+                common/ \
+                jarvisServer/
 
 
 SOURCES += \
@@ -30,7 +31,10 @@ SOURCES += \
     jarvisServer/main.cpp \
     jarvisServer/sjarvis.cpp \
     jarvisServer/sjarvisnodeserver.cpp \
-    jarvisServer/sjarvistcpserver.cpp
+    jarvisServer/sjarvistcpserver.cpp \
+    jarvisServer/gjarvisserverwidget.cpp \
+    jarvisServer/gnodesimplewidget.cpp \
+    jarvisServer/qconnectdialog.cpp
 
 HEADERS += \
     ../JarvisFirmware/jarvisProtocol.h \
@@ -48,7 +52,10 @@ HEADERS += \
     jarvisServer/gjarvisgui.h \
     jarvisServer/sjarvis.h \
     jarvisServer/sjarvisnodeserver.h \
-    jarvisServer/sjarvistcpserver.h
+    jarvisServer/sjarvistcpserver.h \
+    jarvisServer/gjarvisserverwidget.h \
+    jarvisServer/gnodesimplewidget.h \
+    jarvisServer/qconnectdialog.h
 
 FORMS   += \
     common/gblinkwidget.ui \
@@ -57,4 +64,7 @@ FORMS   += \
     common/gsimplegraph.ui \
     common/gwidgetnode.ui \
     common/qimageselectionwidget.ui \
-    jarvisServer/gjarvisgui.ui
+    jarvisServer/gjarvisgui.ui \
+    jarvisServer/gjarvisserverwidget.ui \
+    jarvisServer/gnodesimplewidget.ui \
+    jarvisServer/qconnectdialog.ui

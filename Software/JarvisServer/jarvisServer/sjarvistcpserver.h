@@ -22,7 +22,7 @@ protected:
     void incomingConnection(int socketDescriptor);
     QList<sJarvisTcpClient*> m_clients;
 signals:
-    void new_client(sJarvisTcpClient* n_client);
+    void new_TCPclient(sJarvisTcpClient* n_client);
     void tx();
     void rx();
 private slots:

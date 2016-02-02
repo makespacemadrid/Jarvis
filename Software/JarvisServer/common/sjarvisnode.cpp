@@ -3,31 +3,46 @@
 //hack para eliminar el F() que hay en el protocolo para que se salve en la rom del arduino
 #define F(v) v
 
-sJarvisNode::sJarvisNode(QObject* parent) : QObject(parent)
+sJarvisNode::sJarvisNode(sJarvisTcpClient* tcpClient, QObject* parent) : QObject(parent)
 {
-    connect(&m_tcpClient,SIGNAL(tx()),this,SIGNAL(tx()));
-    connect(&m_tcpClient,SIGNAL(rx()),this,SIGNAL(rx()));
+    if(tcpClient == 0)
+    {
+        m_tcpClient = new sJarvisTcpClient(this);
+    }
+    else
+    {
+        m_tcpClient = tcpClient;
+    }
+
+    connect(m_tcpClient,SIGNAL(tx()),this,SIGNAL(tx()));
+    connect(m_tcpClient,SIGNAL(rx()),this,SIGNAL(rx()));
     connect(&m_pingTimer,SIGNAL(timeout()),this,SLOT(ping()));
     connect(&m_initTimer,SIGNAL(timeout()),this,SLOT(initDone()));
     connect(&m_initTimeout,SIGNAL(timeout()),this,SLOT(initTimeout()));
 //Slots del nodo tcp
     //connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
-    connect(this,SIGNAL(writeData(QByteArray)),&m_tcpClient,SLOT(socket_tx(QByteArray)));
-    connect(&m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
-    connect(&m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
+    connect(this,SIGNAL(writeData(QByteArray)),m_tcpClient,SLOT(socket_tx(QByteArray)));
+    connect(m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
+    connect(m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
 
     m_pingTimer.setInterval(10000);
+    if(m_tcpClient->isOpen())
+        initNode();
 }
 
+sJarvisNode::~sJarvisNode()
+{
+    m_tcpClient->deleteLater();
+}
 
 void sJarvisNode::connectTCP(QString host, quint16 port)
 {
-    m_tcpClient.connectToHost(host,port);
+    m_tcpClient->connectToHost(host,port);
 }
 
 void sJarvisNode::closeTCP()
 {
-    m_tcpClient.close();
+    m_tcpClient->close();
     m_pingTimer.stop();
     deleteComponents();
 }
@@ -85,14 +100,9 @@ void sJarvisNode::parsePacket(QString& packet)
     }else if(arg == C_COMPONENT)
     {
         parseComponent(args);
-//    }else if(arg == C_SENSOR)
-//    {
-//        parseSensor(args);
-
     }else if(arg == C_SENSORS)
     {
         parseSensors(args);
-
     }else if(arg == E_EVENT)
     {
         parseEvent(args);
@@ -110,11 +120,6 @@ void sJarvisNode::parseComponent(QStringList args)
     connect(this,SIGNAL(incomingEvent(QString,jarvisEvents,QStringList)),m_components.last(),SLOT(parseEvent(QString,jarvisEvents,QStringList)));
     emit newComponent(m_components.last());
 }
-
-//void sJarvisNode::parseSensor(QStringList args)
-//{
-//
-//}
 
 void sJarvisNode::parseSensors(QStringList args)
 {
@@ -225,7 +230,6 @@ void sJarvisNode::sendDoAction(QString componentId,jarvisActions action, QString
     args.append(componentId);
     args.append(QString::number(action));
     args.append(arguments);
-    //m_tcpClient.write(encodeNodeMsg(args));
     send(encodeNodeMsg(args));
 }
 
@@ -242,9 +246,8 @@ void sJarvisNode::data_rx(QByteArray data)
 void sJarvisNode::initNode()
 {
     m_initDone =false;
-    connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
+    connect(m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
     send(encodeNodeMsg(QStringList(QString(M_JARVIS_GREETING))));
-    // le damos un segundo para que reciba de vuelta la informacion, al cumplir el segundo se llama a la funcion initDone()
     m_initTimeout.start(5000);
 }
 
@@ -257,11 +260,10 @@ void sJarvisNode::validateClient(QByteArray data)
     greet += P_PACKETSEPARATOR;
     greet += M_NODE_GREETING;
     greet += P_PACKETTERMINATOR;
-    qDebug() << data << "/" << greet  ;
     if(data == greet)
     {
-        disconnect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
-        connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
+        disconnect(m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(validateClient(QByteArray)));
+        connect(m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
     }
     else
         closeTCP();
@@ -316,7 +318,7 @@ void sJarvisNode::initTimeout()
 
 void sJarvisNode::socketDisconected()
 {
-    disconnect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
+    disconnect(m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
     m_pingTimer.stop();
     m_initTimer.stop();
     deleteComponents();
