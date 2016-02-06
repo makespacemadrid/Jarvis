@@ -30,7 +30,7 @@ SOURCES += \
     common/sjarvisnodecomponent.cpp \
     common/sjarvistcpclient.cpp \
     testAppAndroid/main.cpp \
-    testAppAndroid/jarvisnodetestapp.cpp \
+    common/jarvisnodetestapp.cpp \
 
 
 HEADERS += \
@@ -46,7 +46,7 @@ HEADERS += \
     common/sjarvisnode.h \
     common/sjarvisnodecomponent.h \
     common/sjarvistcpclient.h \
-    testAppAndroid/jarvisnodetestapp.h \
+    common/jarvisnodetestapp.h \
 
 
 FORMS   += \
@@ -56,7 +56,7 @@ FORMS   += \
     common/gsimplegraph.ui \
     common/gwidgetnode.ui \
     common/qimageselectionwidget.ui \
-    testAppAndroid/jarvisnodetestapp.ui \
+    common/jarvisnodetestapp.ui \
 
 DISTFILES += \
     testAppAndroid/android/AndroidManifest.xml \

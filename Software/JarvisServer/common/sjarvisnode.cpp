@@ -17,6 +17,7 @@ sJarvisNode::sJarvisNode(sJarvisTcpClient* tcpClient, QObject* parent) : QObject
     connect(m_tcpClient,SIGNAL(tx()),this,SIGNAL(tx()));
     connect(m_tcpClient,SIGNAL(rx()),this,SIGNAL(rx()));
     connect(&m_pingTimer,SIGNAL(timeout()),this,SLOT(ping()));
+    connect(&m_commTimeout,SIGNAL(timeout()),this,SLOT(commTimedOut()));
     connect(&m_initTimer,SIGNAL(timeout()),this,SLOT(initDone()));
     connect(&m_initTimeout,SIGNAL(timeout()),this,SLOT(initTimeout()));
 //Slots del nodo tcp
@@ -25,7 +26,6 @@ sJarvisNode::sJarvisNode(sJarvisTcpClient* tcpClient, QObject* parent) : QObject
     connect(m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
     connect(m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
 
-    m_pingTimer.setInterval(10000);
     if(m_tcpClient->isOpen())
         initNode();
 }
@@ -272,19 +272,24 @@ void sJarvisNode::validateClient(QByteArray data)
 void sJarvisNode::ping()
 {
     sendPing();
-    qDebug() << "KeepATimer:" <<m_keepAliveTimer.elapsed();
-    if(m_keepAliveTimer.elapsed() > 25000)
+    if(!m_commTimeout.isActive())
     {
-        emit rawInput("Timeout, Disconnected!");
-        this->closeTCP();
+        m_commTimeout.start(m_pingTimer.interval()*2.5);
+        m_pingTime.start();
     }
+}
+
+void sJarvisNode::commTimedOut()
+{
+    emit rawInput("Timeout, Disconnected!");
+    this->closeTCP();
 }
 
 void sJarvisNode::pong()
 {
-    m_keepAliveTimer.restart();
-    qDebug() << ":" <<m_keepAliveTimer.elapsed();
-
+    m_lastPingTime=m_pingTime.elapsed();
+    qDebug() << "Pong:" <<m_pingTime.elapsed() <<"ms";
+    m_commTimeout.stop();
 }
 
 void sJarvisNode::initDone()
@@ -303,10 +308,9 @@ void sJarvisNode::initDone()
         m_valid = true;
     }
 
-    m_keepAliveTimer.start();
-    ping();
-    m_pingTimer.start();
+
     m_initDone = true;
+    m_pingTimer.start(10000);
     emit ready();
 }
 
@@ -321,6 +325,7 @@ void sJarvisNode::socketDisconected()
     disconnect(m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
     m_pingTimer.stop();
     m_initTimer.stop();
+    m_commTimeout.stop();
     deleteComponents();
     emit disconnected();
 }

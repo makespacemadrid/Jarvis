@@ -57,7 +57,9 @@ jarvisNode* node;
 void setup() 
 {
     Serial.begin(115200);
+
     jarvisModules type = EEPROMStorage::getSettings().moduleType;
+
     if      (type == unknownModule)
     {
         node = new jarvisNode();

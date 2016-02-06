@@ -28,6 +28,8 @@ private:
     Ui::jarvisNodeTestApp *ui;
     gWidgetTxRx m_rxWidget;
     QLabel      m_statusLabel;
+    QLabel      m_txRxLabel;
+
 
     sJarvisNode*         m_node;
     bool                 m_sharedNode;
@@ -41,6 +43,7 @@ private:
 private slots:
     void nodeConnected();
     void nodeDisconnected();
+    void updateTxRx();
 
 public slots:
     void on_readComponentsBtn_clicked();
@@ -48,6 +51,7 @@ public slots:
     void on_sendCmdBtn_clicked();
     void on_stopReadBtn_clicked();
     void on_btnGetComps_clicked();
+    void on_btnPing_clicked();
     void on_btnClearGraphs_clicked();
     void console_log(QByteArray data);
     void eventLog(QString component,jarvisEvents event,QStringList args);

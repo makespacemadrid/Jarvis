@@ -30,6 +30,9 @@ public:
     {
         return (m_tcpClient->isOpen() && m_valid);
     }
+    quint64 txCount() {return m_tcpClient->txCount();}
+    quint64 rxCount() {return m_tcpClient->rxCount();}
+    int     pingTime(){return m_lastPingTime;}
 
 protected:
     QString          m_id;
@@ -37,10 +40,12 @@ protected:
     QString          m_rxBuffer;
     QString          m_commLog;
     QList<sJarvisNodeComponent*> m_components;
+    int              m_lastPingTime;
     QTimer           m_pingTimer;
+    QTime            m_pingTime;
     QTimer           m_initTimer;
     QTimer           m_initTimeout;
-    QTime            m_keepAliveTimer;
+    QTimer           m_commTimeout;
     bool             m_initDone;
     bool             m_valid;
 
@@ -75,13 +80,14 @@ protected slots:
     void data_rx(QByteArray data);
     void validateClient(QByteArray data);
     void initNode();
-    void ping();
     void pong();
     void initDone();
     void initTimeout();
+    void commTimedOut();
     void socketDisconected();
     void setUpdateInterval(int interval);
 public slots:
+    void ping();
     void doAction(QString Component, jarvisActions action, QStringList args = QStringList());
     void pollSensor(QString sen = "ALL",int interval = -1);
     void stopPollingSensors();

@@ -4,15 +4,22 @@
 #include "jarvisNode.h"
 #include "ledMatrixIcons.h"
 #include "temperatureSensor.h"
+#include "buttons.h"
 
 class ledPanelNode : public jarvisNode
 {
 public:
     ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,false,true), m_dhtSensor(12)
+      , m_activateBtn(13), m_deactivateBtn(15), m_potenciometer(A0)
     {
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
+        m_components.push_back(&m_activateBtn);
+        m_activateBtn.setId("ActivateButton");
+        m_components.push_back((&m_deactivateBtn));
+        m_deactivateBtn.setId("DeactivateButton");
+        m_components.push_back(&m_potenciometer);
 
         m_id = "ledPanel";
         m_actions.push_back(A_ACTIVATE);
@@ -56,6 +63,8 @@ public:
     void update()
     {
         jarvisNode::update();
+        uint8_t power = m_potenciometer.readData();
+        m_ledStrip.dimm(power);
     }
 
     void wifiConnected()
@@ -96,8 +105,12 @@ public:
     }
 
 protected:
-    ledMatrix   m_ledMatrix;
-    dhtSensor   m_dhtSensor;
+    ledMatrix       m_ledMatrix;
+    dhtSensor       m_dhtSensor;
+    button          m_activateBtn;
+    button          m_deactivateBtn;
+    potenciometer   m_potenciometer;
+
 };
 
 #endif // LEDPANELNODE_H

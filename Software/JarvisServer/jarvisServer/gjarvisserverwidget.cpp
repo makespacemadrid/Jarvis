@@ -43,8 +43,10 @@ void gJarvisServerWidget::on_btnConnectNode_clicked()
 
 void gJarvisServerWidget::addNode(sJarvisNode *n)
 {
-    gNodeSimpleWidget* w = new gNodeSimpleWidget(this);
-    QListWidgetItem *item = new QListWidgetItem("node");
+    gNodeSimpleWidget* w = new gNodeSimpleWidget(n,this);
+    QListWidgetItem *item = new QListWidgetItem();
+    connect(n,SIGNAL(tx()),ui->txWidget,SLOT(tx()));
+    connect(n,SIGNAL(rx()),ui->txWidget,SLOT(rx()));
     ui->nodeList->addItem(item);
     ui->nodeList->setItemWidget(item,w);
 }

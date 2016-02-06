@@ -21,6 +21,11 @@ public:
     QList<jarvisActions>   getActions()       {return m_actions;}
     QList<jarvisEvents>    getCapableEvents() {return m_CapableEvents;}
     void initArgs(QStringList args);
+    QString eventName   (jarvisEvents e);
+    QString signalName  (jarvisEvents e);
+    QString actionName  (jarvisActions e);
+    QString slotName    (jarvisActions e);
+
 protected:
     sJarvisNode*    m_parentNode;
     QString         m_id;
@@ -50,7 +55,7 @@ public slots:
     void toggle();
     void readRaw();
     void readData();
-    void dimm(uint power = 128);
+    void dimm(int power = 128);
     void glow();
     void fade();
     void blink(int freq, int r=0, int g=0, int b=0);

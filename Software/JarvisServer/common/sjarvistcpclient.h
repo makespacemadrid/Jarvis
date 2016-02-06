@@ -15,7 +15,8 @@ class sJarvisTcpClient : public QTcpSocket
 public:
     explicit sJarvisTcpClient(QObject *parent = 0);
     ~sJarvisTcpClient();
-
+    quint64 txCount(){return m_tx_count;}
+    quint64 rxCount(){return m_rx_count;}
     QString info();
 
 protected:

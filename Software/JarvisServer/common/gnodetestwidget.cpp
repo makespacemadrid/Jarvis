@@ -30,6 +30,11 @@ gNodeTestWidget::gNodeTestWidget(sJarvisNode* node, QWidget *parent) :
 gNodeTestWidget::~gNodeTestWidget()
 {
     delete ui;
+    qDebug() << "Instance deleted!";
+    if(!m_sharedNode)
+    {
+        m_node->deleteLater();
+    }
 }
 
 void gNodeTestWidget::connectNodeSignals(sJarvisNode* node)

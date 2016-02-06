@@ -34,7 +34,8 @@ SOURCES += \
     jarvisServer/sjarvistcpserver.cpp \
     jarvisServer/gjarvisserverwidget.cpp \
     jarvisServer/gnodesimplewidget.cpp \
-    jarvisServer/qconnectdialog.cpp
+    jarvisServer/qconnectdialog.cpp \
+    common/jarvisnodetestapp.cpp
 
 HEADERS += \
     ../JarvisFirmware/jarvisProtocol.h \
@@ -55,7 +56,8 @@ HEADERS += \
     jarvisServer/sjarvistcpserver.h \
     jarvisServer/gjarvisserverwidget.h \
     jarvisServer/gnodesimplewidget.h \
-    jarvisServer/qconnectdialog.h
+    jarvisServer/qconnectdialog.h \
+    common/jarvisnodetestapp.h
 
 FORMS   += \
     common/gblinkwidget.ui \
@@ -67,4 +69,8 @@ FORMS   += \
     jarvisServer/gjarvisgui.ui \
     jarvisServer/gjarvisserverwidget.ui \
     jarvisServer/gnodesimplewidget.ui \
-    jarvisServer/qconnectdialog.ui
+    jarvisServer/qconnectdialog.ui \
+    common/jarvisnodetestapp.ui
+
+RESOURCES += \
+    common/resources.qrc
