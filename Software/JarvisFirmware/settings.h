@@ -27,7 +27,7 @@ struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
   char          id[15]          = "Configureme";
-  char          remoteHost[17]  = "tesla";
+  char          remoteHost[17]  = "10.0.1.100";
   uint16_t      remotePort      = 31416;
   int           localPort       = 31416;
   //jarvisModules moduleType      = simplePowerControlModule;

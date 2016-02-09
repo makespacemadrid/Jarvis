@@ -63,8 +63,6 @@ enum jarvisEvents
     E_DEACTIVATED,
     E_RAW_READ,
     E_DATA_READ,
-    E_GLOBAL_POWERON,
-    E_GLOBAL_SHUTDOWN,
     E_COFFEE_MAKING,
     E_COFFEE_MADE
 };
