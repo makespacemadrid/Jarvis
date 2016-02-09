@@ -18,6 +18,7 @@ enum jarvisModules
     simplePowerControlModule,
     advancedPowerControlModule,
     coffeeMakerModule,
+    ledNotificationPanelModule,
     ledPanelModule,
     testNodeModule,
     termometroNodeModule
@@ -31,9 +32,9 @@ struct settingList
   int           remotePort      = 31416;
   int           localPort       = 31416;
   //jarvisModules moduleType      = simplePowerControlModule;
-  //jarvisModules moduleType      = makeSwitchModule;
+  jarvisModules moduleType      = makeSwitchModule;
   //jarvisModules moduleType      = coffeeMakerModule;
-  jarvisModules moduleType      = ledPanelModule;
+  //jarvisModules moduleType      = ledNotificationPanelModule;
   //jarvisModules moduleType = testNodeModule;//Selecciona el tipo de modulo
   //jarvisModules moduleType = termometroNodeModule;
 /**
@@ -60,8 +61,8 @@ Tabla de correspondencia de pines nodemcu arduino
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
   int   piezoPin               =  0;
-  //int   ledStripPin            =  4;
-  int   ledStripPin            =  13;
+  int   ledStripPin            =  4;
+  //int   ledStripPin            =  13;
   int   factoryResetPin        =  2;
   #else
   //Pineado por defecto del arduino
@@ -78,8 +79,8 @@ Tabla de correspondencia de pines nodemcu arduino
   //Configuracion
   //int   ledStripLedNr          = 3;
   //int   ledStripLedNr            = 50;
-  //int   ledStripLedNr          = 25;
-  int   ledStripLedNr          = 300;
+  int   ledStripLedNr          = 25;
+  //int   ledStripLedNr          = 256;
   bool  bridgeMode             = false;
   //float currentMeterFactor     = 29.296875f;
   //int   currentMeterVolts      = 220;

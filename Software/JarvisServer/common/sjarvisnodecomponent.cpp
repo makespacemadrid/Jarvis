@@ -221,12 +221,6 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
     {
         emit dataRead();
         emit dataRead(args);
-    }else if(event == E_GLOBAL_POWERON)
-    {
-        emit globalPowerOn();
-    }else if(event == E_GLOBAL_SHUTDOWN)
-    {
-        emit globalShutDown();
     }else if(event == E_COFFEE_MAKING)
     {
         emit coffeeMaking();

@@ -48,6 +48,7 @@ uint8_t updateInterval = 25;
 #include "MakeSwitch.h"
 #include "coffeeMaker.h"
 #include "ledPanelNode.h"
+#include "lednotificationpanel.h"
 #include "testNode.h"
 #include "termometroNode.h"
 
@@ -91,6 +92,9 @@ void setup()
     }else if(type == ledPanelModule)
     {
         node = new ledPanelNode();
+    }else if(type == ledNotificationPanelModule)
+    {
+        node = new ledNotificationPanelNode();
     }else if(type == testNodeModule){
         node = new testNode();
     }else if(type == termometroNodeModule){

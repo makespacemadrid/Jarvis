@@ -49,4 +49,5 @@ void gJarvisServerWidget::addNode(sJarvisNode *n)
     connect(n,SIGNAL(rx()),ui->txWidget,SLOT(rx()));
     ui->nodeList->addItem(item);
     ui->nodeList->setItemWidget(item,w);
+    ui->nodeList->set
 }
