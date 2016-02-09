@@ -27,13 +27,13 @@ struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
   char          id[15]          = "Configureme";
-  char          remoteHost[17]  = "10.0.100.1";
-  int           remotePort      = 31416;
+  char          remoteHost[17]  = "tesla";
+  uint16_t      remotePort      = 31416;
   int           localPort       = 31416;
   //jarvisModules moduleType      = simplePowerControlModule;
-  //jarvisModules moduleType      = makeSwitchModule;
+  jarvisModules moduleType      = makeSwitchModule;
   //jarvisModules moduleType      = coffeeMakerModule;
-  jarvisModules moduleType      = ledPanelModule;
+  //jarvisModules moduleType      = ledPanelModule;
   //jarvisModules moduleType = testNodeModule;//Selecciona el tipo de modulo
   //jarvisModules moduleType = termometroNodeModule;
 /**
@@ -59,9 +59,9 @@ Tabla de correspondencia de pines nodemcu arduino
   int   currentMeterPin        = -1;
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
-  int   piezoPin               =  0;
-  //int   ledStripPin            =  4;
-  int   ledStripPin            =  13;
+  int   piezoPin               = -1;
+  int   ledStripPin            =  4;
+  //int   ledStripPin            =  13;
   int   factoryResetPin        =  2;
   #else
   //Pineado por defecto del arduino
@@ -78,8 +78,8 @@ Tabla de correspondencia de pines nodemcu arduino
   //Configuracion
   //int   ledStripLedNr          = 3;
   //int   ledStripLedNr            = 50;
-  //int   ledStripLedNr          = 25;
-  int   ledStripLedNr          = 300;
+  int   ledStripLedNr          = 25;
+  //int   ledStripLedNr          = 300;
   bool  bridgeMode             = false;
   //float currentMeterFactor     = 29.296875f;
   //int   currentMeterVolts      = 220;
