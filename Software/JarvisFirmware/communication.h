@@ -143,7 +143,7 @@ class communicationModule : public jarvisParser , public nodeComponent
       if(m_reconnectJarvis)
       {
           m_reconnectTimer -= updateInterval/1000.0;
-          if(m_reconnectTimer < 0.0f)
+          if(m_reconnectTimer < 0.0f & !validatingConn())
           {
               connectToJarvis();
           }
@@ -158,7 +158,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     void softReset()
     {
       debugln(String(F("\nRESET\n")));
-      delay(5);
+      yield();
       #ifdef ESP8266
       ESP.reset();
         //ESP.wdtEnable(WDTO_15MS);
@@ -214,7 +214,8 @@ class communicationModule : public jarvisParser , public nodeComponent
 
 
 
-    virtual void connectToJarvis() {;}
+    virtual void connectToJarvis()  = 0;
+    virtual bool validatingConn()   = 0;
 
     void i_wifiConnected()
     {
@@ -254,7 +255,7 @@ class communicationModule : public jarvisParser , public nodeComponent
         else
         {
             m_reconnectJarvis = false;
-            debugln("D:Will NOT reconnect");
+            debugln("D:Will NOT reconnect until wifi is connected");
         }
     }
 
@@ -535,14 +536,25 @@ class espNative : public communicationModule
         WiFiClient client;
         if (client.connect(s.remoteHost, s.remotePort))
         {
-            debugln("D:Connected!");
-            initConn(client);
+            debugln("D:Socket connected, validating client...");
+            validateClient(client);
         }else{
             debugln("D:Can't connect!");
             m_reconnectJarvis = true;
             m_reconnectTimer = 10.0f;
         }
 
+    }
+
+    bool validatingConn()
+    {
+        return m_validatingConns.size() > 0;
+    }
+
+    void validateClient(WiFiClient conn)
+    {
+        m_validatingConns.push_back(conn);
+        m_validateTimeout = 5.0;
     }
 
     void initConn(WiFiClient conn)
@@ -568,7 +580,7 @@ class espNative : public communicationModule
         {
             if(m_validatingConns[i].connected())
             {
-                if(!m_validatingConns[i].available()) return;
+                if(!m_validatingConns[i].available()) continue;
                 String last_char;
                 last_char = (char)m_validatingConns[i].read();
                 String buff;
@@ -596,6 +608,12 @@ class espNative : public communicationModule
                     m_validatingConns[i].stop();
                     m_validatingConns.erase(m_validatingConns.begin()+i);
                     debugln(String(F("D:bad client Disconected")));
+                    if(m_validatedConns.size() == 0)
+                    {
+                        debugln("D:Last client disconnected");
+                        i_jarvisDisConnected();
+
+                    }
                     yield();
                 }
             }
@@ -605,7 +623,35 @@ class espNative : public communicationModule
                 m_validatingConns[i].print("What!?\n");
                 m_validatingConns[i].stop();
                 m_validatingConns.erase(m_validatingConns.begin()+i);
+                if(m_validatedConns.size() == 0)
+                {
+                    debugln("D:Last client disconnected");
+                    i_jarvisDisConnected();
+                }
                 yield();
+            }
+        }
+
+
+        if(m_validatingConns.size() > 0)
+        {
+            m_validateTimeout -= updateInterval/1000.0f;
+            debug("D:Validate Timeout:");
+            debugln(m_validateTimeout);
+            if(m_validateTimeout <= 0.0)
+            {
+                for(int c = 0 ; c < m_validatingConns.size() ; c++)
+                {
+                    debugln(String(F("D:Validate timeout for client!")));
+                    m_validatingConns[0].print("bye!\n");
+                    m_validatingConns[0].stop();
+                    m_validatingConns.erase(m_validatingConns.begin());
+                }
+                if(m_validatedConns.size() == 0)
+                {
+                    debugln("D:Last client disconnected");
+                    i_jarvisDisConnected();
+                }
             }
         }
     }
@@ -636,7 +682,7 @@ class espNative : public communicationModule
             WiFiClient serverClient = m_server.available();
             if(m_validatedConns.size()+m_validatingConns.size() < m_max_clients)
             {
-                m_validatingConns.push_back(serverClient);
+                validateClient(serverClient);
             }
             else
             {//si ya se ha alcanzado el maximo se rechazan los nuevos clientes
@@ -747,7 +793,7 @@ class espNative : public communicationModule
 
     std::vector<WiFiClient> m_validatedConns;
     std::vector<WiFiClient> m_validatingConns;
-
+    float                  m_validateTimeout;
     webConfigurator         m_webServer;
     ESP8266HTTPUpdateServer m_httpUpdater;
 
