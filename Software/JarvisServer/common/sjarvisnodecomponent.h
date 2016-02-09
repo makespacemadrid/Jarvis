@@ -40,8 +40,6 @@ signals:
     void rawRead();
     void dataRead(QStringList args);
     void rawRead(QStringList args);
-    void globalPowerOn();
-    void globalShutDown();
     void coffeeMaking();
     void coffeeMade();
 protected slots:

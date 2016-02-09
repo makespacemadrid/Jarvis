@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 #include "sjarvis.h"
-#include "sjarvistcpserver.h"
+
 
 namespace Ui {
 class gJarvisgui;

@@ -28,7 +28,6 @@ SOURCES += \
     common/qimageselectionwidget.cpp \
     common/sjarvisnode.cpp \
     common/sjarvisnodecomponent.cpp \
-    common/sjarvistcpclient.cpp \
     testAppAndroid/main.cpp \
     common/jarvisnodetestapp.cpp \
 
@@ -45,7 +44,6 @@ HEADERS += \
     common/qimageselectionwidget.h \
     common/sjarvisnode.h \
     common/sjarvisnodecomponent.h \
-    common/sjarvistcpclient.h \
     common/jarvisnodetestapp.h \
 
 

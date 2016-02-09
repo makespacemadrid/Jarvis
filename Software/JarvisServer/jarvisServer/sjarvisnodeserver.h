@@ -1,10 +1,10 @@
 #ifndef SJARVISNODESERVER_H
 #define SJARVISNODESERVER_H
 
-#include "sjarvistcpserver.h"
 #include "sjarvisnode.h"
+#include <QTcpServer>
 
-class sJarvisNodeServer : public sJarvisTcpServer
+class sJarvisNodeServer : public QTcpServer
 {
     Q_OBJECT
 public:
@@ -18,9 +18,11 @@ protected:
 
 signals:
     void new_node(sJarvisNode* nNode);
+protected slots:
+    void handleNewConn();
 public slots:
     void connectNode(QString host, qint16 port);
-    void validateClient(sJarvisTcpClient* client);
+    void validateClient(QTcpSocket *client);
     void nodeReady();
     void removeNode(QObject *obj);
 

@@ -1,11 +1,16 @@
 #include "sjarvisnodeserver.h"
 
 sJarvisNodeServer::sJarvisNodeServer(QObject *parent) :
-    sJarvisTcpServer(parent)
+    QTcpServer(parent)
 {
-    connect(this,SIGNAL(new_TCPclient(sJarvisTcpClient*)),this,SLOT(validateClient(sJarvisTcpClient*)));
+    connect(this,SIGNAL(newConnection()),this,SLOT(handleNewConn()));
 }
 
+void sJarvisNodeServer::handleNewConn()
+{
+    QTcpSocket* s = this->nextPendingConnection();
+    validateClient(s);
+}
 
 void sJarvisNodeServer::addNode(sJarvisNode *nNode)
 {
@@ -16,13 +21,14 @@ void sJarvisNodeServer::addNode(sJarvisNode *nNode)
 
 void sJarvisNodeServer::connectNode(QString host, qint16 port)
 {
-    sJarvisTcpClient* c = new sJarvisTcpClient(this);
+    QTcpSocket* c = new QTcpSocket(this);
     c->connectToHost(host,port);
     validateClient(c);
 }
 
-void sJarvisNodeServer::validateClient(sJarvisTcpClient *client)
+void sJarvisNodeServer::validateClient(QTcpSocket *client)
 {
+    qDebug() << "[D]sJarvisNodeServer::validateClient-> New client!";
     sJarvisNode* n = new sJarvisNode(client,this);
     connect(n,SIGNAL(ready()),this,SLOT(nodeReady()));
     connect(n,SIGNAL(disconnected()),n,SLOT(deleteLater()));
