@@ -22,6 +22,11 @@ class webConfigurator {
     {
       m_webServer.handleClient();
     }
+
+    ESP8266WebServer& webServer()
+    {
+        return m_webServer;
+    }
   private:
     ESP8266WebServer m_webServer;
   
@@ -49,7 +54,7 @@ class webConfigurator {
   Last name:<br>\
   <input type=\"text\" name=\"lastname\" value=\"Mouse\">\
   <button type=\"submit\">\
- </form>\ 
+ </form>\
       </body>\
     </html>",
     

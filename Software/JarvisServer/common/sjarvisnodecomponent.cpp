@@ -4,6 +4,88 @@
 
 #define F(v) v
 
+
+
+QString sJarvisNodeComponent::eventName(jarvisEvents e)
+{
+    QString result = "Unknown";
+    if     (e == E_ENABLED)
+        result = "enabled";
+    else if(e == E_DISABLED)
+        result = "disabled";
+    else if(e == E_ACTIVATED)
+        result = "activated";
+    else if(e == E_DEACTIVATED)
+        result = "deactivated";
+    else if(e == E_RAW_READ)
+        result = "rawRead";
+    else if(e == E_DATA_READ)
+        result = "dataRead";
+    else if(e == E_COFFEE_MAKING)
+        result = "coffeeMaking";
+    else if(e == E_COFFEE_MADE)
+        result = "coffeeMade";
+
+    return result;
+}
+
+QString sJarvisNodeComponent::signalName(jarvisEvents e)
+{
+    QString result = ":";
+    result.append(eventName(e));
+    result.append("()");
+    return result;
+}
+
+QString sJarvisNodeComponent::actionName(jarvisActions a)
+{
+    QString result = "Unknown";
+    if     (a == A_ENABLE)
+        result = "enable";
+    else if(a == A_DISABLE)
+        result = "disable";
+    else if(a == A_ACTIVATE)
+        result = "activate";
+    else if(a == A_DEACTIVATE)
+        result = "deactivate";
+    else if(a == A_TOGGLE)
+        result = "toggle";
+    else if(a == A_READ_RAW)
+        result = "readRaw";
+    else if(a == A_READ_DATA)
+        result = "readData";
+    else if(a == A_DIMM)
+        result = "dimm";
+    else if(a == A_BLINK)
+        result = "blink";
+    else if(a == A_GLOW)
+        result = "glow";
+    else if(a == A_FADE)
+        result = "fade";
+    else if(a == A_SET_COLOR)
+        result = "setColor";
+    else if(a == A_CYLON)
+        result = "cylon";
+    else if(a == A_SET_LEDS)
+        result = "setLeds";
+    else if(a == A_DISPLAY)
+        result = "display";
+    else if(a == A_BEEP)
+        result = "beep";
+    else if(a == A_MAKE_COFFEE)
+        result = "makeCoffe";
+
+    return result;
+}
+
+QString sJarvisNodeComponent::slotName(jarvisActions a)
+{
+    QString result = "1";
+    result.append(actionName(a));
+    result.append("()");
+    return result;
+}
+
 void sJarvisNodeComponent::initArgs(QStringList args)
 {
     if((args.count() < 3) ||
@@ -23,7 +105,6 @@ void sJarvisNodeComponent::initArgs(QStringList args)
     {
         m_actions.append(jarvisActions(args[i].toInt()));
     }
-
 }
 
 void sJarvisNodeComponent::enable()
@@ -61,9 +142,9 @@ void sJarvisNodeComponent::readData()
     m_parentNode->doAction(m_id,A_READ_DATA);
 }
 
-void sJarvisNodeComponent::dimm(uint power)
+void sJarvisNodeComponent::dimm(int power)
 {
-    m_parentNode->doAction(m_id,A_DIMM, QStringList(QString(power)));
+    m_parentNode->doAction(m_id,A_DIMM, QStringList(QString::number(power)));
 }
 
 void sJarvisNodeComponent::blink(int freq, int r,int g,int b)
@@ -112,9 +193,9 @@ void sJarvisNodeComponent::setLeds(QStringList args)
     m_parentNode->doAction(m_id,A_SET_LEDS,args);
 }
 
-void sJarvisNodeComponent::setLed(QStringList args)
+void sJarvisNodeComponent::display(QStringList args)
 {
-    m_parentNode->doAction(m_id,A_SET_LED,args);
+    m_parentNode->doAction(m_id,A_DISPLAY,args);
 }
 
 void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QStringList args)
@@ -140,12 +221,6 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
     {
         emit dataRead();
         emit dataRead(args);
-    }else if(event == E_GLOBAL_POWERON)
-    {
-        emit globalPowerOn();
-    }else if(event == E_GLOBAL_SHUTDOWN)
-    {
-        emit globalShutDown();
     }else if(event == E_COFFEE_MAKING)
     {
         emit coffeeMaking();
@@ -154,5 +229,3 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
         emit coffeeMade();
     }
 }
-
-

@@ -1,6 +1,5 @@
 #include "jarvisnodetestapp.h"
 #include "ui_jarvisnodetestapp.h"
-#include <QGridLayout>
 
 jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
     QMainWindow(parent),
@@ -8,14 +7,17 @@ jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
 {
     ui->setupUi(this);
     ui->statusbar->addWidget(&m_rxWidget);
+    ui->statusbar->addWidget(&m_txRxLabel);
     m_statusLabel.setText("Idle");
     ui->statusbar->addWidget(&m_statusLabel);
     if(node != 0)
     {
         m_sharedNode = true;
         m_node = node;
+        ui->groupConnect->setVisible(false);
+        nodeConnected();
     } else {
-        m_node = new sJarvisNode(this);
+        m_node = new sJarvisNode(0,this);
         m_sharedNode = false;
     }
     m_graphInit =false;
@@ -25,6 +27,9 @@ jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
 
 jarvisNodeTestApp::~jarvisNodeTestApp()
 {
+    qDebug() << "Deleting jarvisNodeTestApp instance";
+    if(!m_sharedNode)
+        m_node->deleteLater();
     delete ui;
 }
 
@@ -33,6 +38,8 @@ void jarvisNodeTestApp::connectNodeSignals(sJarvisNode* node)
 {
     connect(node,SIGNAL(tx()),&m_rxWidget,SLOT(tx()));
     connect(node,SIGNAL(rx()),&m_rxWidget,SLOT(rx()));
+    connect(node,SIGNAL(tx()),this,SLOT(updateTxRx()));
+    connect(node,SIGNAL(rx()),this,SLOT(updateTxRx()));
     connect(node,SIGNAL(rawInput(QByteArray)),this,SLOT(console_log(QByteArray)));
     connect(node,SIGNAL(writeData(QByteArray)),this,SLOT(console_log(QByteArray)));
     connect(node,SIGNAL(incomingEvent(QString,jarvisEvents,QStringList)),this,SLOT(eventLog(QString,jarvisEvents,QStringList)));
@@ -49,7 +56,7 @@ sJarvisNode* jarvisNodeTestApp::newNode()
 {
     if(!m_sharedNode)
         m_node->deleteLater();
-    m_node = new sJarvisNode(this);
+    m_node = new sJarvisNode(0,this);
     m_sharedNode = false;
     connectNodeSignals(m_node);
     return m_node;
@@ -133,6 +140,11 @@ void jarvisNodeTestApp::on_btnGetComps_clicked()
     m_node->getComponents();
 }
 
+void jarvisNodeTestApp::on_btnPing_clicked()
+{
+    m_node->ping();
+}
+
 void jarvisNodeTestApp::on_btnClearGraphs_clicked()
 {
     for(int i = 0 ; i < m_graphs.count() ; i++)
@@ -187,4 +199,17 @@ void jarvisNodeTestApp::sensorRead(QVector<QString> fields,QVector<double> data)
         d.append(data[i]);
         m_graphs[i]->appendData(d);
     }
+}
+
+void jarvisNodeTestApp::updateTxRx()
+{
+    m_txRxLabel.clear();
+    QString text;
+    text.append("Tx:");
+    text.append(QString::number(m_node->txCount()));
+    text.append(" - Rx:");
+    text.append(QString::number(m_node->rxCount()));
+    text.append(" - Ping:");
+    text.append(QString::number(m_node->pingTime()));
+    m_txRxLabel.setText(text);
 }

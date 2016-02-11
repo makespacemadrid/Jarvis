@@ -14,7 +14,7 @@ gNodeTestWidget::gNodeTestWidget(sJarvisNode* node, QWidget *parent) :
         m_sharedNode = true;
         m_node = node;
     } else {
-        m_node = new sJarvisNode(this);
+        m_node = new sJarvisNode(0,this);
         m_sharedNode = false;
     }
     m_graphInit =false;
@@ -30,6 +30,11 @@ gNodeTestWidget::gNodeTestWidget(sJarvisNode* node, QWidget *parent) :
 gNodeTestWidget::~gNodeTestWidget()
 {
     delete ui;
+    qDebug() << "Instance deleted!";
+    if(!m_sharedNode)
+    {
+        m_node->deleteLater();
+    }
 }
 
 void gNodeTestWidget::connectNodeSignals(sJarvisNode* node)
@@ -50,7 +55,7 @@ sJarvisNode* gNodeTestWidget::newNode()
 {
     if(!m_sharedNode)
         m_node->deleteLater();
-    m_node = new sJarvisNode(this);
+    m_node = new sJarvisNode(0,this);
     m_sharedNode = false;
     connectNodeSignals(m_node);
     return m_node;

@@ -6,6 +6,7 @@ gJarvisgui::gJarvisgui(QWidget *parent) :
     ui(new Ui::gJarvisgui)
 {
     ui->setupUi(this);
+    ui->nodeServerWidget->setNodeServer(m_jarvis.nodeServer());
 }
 
 gJarvisgui::~gJarvisgui()

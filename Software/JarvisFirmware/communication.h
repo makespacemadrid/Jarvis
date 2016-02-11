@@ -5,10 +5,13 @@
 #include <ESP8266WiFi.h>
 #include "webconfigurator.h"
 #include <WiFiClient.h> 
+#include <ESP8266mDNS.h>
+#include <ESP8266HTTPUpdateServer.h>
 #endif
 
 #include "jarvisParser.h"
 #include "ws2812led.h"
+#include "settings.h"
 
 //Status del wifi:
 //WL_CONNECTED   3
@@ -81,7 +84,9 @@ class communicationModule : public jarvisParser , public nodeComponent
       }
       if(connectionStatus() != 3)
       {
-        setAP(F("ConfigureMe"),F("configureme"));
+        String name = F("ConfigureMe-");
+        name += String(ESP.getChipId());
+        setAP(name,F("configureme"));
 #ifdef VERBOSE_DEBUG
         debugln(String(F("I:ConfigAP:")));
 #endif
@@ -95,6 +100,7 @@ class communicationModule : public jarvisParser , public nodeComponent
         m_statusLed.wifiClient();
       }
 #ifdef VERBOSE_DEBUG
+      debug(String(F("D: IP:")));
       debug(localIP());
       debug(String(F("  p:")));
       debugln(m_localPort);
@@ -110,22 +116,37 @@ class communicationModule : public jarvisParser , public nodeComponent
       if( connstatus != m_lastConnectionStatus)
       {
           m_lastConnectionStatus = connstatus;
-          Serial.print("WifiStatus:");
-          Serial.println(connstatus);
+          debug("WifiStatus:");
+          debugln(connstatus);
           if(connstatus == 3)
           {
+              debug(String(F("D: IP:")));
+              debug(localIP());
+              debug(String(F("  p:")));
+              debugln(m_localPort);
               i_wifiConnected();
           }
           else if (connstatus == 0)
           {
+              debug(String(F("D: IP:")));
+              debug(localIP());
+              debug(String(F("  p:")));
+              debugln(m_localPort);
               i_wifiConnected();
           }
           else
           {
+              debugln(String(F("D: Wifi disconnected")));
               i_wifiDisConnected();
           }
-
-
+      }
+      if(m_reconnectJarvis)
+      {
+          m_reconnectTimer -= updateInterval/1000.0;
+          if(m_reconnectTimer < 0.0f & !validatingConn())
+          {
+              connectToJarvis();
+          }
       }
     }
 
@@ -137,7 +158,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     void softReset()
     {
       debugln(String(F("\nRESET\n")));
-      delay(5);
+      yield();
       #ifdef ESP8266
       ESP.reset();
         //ESP.wdtEnable(WDTO_15MS);
@@ -181,6 +202,9 @@ class communicationModule : public jarvisParser , public nodeComponent
     int      m_remotePort;
 
     uint8_t  m_lastConnectionStatus;
+    bool     m_jarvisConnected = false;
+    bool     m_reconnectJarvis = false;
+    float    m_reconnectTimer  = 0.0f;
 
     ws2812Strip           m_ledStrip;//(m_EEPROM.settings().ledStripPin);
     ledStatusTrio         m_statusLed;
@@ -190,7 +214,8 @@ class communicationModule : public jarvisParser , public nodeComponent
 
 
 
-    virtual void connectToJarvis() {;}
+    virtual void connectToJarvis()  = 0;
+    virtual bool validatingConn()   = 0;
 
     void i_wifiConnected()
     {
@@ -212,13 +237,26 @@ class communicationModule : public jarvisParser , public nodeComponent
 
     void i_jarvisConnected()
     {
+        m_jarvisConnected = true;
+        m_reconnectJarvis = false;
         jarvisConnected();
     }
 
     void i_jarvisDisConnected()
     {
-        i_wifiConnected();
+        m_jarvisConnected = false;
         jarvisDisConnected();
+        if(isConnected())
+        {
+            debugln("D:Will reconnect in ~10s");
+            m_reconnectJarvis = true;
+            m_reconnectTimer = 10.0;
+        }
+        else
+        {
+            m_reconnectJarvis = false;
+            debugln("D:Will NOT reconnect until wifi is connected");
+        }
     }
 
 
@@ -282,82 +320,82 @@ class communicationModule : public jarvisParser , public nodeComponent
     virtual void processNodeMsg(std::vector<String>& args)
     {
         if(args.size()<=0) return; // si no hay nada que procesar no hacemos nada
-        Serial.println(args[0]);
         if(m_commMode == espRepeater) return; //En modo repetidor no escuchamos este protocolo
+        String command = args[0];
+        args.erase(args.begin());
+        //Serial.println(args[0]);
 
-        if     (args[0] == C_SETAP)
+        if     (command == C_SETAP)
         {
-          if(args.size() != 3) return;
-          setAP(args[1],args[2]);
+          if(args.size() != 2) return;
+          setAP(args[0],args[1]);
         }
-        else if(args[0] == C_SETCLIENT)
+        else if(command == C_SETCLIENT)
         {
-          if(args.size() != 3) return;
-          setStation(args[1],args[2]);
+          if(args.size() != 2) return;
+          setStation(args[0],args[1]);
         }
-        else if(args[0] == C_WSTATUS)
+        else if(command == C_WSTATUS)
         {
           std::vector<String> args;
           args.push_back(C_WSTATUS);
           args.push_back(String(connectionStatus()));
           send(encodeJarvisMsg(args));
         }
-        else if(args[0] == C_LOCALIP)
+        else if(command == C_LOCALIP)
         {
           std::vector<String> args;
           args.push_back(C_LOCALIP);
           args.push_back(localIP());
           send(encodeJarvisMsg(args));
         }
-        else if(args[0] == C_RESET)
+        else if(command == C_RESET)
         {
           softReset();
         }
-        else if(args[0] == C_PING)
+        else if(command == C_PING)
         {
           std::vector<String> args;
           args.push_back(C_PONG);
           send(encodeJarvisMsg(args));
         }
-        else if(args[0] == C_GETID)
+        else if(command == C_GETID)
         {
             sendId();
         }
-        else if(args[0] == C_GETCOMPONENTS)
+        else if(command == C_GETCOMPONENTS)
         {
             sendComponents();
         }
-        else if(args[0] == C_POLLSENSOR)
+        else if(command == C_POLLSENSOR)
         {
-            if(args.size() == 2)
-                pollSensor(args[1]);
-            else if(args.size() == 3)
-                pollSensor(args[1],args[2].toInt());
+            if(args.size() == 1)
+                pollSensor(args[0]);
+            else if(args.size() == 2)
+                pollSensor(args[0],args[1].toInt());
         }
-        else if(args[0] == C_POLLSENSORS)
+        else if(command == C_POLLSENSORS)
         {
-            args.erase(args.begin());
             if(args.size())
                 pollSensors(args[0].toInt());
             else
                 pollSensors();
-        }else if(args[0] == C_STOP_POLLING)
+        }else if(command == C_STOP_POLLING)
         {
             stopPolling();
-        }else if(args[0] == C_DOACTION)
+        }else if(command == C_DOACTION)
         {
-            args.erase(args.begin());
             processDoAction(args);
-        }else if(args[0] == C_GET_FREEM)
+        }else if(command == C_GET_FREEM)
         {
            sendFreeMem();
-        }else if(args[0] == C_GET_PROTOCOL_VERSION)
+        }else if(command == C_GET_PROTOCOL_VERSION)
         {
            sendProtocolVersion();
-        }else if(args[0] == C_SET_UPDATE_INTERVAL)
+        }else if(command == C_SET_UPDATE_INTERVAL)
         {
-            if(args.size() == 2)
-                setUpdateInterval(args[1].toInt());
+            if(args.size() == 1)
+                setUpdateInterval(args[0].toInt());
         }
     }
 
@@ -371,7 +409,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     virtual void pollSensors(int delay = -1)          = 0;
     virtual void pollSensor(String id,int delay = -1) = 0;
     virtual void stopPolling()                      = 0;
-    virtual void processDoAction(std::vector<String> args) = 0;
+    virtual void processDoAction(std::vector<String>& args) = 0;
 
     void sendEvent(String source,nodeComponent::event e)
     {
@@ -437,7 +475,8 @@ class communicationModule : public jarvisParser , public nodeComponent
     }
 };
 
-#define ESP8266
+#define ESP8266 //Descomentar para que el qt creator pueda hacer autocompletado en esta zona del codigo
+//volver a comentar el terminar para que no interfiera con la compilacion para arduino.
 
 #ifdef ESP8266
 class espNative : public communicationModule
@@ -451,9 +490,9 @@ class espNative : public communicationModule
             m_bridge = true;
     }
 
-    bool isConnected()      {return WiFi.status() != WL_CONNECTED;}
+    bool isConnected()      { return WiFi.status() == WL_CONNECTED; }
 
-    int connectionStatus()  {return WiFi.status();}
+    int connectionStatus()  { return WiFi.status(); }
 
     void setup()
     {
@@ -464,6 +503,16 @@ class espNative : public communicationModule
       #ifdef I2C_TRANSPORT
       Wire.begin(0,2);// guardar los pines i2c en la eeprom!
       #endif
+
+      char c_id[sizeof(m_id)];
+      m_id.toCharArray(c_id, sizeof(c_id));
+      debugln("D: Starting mdns responder.");
+      MDNS.begin(c_id);
+      m_httpUpdater.setup(&m_webServer.webServer());
+      MDNS.addService("http", "tcp", 80);
+      debug("D: HTTPUpdateServer ready! Open http://");
+      debug(m_id);
+      debug(".local/update in your browser\n");
     }
 
     void update()
@@ -475,6 +524,37 @@ class espNative : public communicationModule
       readSerial();
       parseBuffer(m_serialBuffer);
       yield();
+    }
+
+    void connectToJarvis()
+    {
+        settingList s = EEPROMStorage::getSettings();
+        debug("D:Connecting to ");
+        debug(s.remoteHost);
+        debug(":");
+        debugln(s.remotePort);
+        WiFiClient client;
+        if (client.connect(s.remoteHost, s.remotePort))
+        {
+            debugln("D:Socket connected, validating client...");
+            validateClient(client);
+        }else{
+            debugln("D:Can't connect!");
+            m_reconnectJarvis = true;
+            m_reconnectTimer = 10.0f;
+        }
+
+    }
+
+    bool validatingConn()
+    {
+        return m_validatingConns.size() > 0;
+    }
+
+    void validateClient(WiFiClient conn)
+    {
+        m_validatingConns.push_back(conn);
+        m_validateTimeout = 5.0;
     }
 
     void initConn(WiFiClient conn)
@@ -500,11 +580,11 @@ class espNative : public communicationModule
         {
             if(m_validatingConns[i].connected())
             {
-                if(!m_validatingConns[i].available()) return;
+                if(!m_validatingConns[i].available()) continue;
                 String last_char;
                 last_char = (char)m_validatingConns[i].read();
                 String buff;
-                Serial.println("D:Validating client");
+                debugln("D:Validating client");
                 while(m_validatingConns[i].available() && (last_char != P_PACKETTERMINATOR))
                 {
                   yield();
@@ -512,13 +592,12 @@ class espNative : public communicationModule
                   buff += last_char;
                 }
                 buff.remove(buff.length()-1);
-                Serial.println(buff);
                 std::vector<String> args = splitStr(buff,P_PACKETSEPARATOR);
                 if((args.size() == 2) &&
                    (args[0] == M_NODEMSG) &&
                    (args[1] == M_JARVIS_GREETING) )
                 {
-                    debugln(String(F("D:New client!")));
+                    debugln(String(F("D:New tcp client!")));
                     initConn(m_validatingConns[i]);
                     m_validatingConns.erase(m_validatingConns.begin()+i);
                 }
@@ -529,6 +608,12 @@ class espNative : public communicationModule
                     m_validatingConns[i].stop();
                     m_validatingConns.erase(m_validatingConns.begin()+i);
                     debugln(String(F("D:bad client Disconected")));
+                    if(m_validatedConns.size() == 0)
+                    {
+                        debugln("D:Last client disconnected");
+                        i_jarvisDisConnected();
+
+                    }
                     yield();
                 }
             }
@@ -538,7 +623,35 @@ class espNative : public communicationModule
                 m_validatingConns[i].print("What!?\n");
                 m_validatingConns[i].stop();
                 m_validatingConns.erase(m_validatingConns.begin()+i);
+                if(m_validatedConns.size() == 0)
+                {
+                    debugln("D:Last client disconnected");
+                    i_jarvisDisConnected();
+                }
                 yield();
+            }
+        }
+
+
+        if(m_validatingConns.size() > 0)
+        {
+            m_validateTimeout -= updateInterval/1000.0f;
+            debug("D:Validate Timeout:");
+            debugln(m_validateTimeout);
+            if(m_validateTimeout <= 0.0)
+            {
+                for(int c = 0 ; c < m_validatingConns.size() ; c++)
+                {
+                    debugln(String(F("D:Validate timeout for client!")));
+                    m_validatingConns[0].print("bye!\n");
+                    m_validatingConns[0].stop();
+                    m_validatingConns.erase(m_validatingConns.begin());
+                }
+                if(m_validatedConns.size() == 0)
+                {
+                    debugln("D:Last client disconnected");
+                    i_jarvisDisConnected();
+                }
             }
         }
     }
@@ -550,15 +663,16 @@ class espNative : public communicationModule
         for(int i = (m_validatedConns.size() -1) ; i >= 0 ; i--) {
           //liberar las conexiones que se han cerrado
            if (!m_validatedConns[i].connected()){
-              debugln(String(F("D:Client Disconected")));
+              debugln(String(F("D:Client Disconnected")));
               m_validatedConns[i].stop();
               m_validatedConns.erase(m_validatedConns.begin()+i);
 
               //comprobamos si era el ultimo cliente conectado.
               if(m_validatedConns.size() == 0)
               {
+                  debugln("D:Last client disconnected");
                   i_jarvisDisConnected();
-                  debugln("D:All clients left");
+
               }
            }
         }
@@ -568,7 +682,7 @@ class espNative : public communicationModule
             WiFiClient serverClient = m_server.available();
             if(m_validatedConns.size()+m_validatingConns.size() < m_max_clients)
             {
-                m_validatingConns.push_back(serverClient);
+                validateClient(serverClient);
             }
             else
             {//si ya se ha alcanzado el maximo se rechazan los nuevos clientes
@@ -654,15 +768,20 @@ class espNative : public communicationModule
 
     String localIP()
     {
-      IPAddress local = WiFi.localIP();
+      IPAddress ip;
+      if     (m_lastConnectionStatus == 3)
+        ip = WiFi.localIP();
+      else if(m_lastConnectionStatus == 0)
+        ip = WiFi.softAPIP();
+
       String result;
-      result += local[0];
+      result += ip[0];
       result += ".";
-      result += local[1];
+      result += ip[1];
       result += ".";
-      result += local[2];
+      result += ip[2];
       result += ".";
-      result += local[3];
+      result += ip[3];
       return result;
     }
     
@@ -671,12 +790,12 @@ class espNative : public communicationModule
     uint8_t          m_max_clients = 3;
     String           m_serialBufer;
     WiFiServer       m_server;
-//    WiFiClient       m_connections[3];
 
     std::vector<WiFiClient> m_validatedConns;
     std::vector<WiFiClient> m_validatingConns;
-
-    webConfigurator  m_webServer;
+    float                  m_validateTimeout;
+    webConfigurator         m_webServer;
+    ESP8266HTTPUpdateServer m_httpUpdater;
 
 
     void connectAP()

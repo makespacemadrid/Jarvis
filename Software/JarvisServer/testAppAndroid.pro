@@ -28,9 +28,8 @@ SOURCES += \
     common/qimageselectionwidget.cpp \
     common/sjarvisnode.cpp \
     common/sjarvisnodecomponent.cpp \
-    common/sjarvistcpclient.cpp \
     testAppAndroid/main.cpp \
-    jarvisnodetestapp.cpp
+    common/jarvisnodetestapp.cpp \
 
 
 HEADERS += \
@@ -45,8 +44,7 @@ HEADERS += \
     common/qimageselectionwidget.h \
     common/sjarvisnode.h \
     common/sjarvisnodecomponent.h \
-    common/sjarvistcpclient.h \
-    jarvisnodetestapp.h
+    common/jarvisnodetestapp.h \
 
 
 FORMS   += \
@@ -56,7 +54,7 @@ FORMS   += \
     common/gsimplegraph.ui \
     common/gwidgetnode.ui \
     common/qimageselectionwidget.ui \
-    jarvisnodetestapp.ui
+    common/jarvisnodetestapp.ui \
 
 DISTFILES += \
     testAppAndroid/android/AndroidManifest.xml \

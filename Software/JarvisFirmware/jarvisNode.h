@@ -124,8 +124,10 @@ public:
                 args.push_back(String(comp->readData()));
               }
             }
-        args.push_back("Freemem:");
+        args.push_back(F("Freemem:"));
         args.push_back(String(getFreeMem()));
+        args.push_back(F("BufferLength:"));
+        args.push_back(String(bufferCount()));
         send(encodeJarvisMsg(args));
     }
 
@@ -136,7 +138,7 @@ public:
 protected:
   jarvisModules         m_type;
   EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
-  uint8_t m_loopCount = 0;
+  uint16_t m_loopCount = 0;
   std::vector<String>           m_pollingSensors;
   std::vector<nodeComponent*>   m_components;
   piezoSpeaker                  m_speaker;   //(m_EEPROM.settings().piezoPin);
@@ -180,7 +182,8 @@ protected:
       digitalWrite(m_EEPROM.settings().alivePin, !digitalRead(m_EEPROM.settings().alivePin));
       m_loopCount = 0;
       m_statusLed.controllerOK();
-      debugln(String(F("D:ImAlive!")));
+      debug(String(F("D:ImAlive! - FreeMem:")));
+      debugln(getFreeMem());
     }
     else
       m_loopCount++;
@@ -276,9 +279,11 @@ protected:
       m_pollingSensors.clear();
   }
 
-  virtual void processDoAction(std::vector<String> args)
+  virtual void processDoAction(std::vector<String>& args)
   {
       if(args.size() < 2) return;
+//      Serial.print("N-process doAction, fm:");
+//      Serial.println(getFreeMem());
       String dest = args[0];
       args.erase(args.begin());
       jarvisActions action = jarvisActions(args[0].toInt());

@@ -12,7 +12,8 @@ TARGET = JarvisServer
 TEMPLATE = app
 
 INCLUDEPATH+= ../JarvisFirmware/ \
-                common/
+                common/ \
+                jarvisServer/
 
 
 SOURCES += \
@@ -25,12 +26,14 @@ SOURCES += \
     common/qimageselectionwidget.cpp \
     common/sjarvisnode.cpp \
     common/sjarvisnodecomponent.cpp \
-    common/sjarvistcpclient.cpp \
     jarvisServer/gjarvisgui.cpp \
     jarvisServer/main.cpp \
     jarvisServer/sjarvis.cpp \
     jarvisServer/sjarvisnodeserver.cpp \
-    jarvisServer/sjarvistcpserver.cpp
+    jarvisServer/gjarvisserverwidget.cpp \
+    jarvisServer/gnodesimplewidget.cpp \
+    jarvisServer/qconnectdialog.cpp \
+    common/jarvisnodetestapp.cpp
 
 HEADERS += \
     ../JarvisFirmware/jarvisProtocol.h \
@@ -44,11 +47,13 @@ HEADERS += \
     common/qimageselectionwidget.h \
     common/sjarvisnode.h \
     common/sjarvisnodecomponent.h \
-    common/sjarvistcpclient.h \
     jarvisServer/gjarvisgui.h \
     jarvisServer/sjarvis.h \
     jarvisServer/sjarvisnodeserver.h \
-    jarvisServer/sjarvistcpserver.h
+    jarvisServer/gjarvisserverwidget.h \
+    jarvisServer/gnodesimplewidget.h \
+    jarvisServer/qconnectdialog.h \
+    common/jarvisnodetestapp.h
 
 FORMS   += \
     common/gblinkwidget.ui \
@@ -57,4 +62,11 @@ FORMS   += \
     common/gsimplegraph.ui \
     common/gwidgetnode.ui \
     common/qimageselectionwidget.ui \
-    jarvisServer/gjarvisgui.ui
+    jarvisServer/gjarvisgui.ui \
+    jarvisServer/gjarvisserverwidget.ui \
+    jarvisServer/gnodesimplewidget.ui \
+    jarvisServer/qconnectdialog.ui \
+    common/jarvisnodetestapp.ui
+
+RESOURCES += \
+    common/resources.qrc

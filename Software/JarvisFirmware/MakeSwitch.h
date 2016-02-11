@@ -49,8 +49,8 @@ public:
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
 
-        addCapableEvent(E_GLOBAL_POWERON);
-        addCapableEvent(E_GLOBAL_SHUTDOWN);
+        addCapableEvent(E_ACTIVATED);
+        addCapableEvent(E_DEACTIVATED);
         m_id = "makeSwitch";
         disable();
     }
@@ -133,7 +133,7 @@ public:
         {
             m_status = PoweringOn;
             m_activationCounter = 0.0;
-            addEvent(E_GLOBAL_POWERON);
+            addEvent(E_ACTIVATED);
         }
       }else if(m_status == ShutDownRequested)
       {
@@ -142,7 +142,7 @@ public:
           {
               m_status = ShuttingDown;
               m_deActivationCounter = 0.0;
-              addEvent(E_GLOBAL_SHUTDOWN);
+              addEvent(E_DEACTIVATED);
           }
       }else if(m_status == PoweringOn)
       {

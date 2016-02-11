@@ -6,6 +6,15 @@
 #include <vector>
 #include "jarvisProtocol.h"
 
+uint16_t getFreeMem()
+{
+  #ifdef ESP8266
+  return system_get_free_heap_size();
+  #else
+  return freeMemory();
+  #endif
+}
+
 class nodeComponent{
 public:
     class event
@@ -82,7 +91,7 @@ public:
     virtual void setColor(uint8_t r, uint8_t g,uint8_t b) {;}
     virtual void cylon()                                  {;}
     virtual void setLeds(std::vector<String>&  args)      {;}
-    virtual void setLed(std::vector<String>&  args)       {;}
+    virtual void display(std::vector<String>&  args)       {;}
     virtual void beep(int tone,int toneDuration)          {;}
     virtual void makeCoffee()                             {;}
 
@@ -96,10 +105,12 @@ public:
 
     virtual void doAction(jarvisActions act,std::vector<String>& args)
     {
-        Serial.print("act:");
-        Serial.print(act);
-        Serial.print(" args:");
-        Serial.println(args.size());
+        //Serial.print("C-processing action:, fm:");
+        //Serial.println(getFreeMem());
+        //Serial.print("act:");
+        //Serial.print(act);
+        //Serial.print(" args:");
+        //Serial.println(args.size());
         if          (act == A_ENABLE) {
             enable();
         } else if   (act == A_DISABLE) {
@@ -132,14 +143,16 @@ public:
             cylon();
         } else if   (act == A_SET_LEDS) {
             setLeds(args);
-        } else if   (act == A_SET_LED) {
-            setLed(args);
+        } else if   (act == A_DISPLAY) {
+            display(args);
         } else if   (act == A_BEEP) {
             if(args.size() != 2) return;
             beep(args[0].toInt(),args[1].toInt());
         } else if   (act == A_MAKE_COFFEE) {
             makeCoffee();
         }
+        //Serial.print("C-action processed:, fm:");
+        //Serial.println(getFreeMem());
     }
 
     void addEvent(event nevent)

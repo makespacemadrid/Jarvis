@@ -8,6 +8,8 @@
 #ifdef ESP8266
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
+  #include <ESP8266mDNS.h>
+  #include <ESP8266HTTPUpdateServer.h>
 #endif
 
 
@@ -46,6 +48,7 @@ uint8_t updateInterval = 25;
 #include "MakeSwitch.h"
 #include "coffeeMaker.h"
 #include "ledPanelNode.h"
+#include "lednotificationpanel.h"
 #include "testNode.h"
 #include "termometroNode.h"
 
@@ -55,7 +58,9 @@ jarvisNode* node;
 void setup() 
 {
     Serial.begin(115200);
+
     jarvisModules type = EEPROMStorage::getSettings().moduleType;
+
     if      (type == unknownModule)
     {
         node = new jarvisNode();
@@ -87,6 +92,9 @@ void setup()
     }else if(type == ledPanelModule)
     {
         node = new ledPanelNode();
+    }else if(type == ledNotificationPanelModule)
+    {
+        node = new ledNotificationPanelNode();
     }else if(type == testNodeModule){
         node = new testNode();
     }else if(type == termometroNodeModule){

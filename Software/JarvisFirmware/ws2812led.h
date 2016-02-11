@@ -7,7 +7,6 @@
 #include "nodeComponent.h"
 #include "ledMatrixIcons.h"
 
-
 class ws2812Strip {
 public:
     class led{ // clase led dentro de la clase Strip
@@ -40,13 +39,19 @@ public:
       float bright;
     };
   
-  ws2812Strip(int pin = -1, int lednr = 25) : m_pin(pin) , m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
+  ws2812Strip(int pin = -1, int lednr = 25, float bright = 1.0) : m_pin(pin) , m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
   {
-    m_brightness = 0.2f;
+    m_brightness = bright;
     if((isValid()))
     {
       for(int i = 0 ; i < lednr ; i++) m_leds.push_back(led());
     }
+  }
+
+  void dimm(uint8_t power)
+  {
+      if(power>100) power = 100;
+      m_brightness = power/100.0;
   }
 
   bool isValid() {return  (m_pin != -1);}
@@ -62,9 +67,9 @@ public:
   {
     if(!isValid()) return;
     m_pixels.begin();
+    yield();
     test();
     off();
-
   }
   
   void update(){
@@ -74,6 +79,7 @@ public:
       m_pixels.setPixelColor(i, m_leds[i].r*m_brightness,m_leds[i].g*m_brightness,m_leds[i].b*m_brightness);
     }
     m_pixels.show(); 
+    yield();
   }
 
   void off()
@@ -81,7 +87,7 @@ public:
     if(!isValid()) return;
     for( uint16_t i = 0 ; i < m_leds.size() ; i++)
     {
-	    m_leds[i].off();
+        m_leds[i].off();
     }
     update();
   }
@@ -102,7 +108,6 @@ public:
     {
       m_leds[i].setColor(20,20,20);
       update();
-      //delay(5);
     }
   }
   
@@ -134,68 +139,25 @@ class ledGadget :  public nodeComponent
       m_actions.push_back(A_DEACTIVATE);
       m_actions.push_back(A_SET_COLOR);
       m_actions.push_back(A_SET_LEDS);
-      m_actions.push_back(A_SET_LED);
+      m_actions.push_back(A_CYLON);
+      m_actions.push_back(A_GLOW);
+      m_actions.push_back(A_FADE);
     }
     
-    virtual void animate() {;}
+    void update()
+    {
+      if(!m_enabled) return;
+      animate();
+    }
 
     bool isValid() {return m_strip->isValid();}
 
     void deactivate()
     {
-        if(!m_enabled) return;
-        off();
-        m_events.push_back(E_DEACTIVATED);
+        fade();
     }
 
-    virtual void off()
-    {
-        if(!m_enabled) return;
-        m_animationType = animationNone;
-        for(int i = 0 ; i < m_leds.size() ; i++)
-        {
-            m_leds[i]->off();
-        }
-        m_strip->update();
-    }
-
-    virtual void setColor(uint8_t r, uint8_t g, uint8_t b)
-    {
-        if(!m_enabled) return;
-        m_animationType = animationNone;
-        for(int i = 0 ; i < m_leds.size() ; i++)
-        {
-            m_leds[i]->setColor(r,g,b);
-        }
-        m_strip->update();
-    }
-
-    void setBrightness(float b = 1.0)
-    {
-        m_bright = b;
-        for(int i = 0 ; i < m_leds.size() ; i++)
-        {
-            m_leds[i]->setBrightness(b);
-        }
-        m_strip->update();
-    }
-
-
-    void setLed(std::vector<String>&  args)
-    {
-        if((args.size() < 4) || !m_enabled ) return;
-        m_animationType = animationNone;
-        for(int p = 0 ; p < args.size() ; p+=4)
-        {
-            int ledPos = args[p].toInt();
-            int r = args[p+1].toInt();
-            int g = args[p+2].toInt();
-            int b = args[p+3].toInt();
-
-            if(m_leds.size() < ledPos) return;
-            m_leds[ledPos]->setColor(r,g,b);
-        }
-    }
+//gestion del array de leds
 
     void setLeds(std::vector<String>&  args)
     {
@@ -253,29 +215,36 @@ class ledGadget :  public nodeComponent
         }
     }
 
-  protected:
-    ws2812Strip*                    m_strip;
-    std::vector<ws2812Strip::led*>  m_leds;
-    animationType                   m_animationType = animationNone;
-    float m_bright;
-};
+//efectos y animaciones
 
-class ledBar : public ledGadget
-{
-public:
-    ledBar(ws2812Strip* parentStrip) : ledGadget(parentStrip), m_reversed(false) 
+    virtual void off()
     {
-      m_id = "ledBar";
-      m_actions.push_back(A_CYLON);
-      m_actions.push_back(A_GLOW);
-      m_actions.push_back(A_FADE);
+        if(!m_enabled) return;
+        m_animationType = animationNone;
+        for(int i = 0 ; i < m_leds.size() ; i++)
+            m_leds[i]->off();
+        m_strip->update();
     }
-    void setReversed(bool reversed) {m_reversed = reversed;}
 
-    void update()
+    virtual void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
-      if(!m_enabled) return;
-      animate();
+        if(!m_enabled) return;
+        m_animationType = animationNone;
+        for(int i = 0 ; i < m_leds.size() ; i++)
+        {
+            m_leds[i]->setColor(r,g,b);
+        }
+        m_strip->update();
+    }
+
+    void setBrightness(float b = 1.0)
+    {
+        m_bright = b;
+        for(int i = 0 ; i < m_leds.size() ; i++)
+        {
+            m_leds[i]->setBrightness(b);
+        }
+        m_strip->update();
     }
 
     virtual void fade()
@@ -325,8 +294,12 @@ public:
     }
 
 
-protected:
-    bool m_reversed;
+  protected:
+    ws2812Strip*                    m_strip;
+    std::vector<ws2812Strip::led*>  m_leds;
+    animationType                   m_animationType = animationNone;
+    float m_bright;
+
     uint8_t m_counter1;
     uint8_t m_counter2;
     uint8_t m_counter3;
@@ -342,11 +315,14 @@ protected:
                  (m_leds[i]->g > 0) ||
                  (m_leds[i]->b > 0) )
             {
-                all_off = false;
+                all_off=false;
             }
         }
         if(all_off)
-            deactivate();
+        {
+            m_events.push_back(E_DEACTIVATED);
+            m_animationType = animationNone;
+        }
     }
 
     virtual void animateGlow()
@@ -475,6 +451,20 @@ protected:
 
 };
 
+class ledBar : public ledGadget
+{
+public:
+    ledBar(ws2812Strip* parentStrip) : ledGadget(parentStrip), m_reversed(false) 
+    {
+      m_id = "ledBar";
+    }
+    void setReversed(bool reversed) {m_reversed = reversed;}
+
+protected:
+    bool m_reversed;
+
+};
+
 
 class ledStatusTrio : public ledBar
 {
@@ -507,50 +497,57 @@ class ledStatusTrio : public ledBar
 
     void controllerInit()
     {
+        if(!m_enabled)return;
         m_statusDecay = false;
         m_controllerLed->setColor(0,100,100);
     }
 
     void controllerOK()
     {
+        if(!m_enabled)return;
         m_statusDecay = true;
         m_controllerLed->setColor(0,100,0);
     }
 
     void controllerError()
     {
+        if(!m_enabled)return;
         m_statusDecay = false;
         m_controllerLed->setColor(100,0,0);
     }
 
     void wifiTX()
     {
+        if(!m_enabled)return;
         m_wifiStatusDecay = true;
         m_wifiLed->setColor(0,100,0);
     }
 
     void wifiRX()
     {
+        if(!m_enabled)return;
         m_wifiStatusDecay = true;
         m_wifiLed->setColor(100,0,0);
     }
 
     void wifiInit()
     {
+        if(!m_enabled)return;
         m_wifiStatusDecay = false;
         m_wifiLed->setColor(100,100,0);
     }
 
     void wifiClient()
     {
+        if(!m_enabled)return;
         m_wifiStatusDecay = false;
         m_wifiLed->setColor(0,100,100);
         m_wifiStatusColor = *m_wifiLed;
     }
 
     void wifiAutoConfig()
-
     {
+        if(!m_enabled)return;
         m_wifiStatusDecay = false;
         m_wifiLed->setColor(100,0,100);
         m_wifiStatusColor = *m_wifiLed;
@@ -558,33 +555,39 @@ class ledStatusTrio : public ledBar
 
     void wifiOK()
     {
+        if(!m_enabled)return;
         *m_wifiLed = m_wifiStatusColor;
     }
 
     void wifiError()
     {
+        if(!m_enabled)return;
         m_wifiStatusDecay = false;
         m_wifiLed->setColor(100,0,0);
     }
 
     void extraLedOK()
     {
+        if(!m_enabled)return;
         m_extraLed->setColor(0,200,0);
     }
 
     void extraLedIdle()
     {
+        if(!m_enabled)return;
         m_extraLed->setColor(0,0,200);
     }
 
     void extraLedError()
     {
+        if(!m_enabled)return;
         m_extraLed->setColor(200,0,0);
     }
 
     void extraLedSetDecay(bool decay)
     {
-      m_extraLedDecay = decay;
+        if(!m_enabled)return;
+        m_extraLedDecay = decay;
     }
 
   private:
@@ -602,17 +605,73 @@ class ledStatusTrio : public ledBar
 class ledMatrix : public ledBar
 {
 public:
-    ledMatrix(uint8_t firstLednr, uint8_t cols, uint8_t rows, ws2812Strip* parentStrip, bool invertEachRow = false) : ledBar(parentStrip)
+    ledMatrix(uint8_t firstLednr, uint8_t cols, uint8_t rows, ws2812Strip* parentStrip,bool mirror = false, bool invertEachRow = false) : ledBar(parentStrip)
     {
+        m_actions.push_back(A_DISPLAY);
+
         for(int r = 0 ; r < rows ; r++)
         {
+            m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
-            addLed(r*cols+firstLednr,cols,invertedRow);
+            if(mirror) invertedRow = !invertEachRow;
+
+            int start = r*cols+firstLednr;
+            int count = cols;
+
+            if(invertedRow)
+            {
+                for(int i = start+count-1 ; i >= start ; i-- )
+                {
+                    ws2812Strip::led* l = m_strip->getLed(i);
+                    m_leds.push_back(l);
+                    m_matrix[r].push_back(l);
+                }
+            }
+            else
+            {
+                for(int i = start ; i < start+count ; i++ )
+                {
+                    ws2812Strip::led* l = m_strip->getLed(i);
+                    m_leds.push_back(l);
+                    m_matrix[r].push_back(l);
+                }
+            }
         }
-        m_id = "ws2812Matrix";
+        m_id = "ws2812Matrix-";
+        m_id +=cols;
+        m_id +="x";
+        m_id += rows;
     }
+
+   void display(std::vector<String>& args)
+    {
+       //Serial.print("L-start display:, fm:");
+       //Serial.println(getFreeMem());
+        m_animationType = animationNone;
+        if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5.
+        while (args.size())
+        {
+            int row = args[0].toInt();
+            args.erase(args.begin());
+            int col = args[0].toInt();
+            args.erase(args.begin());
+            uint8_t r = args[0].toInt();
+            args.erase(args.begin());
+            uint8_t g = args[0].toInt();
+            args.erase(args.begin());
+            uint8_t b = args[0].toInt();
+            args.erase(args.begin());
+
+            if(row < m_matrix.size() && col < m_matrix[row].size())
+                m_matrix[row][col]->setColor(r,g,b);
+        }
+        //Serial.print("L-display done:, fm:");
+        //Serial.println(getFreeMem());
+        m_strip->update();
+    }
+
 protected:
-//    std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
+    std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
     void animateCylon()
     {
         setLeds(ledMatrixIcons::cylonIcon16x16());

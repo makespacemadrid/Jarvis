@@ -5,6 +5,8 @@
 #include "qimageselectionwidget.h"
 #include <QColorDialog>
 #include <QLabel>
+#include <QApplication>
+#include <QSlider>
 
 gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *parent) :
     QGroupBox(parent), m_component(comp),
@@ -21,58 +23,35 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         //qDebug() << QString::number(int(action));
         QToolButton* b = new QToolButton(ui->actionsBox);
         QGridLayout* l = (QGridLayout*)ui->actionsBox->layout();
-        l->addWidget(b,l->count()/2,l->count()%2);
-        b->setText(QString::number(action,'f',0));
 
-        if      (action == A_ENABLE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(enable()));
-            b->setText("EN");
-        }
-        else if(action == A_DISABLE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(disable()));
-            b->setText("DIS");
-        }else if(action == A_ACTIVATE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(activate()));
-            b->setText("ACT");
-        }else if(action == A_DEACTIVATE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(deactivate()));
-            b->setText("DEA");
-        }else if(action == A_TOGGLE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(toggle()));
-            b->setText("TOGGLE");
-        }else if(actions[i] == A_READ_RAW){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(readRaw()));
-            b->setText("READR");
-        }else if(actions[i] == A_READ_DATA){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(readData()));
-            b->setText("READ");
-        }else if(actions[i] == A_DIMM){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(dimm()));
-            b->setText("DIMM");
-        }else if(actions[i] == A_BLINK){
-            //connect(b,SIGNAL(clicked()),m_component,SLOT(blink(50)));
-            b->setText("BLINK");
-        }else if(actions[i] == A_GLOW){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(glow()));
-            b->setText("GLOW");
-        }else if(actions[i] == A_FADE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(fade()));
-            b->setText("FADE");
-        }else if(actions[i] == A_SET_COLOR){
+        if      (action == A_DIMM){
+            b->deleteLater();
+            QSlider* w = new QSlider(this);
+            w->setMaximum(100);
+            w->setValue(50);
+            l->addWidget(w,l->count()/2,l->count()%2);
+            connect(w,SIGNAL(valueChanged(int)),m_component,SLOT(dimm(int)));
+
+        }else if(action == A_SET_COLOR){
             connect(b,SIGNAL(clicked()),this,SLOT(selectComponentColor()));
-            b->setText("SCOLOR");
-        }else if(actions[i] == A_CYLON){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(cylon()));
-            b->setText("CYLON");
-        }else if(actions[i] == A_SET_LEDS){
+            b->setText(m_component->actionName((m_component->getActions()[i])));
+            l->addWidget(b,l->count()/2,l->count()%2);
+
+        }else if(action == A_SET_LEDS){
             connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
-            b->setText("SET_IMG");
-        }else if(actions[i] == A_SET_LED){
-            //connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
-            b->setText("SLED");
-        }else if(actions[i] == A_MAKE_COFFEE){
-            connect(b,SIGNAL(clicked()),m_component,SLOT(makeCoffe()));
-            b->setText("MAKE_COFFEE");
+            b->setText(m_component->actionName((m_component->getActions()[i])));
+            l->addWidget(b,l->count()/2,l->count()%2);
+
+        }else if(action == A_DISPLAY){
+            connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
+            b->setText(m_component->actionName((m_component->getActions()[i])));
+            l->addWidget(b,l->count()/2,l->count()%2);
+
+        }else{
+            QString slotName = m_component->slotName(m_component->getActions()[i]);
+            b->setText(m_component->actionName((m_component->getActions()[i])));
+            l->addWidget(b,l->count()/2,l->count()%2);
+            connect(b,SIGNAL(clicked()),m_component,slotName.toStdString().c_str());
         }
     }
 
@@ -85,61 +64,23 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
         l->addWidget(label,i,0);
         l->addWidget(w,i,1);
         w->setMaximumHeight(50);
-        if(events[i] == E_ACTIVATED)
-        {
-            connect(m_component,SIGNAL(activated()),w,SLOT(blink()));
-            label->setText("Activated");
-
-        }else if(events[i] == E_DEACTIVATED)
-        {
-            connect(m_component,SIGNAL(deactivated()),w,SLOT(blink()));
-            label->setText("Deactivated");
-
-        }else if(events[i] == E_ENABLED)
-        {
-            connect(m_component,SIGNAL(enabled()),w,SLOT(blink()));
-            label->setText("Enabled");
-
-        }else if(events[i] == E_DISABLED)
-        {
-            connect(m_component,SIGNAL(disabled()),w,SLOT(blink()));
-            label->setText("Disabled");
-
-        }else if(events[i] == E_RAW_READ)
+        if(events[i] == E_RAW_READ)
         {
             connect(m_component,SIGNAL(rawRead()),w,SLOT(blink()));
             connect(m_component,SIGNAL(rawRead(QStringList)),w,SLOT(displayRead(QStringList)));
-            label->setText("Raw");
+            label->setText(m_component->eventName((m_component->getCapableEvents()[i])));
 
         }else if(events[i] == E_DATA_READ)
         {
             connect(m_component,SIGNAL(dataRead()),w,SLOT(blink()));
             connect(m_component,SIGNAL(dataRead(QStringList)),w,SLOT(displayRead(QStringList)));
-            label->setText("Data");
+            label->setText(m_component->eventName((m_component->getCapableEvents()[i])));
 
-        }else if(events[i] == E_GLOBAL_POWERON)
+        }else
         {
-            connect(m_component,SIGNAL(globalPowerOn()),w,SLOT(blink()));
-            label->setText("PowerOn");
-
-        }else if(events[i] == E_GLOBAL_SHUTDOWN)
-        {
-            connect(m_component,SIGNAL(globalShutDown()),w,SLOT(blink()));
-            label->setText("PowerOff");
-
-        }else if(events[i] == E_COFFEE_MAKING)
-        {
-            connect(m_component,SIGNAL(coffeeMaking()),w,SLOT(blink()));
-            label->setText("Coffee Making");
-
-        }else if(events[i] == E_COFFEE_MADE)
-        {
-            connect(m_component,SIGNAL(coffeeMade()),w,SLOT(blink()));
-            label->setText("Cofee Made");
-        }
-        else
-        {
-            label->setText("Unknown");
+            QString signalName = m_component->signalName(m_component->getCapableEvents()[i]);
+            label->setText(m_component->eventName((m_component->getCapableEvents()[i])));
+            connect(m_component,signalName.toStdString().c_str(),w,SLOT(blink()));
         }
         //w->setMinimumSize(32,32);
         //w->setMaximumSize(32,32);
@@ -157,23 +98,30 @@ void gNodeComponentWidget::sendImage()
     if(w.exec())
     {
         QImage img = w.scaledImage.convertToFormat(QImage::Format_RGB888);
-        uchar *bits = img.bits();
         QStringList args;
-        for (int i = 0; i < (img.width() * img.height() * 3); i = i+3)
+        for(int x = 0 ; x < img.width() ; x++)
         {
-            args.append(QString::number(i/3,'f',0));
-            args.append(QString::number((int) bits[i],'f',0));
-            args.append(QString::number((int) bits[i+1],'f',0));
-            args.append(QString::number((int) bits[i+2],'f',0));
-            if(i%16==0)
+            for(int y = 0 ; y < img.height() ; y++)
             {
-                m_component->setLed(args);
-                args.clear();
-            }
+                QRgb colorRgb = img.pixel(QPoint(x,y));
+                QColor color(colorRgb);
 
+                //qDebug() << "x:" << x << " - y:" << y << " - r:" << color.red() << " - g:" << color.green() << " - b:" << color.blue();
+
+                args.append(QString::number(y,'f',0));
+                args.append(QString::number(x,'f',0));
+                args.append(QString::number(color.red() ,'f',0));
+                args.append(QString::number(color.green() ,'f',0));
+                args.append(QString::number(color.blue() ,'f',0));
+                qDebug() << " - args:" << args.size() ;
+                if( args.size() >= (32*5) )
+                {
+                    m_component->display(args);
+                    args.clear();
+                }
+            }
         }
-        if(args.size())
-            m_component->setLed(args);
+        if(args.size()) m_component->display(args);
     }
 }
 

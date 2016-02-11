@@ -5,6 +5,7 @@
 
 #include "sjarvis.h"
 
+
 namespace Ui {
 class gJarvisgui;
 }
@@ -20,6 +21,7 @@ public:
 private:
     Ui::gJarvisgui *ui;
     sJarvis m_jarvis;
+
 };
 
 #endif // GJARVISGUI_H

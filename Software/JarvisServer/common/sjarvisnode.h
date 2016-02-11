@@ -2,13 +2,15 @@
 #define SJARVISNODE_H
 
 #include "jarvisProtocol.h"
-#include "sjarvistcpclient.h"
 #include "sjarvisnodecomponent.h"
 #include <QObject>
 #include <QString>
 #include <QList>
 #include <QStringList>
 #include <QTimer>
+#include <QTime>
+#include <QTcpSocket>
+
 
 class sJarvisNodeComponent;
 
@@ -18,30 +20,49 @@ class sJarvisNode :public QObject
     Q_OBJECT
 public:
 
-    sJarvisNode(QObject* parent = 0);
+    sJarvisNode(QTcpSocket *tcpClient = 0, QObject* parent = 0);
+    ~sJarvisNode();
     QString getId() {return m_id;}
     QList<sJarvisNodeComponent*> components() {return m_components;}
 
     void connectTCP(QString host, quint16 port);
     void closeTCP();
-    void send(QByteArray data) {emit writeData(data);}
-    bool isValid()
+    void send(QByteArray data)
     {
-        return (m_tcpClient.isOpen() && m_valid);
+        emit tx();
+        m_txCount++;
+        emit rawInput(data);
+        m_commLog.append(data);
+        m_tcpClient->write(data);
     }
 
+    bool isValid()
+    {
+        return (m_tcpClient->isOpen() && m_valid);
+    }
+
+    quint64 txCount() {return m_txCount;}
+    quint64 rxCount() {return m_rxCount;}
+    int     pingTime(){return m_lastPingTime;}
+
 protected:
-    QString          m_id;
-    sJarvisTcpClient m_tcpClient;
-    QString          m_rxBuffer;
-    QString          m_commLog;
+    QString           m_id;
+    QTcpSocket       *m_tcpClient;
+    QString           m_rxBuffer;
+    QString           m_commLog;
     QList<sJarvisNodeComponent*> m_components;
-    QTimer           m_pingTimer;
-    QTimer           m_initTimer;
-    QTimer           m_initTimeout;
-    QTime            m_keepAliveTimer;
-    bool             m_initDone;
-    bool             m_valid;
+    int               m_lastPingTime;
+    QTimer            m_pingTimer;
+    QTime             m_pingTime;
+    QTimer            m_initTimer;
+    QTimer            m_initTimeout;
+    QTimer            m_commTimeout;
+    bool              m_initDone;
+    bool              m_valid;
+    bool              m_validated;
+    u_int16_t         m_txCount;
+    u_int16_t         m_rxCount;
+
 
     void parseBuffer(QString& buf);
     void parsePacket(QString& packet);
@@ -71,16 +92,17 @@ signals:
     void ready();
     void disconnected();
 protected slots:
-    void data_rx(QByteArray data);
+    void readSocket();
     void validateClient(QByteArray data);
     void initNode();
-    void ping();
     void pong();
     void initDone();
     void initTimeout();
+    void commTimedOut();
     void socketDisconected();
     void setUpdateInterval(int interval);
 public slots:
+    void ping();
     void doAction(QString Component, jarvisActions action, QStringList args = QStringList());
     void pollSensor(QString sen = "ALL",int interval = -1);
     void stopPollingSensors();

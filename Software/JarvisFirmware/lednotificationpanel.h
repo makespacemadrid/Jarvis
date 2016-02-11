@@ -1,27 +1,22 @@
-#ifndef LEDPANELNODE_H
-#define LEDPANELNODE_H
+#ifndef LEDNOTIFICATIONPANEL_H
+#define LEDNOTIFICATIONPANEL_H
 
 #include "jarvisNode.h"
 #include "ledMatrixIcons.h"
 #include "temperatureSensor.h"
-#include "buttons.h"
 
-class ledPanelNode : public jarvisNode
+
+class ledNotificationPanelNode : public jarvisNode
 {
 public:
-    ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,false,true), m_dhtSensor(12)
-      , m_activateBtn(13), m_deactivateBtn(15), m_potenciometer(A0)
+    ledNotificationPanelNode() : jarvisNode() ,m_ledMatrix(0,16,16,&m_ledStrip,true,true), m_dhtSensor(12)
     {
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
-        m_components.push_back(&m_activateBtn);
-        m_activateBtn.setId("ActivateButton");
-        m_components.push_back((&m_deactivateBtn));
-        m_deactivateBtn.setId("DeactivateButton");
-        m_components.push_back(&m_potenciometer);
 
-        m_id = "ledPanel";
+
+        m_id = "ledNotificationPanel";
         m_actions.push_back(A_ACTIVATE);
         m_actions.push_back(A_DEACTIVATE);
         m_actions.push_back(A_DIMM);
@@ -58,13 +53,6 @@ public:
         m_ledMatrix.setLeds(ledMatrixIcons::wifiYellowIcon16x16());
         m_ledMatrix.glow();
         jarvisNode::setup();
-    }
-
-    void update()
-    {
-        jarvisNode::update();
-        uint8_t power = m_potenciometer.readData();
-        m_ledStrip.dimm(power);
     }
 
     void wifiConnected()
@@ -107,10 +95,7 @@ public:
 protected:
     ledMatrix       m_ledMatrix;
     dhtSensor       m_dhtSensor;
-    button          m_activateBtn;
-    button          m_deactivateBtn;
-    potenciometer   m_potenciometer;
-
 };
 
-#endif // LEDPANELNODE_H
+
+#endif // LEDNOTIFICATIONPANEL_H
