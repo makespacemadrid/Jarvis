@@ -67,11 +67,9 @@ public:
 
             if(e.jevent == E_ACTIVATED)
             {
-                m_speaker.beep();
                 startPowerOn();
             }else if (e.jevent == E_DEACTIVATED)
             {
-                m_speaker.beep();
                 startShutDown();
             }
         }
@@ -134,6 +132,7 @@ public:
             m_status = PoweringOn;
             m_activationCounter = 0.0;
             addEvent(E_ACTIVATED);
+            m_speaker.playRtttl(piezoSongs::pacman);
         }
       }else if(m_status == ShutDownRequested)
       {
@@ -168,12 +167,16 @@ public:
             m_makeLed.setColor(250,250,0);
             m_makeLed.glow();
             m_offLed.setColor(250,0,0);
+            m_speaker.beep();
+            m_speaker.beep();
         }else if(m_status == ShutDownRequested)
         {
             m_deActivationCounter = 0;
             m_status = On;
             m_makeLed.setColor(0,250,0);
             m_offLed.off();
+            m_speaker.beep();
+            m_speaker.playTone(555,100);
         }
     }
 
@@ -187,6 +190,7 @@ public:
             m_makeLed.glow();
             m_offLed.setColor(250,0,0);
             m_offLed.glow();
+            m_speaker.beep();
         }else if(m_status == PowerOnRequested)
         {
             m_activationCounter = 0;
@@ -194,6 +198,8 @@ public:
             m_makeLed.off();
             m_offLed.setColor(250,0,0);
             m_makeLed.glow();
+            m_speaker.beep();
+            m_speaker.playTone(555,100);
         }
     }
 

@@ -33,7 +33,13 @@ SOURCES += \
     jarvisServer/gjarvisserverwidget.cpp \
     jarvisServer/gnodesimplewidget.cpp \
     jarvisServer/qconnectdialog.cpp \
-    common/jarvisnodetestapp.cpp
+    common/jarvisnodetestapp.cpp \
+    jarvisServer/sjarvisconnection.cpp \
+    sjarvisconnectionmanager.cpp \
+    jarvisServer/gjarvisconnectionmanagerwidget.cpp \
+    jarvisServer/gjarvisconnectionwidget.cpp \
+    common/grtttlplayer.cpp \
+    common/qwificonfigdialog.cpp
 
 HEADERS += \
     ../JarvisFirmware/jarvisProtocol.h \
@@ -53,7 +59,13 @@ HEADERS += \
     jarvisServer/gjarvisserverwidget.h \
     jarvisServer/gnodesimplewidget.h \
     jarvisServer/qconnectdialog.h \
-    common/jarvisnodetestapp.h
+    common/jarvisnodetestapp.h \
+    jarvisServer/sjarvisconnection.h \
+    sjarvisconnectionmanager.h \
+    jarvisServer/gjarvisconnectionmanagerwidget.h \
+    jarvisServer/gjarvisconnectionwidget.h \
+    common/grtttlplayer.h \
+    common/qwificonfigdialog.h
 
 FORMS   += \
     common/gblinkwidget.ui \
@@ -66,7 +78,11 @@ FORMS   += \
     jarvisServer/gjarvisserverwidget.ui \
     jarvisServer/gnodesimplewidget.ui \
     jarvisServer/qconnectdialog.ui \
-    common/jarvisnodetestapp.ui
+    common/jarvisnodetestapp.ui \
+    jarvisServer/gjarvisconnectionmanagerwidget.ui \
+    jarvisServer/gjarvisconnectionwidget.ui \
+    common/grtttlplayer.ui \
+    common/qwificonfigdialog.ui
 
 RESOURCES += \
     common/resources.qrc

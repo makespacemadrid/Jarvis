@@ -11,32 +11,45 @@ class ws2812Strip {
 public:
     class led{ // clase led dentro de la clase Strip
     public:
-      led(): r(0), g(0), b(0), bright(1.0) {;}
+      led(int r = 0, int g = 0, int b = 0, float bright = 1.0): m_r(r), m_g(r), m_b(b), m_bright(bright) {;}
       void setColor(uint8_t red =0,uint8_t green=0,uint8_t blue=0)
-        {
-          r=red   * bright;
-          g=green * bright;
-          b=blue  * bright;
-        }
-
-      void dimm(float factor = 0.5f)
       {
-          r *= factor;
-          g *= factor;
-          b *= factor;
+          m_r= red;
+          m_g= green;
+          m_b= blue;
       }
 
-      void setBrightness(float b)
+      void dimm(float factor = 0.75)
       {
-          bright = b;
+          m_r *= factor;
+          m_g *= factor;
+          m_b *= factor;
+      }
+
+      void setBrightness(float b = 1.0)
+      {
+          m_bright = b;
       }
 
       void off()   {setColor(0,0,0);}
       void white() {setColor(200,200,200);}
-      uint8_t r;
-      uint8_t g;
-      uint8_t b;
-      float bright;
+      void red()   {setColor(200,0,0);}
+      void green() {setColor(0,200,0);}
+      void blue()  {setColor(0,0,200);}
+
+      void setR(uint8_t val) {m_r = val;}
+      void setG(uint8_t val) {m_g = val;}
+      void setB(uint8_t val) {m_b = val;}
+
+      int r()   {return m_r*m_bright;}
+      int g()   {return m_g*m_bright;}
+      int b()   {return m_b*m_bright;}
+
+    private:
+      uint8_t m_r;
+      uint8_t m_g;
+      uint8_t m_b;
+      float   m_bright;
     };
   
   ws2812Strip(int pin = -1, int lednr = 25, float bright = 1.0) : m_pin(pin) , m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
@@ -76,7 +89,7 @@ public:
     if(!isValid()) return;
     for(int i=0;i<m_leds.size();i++)
     {
-      m_pixels.setPixelColor(i, m_leds[i].r*m_brightness,m_leds[i].g*m_brightness,m_leds[i].b*m_brightness);
+      m_pixels.setPixelColor(i, m_leds[i].r()*m_brightness,m_leds[i].g()*m_brightness,m_leds[i].b()*m_brightness);
     }
     m_pixels.show(); 
     yield();
@@ -137,6 +150,7 @@ class ledGadget :  public nodeComponent
       m_capableEvents.push_back(E_DEACTIVATED);
       m_actions.push_back(A_ACTIVATE);
       m_actions.push_back(A_DEACTIVATE);
+      m_actions.push_back(A_DIMM);
       m_actions.push_back(A_SET_COLOR);
       m_actions.push_back(A_SET_LEDS);
       m_actions.push_back(A_CYLON);
@@ -220,7 +234,7 @@ class ledGadget :  public nodeComponent
     virtual void off()
     {
         if(!m_enabled) return;
-        m_animationType = animationNone;
+        resetAnimation();
         for(int i = 0 ; i < m_leds.size() ; i++)
             m_leds[i]->off();
         m_strip->update();
@@ -229,12 +243,18 @@ class ledGadget :  public nodeComponent
     virtual void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
         if(!m_enabled) return;
-        m_animationType = animationNone;
+        resetAnimation();
         for(int i = 0 ; i < m_leds.size() ; i++)
         {
             m_leds[i]->setColor(r,g,b);
         }
         m_strip->update();
+    }
+
+    void dimm(uint8_t power)
+    {
+        if(power > 100) power = 100;
+        setBrightness(power /100.0f);
     }
 
     void setBrightness(float b = 1.0)
@@ -247,26 +267,40 @@ class ledGadget :  public nodeComponent
         m_strip->update();
     }
 
+    void resetAnimation()
+    {
+        if(m_animationType == animationGlow)
+        {
+            setBrightness(1.0);
+        }
+
+        m_animationType = animationNone;
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+    }
+
     virtual void fade()
     {
-        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        resetAnimation();
         m_animationType = animationFade;
     }
 
     virtual void glow()
     {
+        resetAnimation();
         m_counter1 = 50, m_counter2 = 1 ; m_counter3 = 50;
         m_animationType = animationGlow;
     }
 
     virtual void blink()
     {
+        resetAnimation();
         m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
         m_animationType = animationBlink;
     }
 
     virtual void cylon()
     {//animacion cylon
+        resetAnimation();
         m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
         m_animationType = animationCylon;
     }
@@ -310,66 +344,47 @@ class ledGadget :  public nodeComponent
         bool all_off = true;
         for(int i = 0 ; i < m_leds.size() ; i++)
         {
-            m_leds[i]->dimm(0.8);
-            if ( (m_leds[i]->r > 0) ||
-                 (m_leds[i]->g > 0) ||
-                 (m_leds[i]->b > 0) )
+            if( (m_leds[i]->r() > 0) || (m_leds[i]->g() > 0) || (m_leds[i]->b() > 0) )
             {
+                m_leds[i]->dimm();
                 all_off=false;
             }
         }
+
         if(all_off)
         {
             m_events.push_back(E_DEACTIVATED);
-            m_animationType = animationNone;
+            resetAnimation();
         }
     }
 
     virtual void animateGlow()
-    {//contador 1 se usa contar la iteracion, y el 2 para la direccion(sumando/restando), y el 3 para el limite
+    {//contador 1 se usa contar la iteracion, y el 2 para la direccion(sumando/restando).
         if(m_counter2 == 0)
         {//sumando
+            float bright = m_counter1/50.0;
             for(int i = 0 ; i < m_leds.size() ; i++)
             {
-                if ((m_leds[i]->r > 0) && (m_leds[i]->r < 250))
-                {
-                    m_leds[i]->r += 5;
-                }
-                if((m_leds[i]->g > 0) && (m_leds[i]->g < 250))
-                {
-                   m_leds[i]->g += 5;
-               }
-               if((m_leds[i]->b > 0) && (m_leds[i]->b < 250))
-               {
-                   m_leds[i]->b += 5;
-               }
-//                m_leds[i]->setBrightness(m_counter3*100.0f/m_counter1/100.0f);
+                m_leds[i]->setBrightness(bright);
             }
-            m_counter1++;
-            if(m_counter1 == m_counter3)
+
+            if(m_counter1 == 50)
               m_counter2 = 1;
+            else
+              m_counter1++;
         }
         else
         {//restando
+            float bright = m_counter1/50.0;
             for(int i = 0 ; i < m_leds.size() ; i++)
             {
-                if(m_leds[i]->r > 5)
-                {
-                    m_leds[i]->r -= 5;
-                }
-               if(m_leds[i]->g > 5)
-                {
-                    m_leds[i]->g -= 5;
-                }
-                if(m_leds[i]->b > 5)
-                {
-                    m_leds[i]->b -= 5;
-                }
-//                m_leds[i]->setBrightness(m_counter3*100.0f/m_counter1/100.0f);
+                m_leds[i]->setBrightness(bright);
             }
-            m_counter1--;
+
             if(m_counter1 == 0)
                 m_counter2 = 0;
+            else
+              m_counter1--;
         }
  //       Serial.print("C1: ");
  //       Serial.print(m_counter1);
@@ -645,8 +660,10 @@ public:
 
    void display(std::vector<String>& args)
     {
-       //Serial.print("L-start display:, fm:");
-       //Serial.println(getFreeMem());
+       Serial.print("L-start display: fm:");
+       Serial.println(getFreeMem());
+       Serial.print("args:");
+       Serial.println(args.size());
         m_animationType = animationNone;
         if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5.
         while (args.size())
@@ -661,12 +678,28 @@ public:
             args.erase(args.begin());
             uint8_t b = args[0].toInt();
             args.erase(args.begin());
+            Serial.print("x:");
+            Serial.print(row);
+            Serial.print("y:");
+            Serial.print(col);
+            Serial.print("r:");
+            Serial.print(r);
+            Serial.print("g:");
+            Serial.print(g);
+            Serial.print("b:");
+            Serial.println(b);
 
+            Serial.print("cols:");
+            Serial.print(m_matrix.size());
+            Serial.print("rows:");
+            Serial.print(m_matrix[0].size());
+            Serial.print("rows-end:");
+            Serial.print(m_matrix[m_matrix.size()-1].size());
             if(row < m_matrix.size() && col < m_matrix[row].size())
                 m_matrix[row][col]->setColor(r,g,b);
         }
-        //Serial.print("L-display done:, fm:");
-        //Serial.println(getFreeMem());
+        Serial.print("L-display done:, fm:");
+        Serial.println(getFreeMem());
         m_strip->update();
     }
 

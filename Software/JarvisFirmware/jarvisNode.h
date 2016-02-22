@@ -35,7 +35,13 @@ public:
       }
 
     if(m_speaker.isValid())
+    {
         m_components.push_back(&m_speaker);
+        debug(String(F("I:-Piezo on: ")));
+        debugln(m_speaker.pinNr());
+        m_speaker.setup();
+    }
+
     m_id = "jarvisNode";
   }
 
@@ -235,23 +241,6 @@ protected:
             m_pollingSensors.push_back(comp->id());
         }
       }
-
-//      std::vector<String> args;
-//      args.push_back(C_SENSORS);
-//      for(int i  = 0 ; i < m_components.size() ; i++ )
-//      {
-//        nodeComponent* comp = m_components[i];
-//        if(comp->canRead())
-//        {
-//          args.push_back(comp->id());
-//          args.push_back(String(comp->read()));
-//        }
-//      }
-//      args.push_back(F("FreeMem"));
-//      args.push_back(String(getFreeMem()));
-//      args.push_back(F("BufferSize"));
-//      args.push_back(String(bufferCount()));
-//      send(encodeJarvisMsg(args));
   }
 
   virtual void pollSensor(String id,int delay = -1)
@@ -259,19 +248,6 @@ protected:
       if(delay != -1)
           setUpdateInterval(delay);
       m_pollingSensors.push_back(id);
-
-//      std::vector<String> args;
-//      args.push_back(C_SENSOR);
-//      for(int i  = 0 ; i < m_components.size() ; i++ )
-//      {
-//        nodeComponent* comp = m_components[i];
-//        if(comp->id() == id)
-//        {
-//          args.push_back(comp->id());
-//          args.push_back(String(comp->read()));
-//        }
-//      }
-//      send(encodeJarvisMsg(args));
   }
 
   virtual void stopPolling()

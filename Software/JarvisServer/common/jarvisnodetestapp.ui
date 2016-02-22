@@ -437,7 +437,7 @@
    <string>Node Test</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources.qrc">
+   <iconset>
     <normaloff>:/icons/Iconos/m.bmp</normaloff>:/icons/Iconos/m.bmp</iconset>
   </property>
   <property name="autoFillBackground">
@@ -681,7 +681,7 @@
           <string/>
          </property>
          <property name="icon">
-          <iconset resource="resources.qrc">
+          <iconset>
            <normaloff>:/icons/Iconos/connect-icon.png</normaloff>
            <normalon>:/icons/Iconos/connected-icon.png</normalon>:/icons/Iconos/connect-icon.png</iconset>
          </property>
@@ -817,7 +817,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QToolButton" name="toolButton_5">
+          <widget class="QToolButton" name="wifiConfigBtn">
            <property name="font">
             <font>
              <weight>50</weight>
@@ -825,7 +825,7 @@
             </font>
            </property>
            <property name="text">
-            <string>...</string>
+            <string>WifiConfig</string>
            </property>
           </widget>
          </item>
@@ -1346,9 +1346,7 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources>
-  <include location="resources.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>sliderUpdateInterval</sender>

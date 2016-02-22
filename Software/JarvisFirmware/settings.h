@@ -28,7 +28,7 @@ struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
   char          id[15]          = "Configureme";
-  char          remoteHost[17]  = "10.0.1.100";
+  char          remoteHost[17]  = "tesla";
   uint16_t      remotePort      = 31416;
   int           localPort       = 31416;
   //jarvisModules moduleType      = simplePowerControlModule;
@@ -61,10 +61,11 @@ Tabla de correspondencia de pines nodemcu arduino
   int   currentMeterPin        = -1;
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
-  int   piezoPin               = -1;
-  int   ledStripPin            =  4; //makeswitch
-  //int   ledStripPin            =  13; // coffeemaker
-  int   factoryResetPin        =  2;
+//  int   piezoPin               = -1;
+  int   piezoPin               =  0;
+  int   ledStripPin            =  4; //makeswitch /coffeemaker
+//  int   ledStripPin            =  13; // LedPanel
+  int   factoryResetPin        = -1;
   #else
   //Pineado por defecto del arduino
   int   alivePin               = 13;
@@ -72,24 +73,23 @@ Tabla de correspondencia de pines nodemcu arduino
   int   currentMeterPin        = -1;
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
-  int   piezoPin               =  6;
+  int   piezoPin               = -1;
   int   ledStripPin            =  9;
   int   factoryResetPin        =  -1;//8
   #endif
 
   //Configuracion
   //int   ledStripLedNr          = 3;
-  //int   ledStripLedNr          = 50; //cofeeMaker
-  int   ledStripLedNr          = 25; //makeswitch
+  int   ledStripLedNr          = 50; //cofeeMaker
+  //int   ledStripLedNr          = 25; //makeswitch
   //int   ledStripLedNr          = 256; //ledNotif
-  //int   ledStripLedNr          = 300; // ledpanel
+//  int   ledStripLedNr          = 300; // ledpanel
   bool  bridgeMode             = false;
   //float currentMeterFactor     = 29.296875f;
   //int   currentMeterVolts      = 220;
   //int   relayMaxAmps           = 15;
   //bool  relayDimmable          = false;
   //int   relayMaxTemp           = 60;
-  //int   ledNumber              =  3;
   int   magicNumber            = 31416; 
 };
 

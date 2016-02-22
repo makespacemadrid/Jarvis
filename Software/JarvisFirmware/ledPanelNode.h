@@ -16,9 +16,9 @@ public:
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
         m_components.push_back(&m_activateBtn);
-        m_activateBtn.setId("ActivateButton");
+        m_activateBtn.setId("OnBtn");
         m_components.push_back((&m_deactivateBtn));
-        m_deactivateBtn.setId("DeactivateButton");
+        m_deactivateBtn.setId("OffBtn");
         m_components.push_back(&m_potenciometer);
 
         m_id = "ledPanel";
@@ -55,53 +55,16 @@ public:
 
     void setup()
     {
-        m_ledMatrix.setLeds(ledMatrixIcons::wifiYellowIcon16x16());
-        m_ledMatrix.glow();
+        m_ledMatrix.setColor(100,100,100);
         jarvisNode::setup();
+        m_ledMatrix.setColor(150,150,150);
     }
 
     void update()
     {
         jarvisNode::update();
         uint8_t power = m_potenciometer.readData();
-        m_ledStrip.dimm(power);
-    }
-
-    void wifiConnected()
-    {
-        if(connectionStatus() == 3)
-        {
-            m_ledMatrix.setLeds(ledMatrixIcons::wifiGreenIcon16x16());
-            m_ledMatrix.glow();
-        }
-        else if(connectionStatus() == 0)
-        {
-            m_ledMatrix.setLeds(ledMatrixIcons::wifiBlueIcon16x16());
-        }
-    }
-
-    void wifiDisConnected()
-    {
-        m_ledMatrix.setLeds(ledMatrixIcons::wifiRedIcon16x16());
-    }
-
-    void jarvisConnected()
-    {
-        m_ledMatrix.setLeds(ledMatrixIcons::mMakeSpaceIcon16x16());
-        m_ledMatrix.glow();
-    }
-
-    void jarvisDisConnected()
-    {
-        if(connectionStatus() == 3)
-        {
-            m_ledMatrix.setLeds(ledMatrixIcons::wifiGreenIcon16x16());
-            m_ledMatrix.glow();
-        }
-        else if(connectionStatus() == 0)
-        {
-            m_ledMatrix.setLeds(ledMatrixIcons::wifiBlueIcon16x16());
-        }
+        dimm(power);
     }
 
 protected:

@@ -71,17 +71,18 @@ class communicationModule : public jarvisParser , public nodeComponent
       }
       m_statusLed.wifiInit();
       m_lastConnectionStatus = connectionStatus();
-      int i = 0;
+      float i = 0;
       while (connectionStatus() != 3)
       {
 #ifdef VERBOSE_DEBUG
         debug(F("."));
 #endif
-        if(i >= 15000/(updateInterval+1)) // Esperamos 15 segundos para que se establezca la conexion por defecto
+        if(i >= 15) // Esperamos 15 segundos para que se establezca la conexion por defecto
           break;
-        update();;
-        i++;
+        update();
+        i+=updateInterval/1000.0;
       }
+
       if(connectionStatus() != 3)
       {
         String name = F("ConfigureMe-");
@@ -513,6 +514,7 @@ class espNative : public communicationModule
       debug("D: HTTPUpdateServer ready! Open http://");
       debug(m_id);
       debug(".local/update in your browser\n");
+
     }
 
     void update()
@@ -809,9 +811,9 @@ class espNative : public communicationModule
       debug(String(F("#")));
       debugln(pass);
       WiFi.disconnect();
-      delay(1000);
+      yield();
       WiFi.softAP(essid, pass);
-      delay(500);
+      yield();
       m_server.begin();
       delete pass;
       delete essid;
@@ -829,9 +831,9 @@ class espNative : public communicationModule
       debugln(pass);
       Serial.print(pass);
       WiFi.disconnect();
-      delay(10);
+      yield();
       WiFi.begin(essid, pass);
-      delay(1000);
+      yield();
       m_server.begin();
       delete pass;
       delete essid;

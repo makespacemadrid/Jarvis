@@ -85,6 +85,8 @@ enum jarvisActions
     A_SET_LEDS,
     A_DISPLAY,
     A_BEEP,
+    A_PLAYTONE,
+    A_PLAYRTTTL,
     A_MAKE_COFFEE
 };
 

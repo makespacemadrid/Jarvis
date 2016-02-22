@@ -3,6 +3,8 @@
 
 #include <QObject>
 #include "sjarvisnodeserver.h"
+#include "sjarvisconnectionmanager.h"
+
 
 class sJarvis : public QObject
 {
@@ -12,7 +14,8 @@ public:
     sJarvisNodeServer* nodeServer() {return &m_nodeServer;}
 
 private:
-    sJarvisNodeServer m_nodeServer;
+    sJarvisNodeServer        m_nodeServer;
+    sJarvisConnectionManager m_connectionManager;
 signals:
 
 public slots:

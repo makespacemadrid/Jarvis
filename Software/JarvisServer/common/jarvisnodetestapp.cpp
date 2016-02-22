@@ -1,6 +1,8 @@
 #include "jarvisnodetestapp.h"
 #include "ui_jarvisnodetestapp.h"
 
+#include "qwificonfigdialog.h"
+
 jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::jarvisNodeTestApp)
@@ -124,6 +126,16 @@ void jarvisNodeTestApp::on_sendCmdBtn_clicked()
 {
     m_node->send(ui->editCommand->text().toUtf8());
 }
+
+void jarvisNodeTestApp::on_wifiConfigBtn_clicked()
+{
+    qWifiConfigDialog w;
+    if(w.exec())
+    {
+        m_node->setWifiConfig(w.essid(),w.passwd(),w.apMode());
+    }
+}
+
 
 void jarvisNodeTestApp::on_stopReadBtn_clicked()
 {

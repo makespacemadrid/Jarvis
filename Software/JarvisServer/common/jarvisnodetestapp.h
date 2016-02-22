@@ -51,6 +51,7 @@ public slots:
     void on_sendCmdBtn_clicked();
     void on_stopReadBtn_clicked();
     void on_btnGetComps_clicked();
+    void on_wifiConfigBtn_clicked();
     void on_btnPing_clicked();
     void on_btnClearGraphs_clicked();
     void console_log(QByteArray data);

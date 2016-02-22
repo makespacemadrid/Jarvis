@@ -3,6 +3,7 @@
 
 #include "jarvisProtocol.h"
 #include "sjarvisnodecomponent.h"
+
 #include <QObject>
 #include <QString>
 #include <QList>
@@ -22,6 +23,8 @@ public:
 
     sJarvisNode(QTcpSocket *tcpClient = 0, QObject* parent = 0);
     ~sJarvisNode();
+    void setTcpClient(QTcpSocket *tcpClient);
+    QTcpSocket* releaseTcpClient();
     QString getId() {return m_id;}
     QList<sJarvisNodeComponent*> components() {return m_components;}
 
@@ -107,6 +110,7 @@ public slots:
     void pollSensor(QString sen = "ALL",int interval = -1);
     void stopPollingSensors();
     void resetNode();
+    void setWifiConfig(QString essid, QString passwd, bool apMode = false);
     void getComponents() {sendGetComponents();}
 
 };

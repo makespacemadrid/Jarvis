@@ -3,10 +3,12 @@
 #include <QToolButton>
 #include <QHBoxLayout>
 #include "qimageselectionwidget.h"
+#include "grtttlplayer.h"
 #include <QColorDialog>
 #include <QLabel>
 #include <QApplication>
 #include <QSlider>
+
 
 gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *parent) :
     QGroupBox(parent), m_component(comp),
@@ -46,7 +48,10 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
             connect(b,SIGNAL(clicked()),this,SLOT(sendImage()));
             b->setText(m_component->actionName((m_component->getActions()[i])));
             l->addWidget(b,l->count()/2,l->count()%2);
-
+        }else if(action == A_PLAYRTTTL){
+            connect(b,SIGNAL(clicked()),this,SLOT(openRtttlPlayer()));
+            b->setText(m_component->actionName((m_component->getActions()[i])));
+            l->addWidget(b,l->count()/2,l->count()%2);
         }else{
             QString slotName = m_component->slotName(m_component->getActions()[i]);
             b->setText(m_component->actionName((m_component->getActions()[i])));
@@ -131,4 +136,11 @@ void gNodeComponentWidget::selectComponentColor()
    if(!w.exec())return;
    QColor q = w.selectedColor();
    m_component->setColor(q.red(),q.green(),q.blue());
+}
+
+
+void gNodeComponentWidget::openRtttlPlayer()
+{
+    gRtttlPlayer* w = new gRtttlPlayer(m_component);
+    w->show(); //leak al cerrar la ventana?
 }
