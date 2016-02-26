@@ -2,50 +2,48 @@
 
 sJarvisConnection::sJarvisConnection(QObject *parent) : QObject(parent)
 {
-    m_senderObj = 0;
-    m_destObj   = 0;
     m_enabled   = true;
+    m_id        = "Configureme";
+    m_delay     = 0;
+    connect(&m_delayTimer,SIGNAL(timeout()),this,SLOT(actuallyDoAction()));
 }
 
-void sJarvisConnection::setSenderEvent(sJarvisNodeComponent* sender, jarvisEvents event)
+void sJarvisConnection::addSenderEvent(QString senderID, QString senderComponent , jarvisEvents event, sJarvisNodeComponent* senderObj)
 {
-    QString evString = sender->signalName(event);
-    setSenderEvent(sender,evString);
+    QString evString = sJarvisNodeComponent::signalName(event);
+    addSenderEvent(senderID,senderComponent,evString,senderObj);
 }
 
-void sJarvisConnection::setSenderEvent(sJarvisNodeComponent* sender, QString event)
+void sJarvisConnection::addSenderEvent(QString senderID, QString senderComponent , QString event, sJarvisNodeComponent *senderObj)
 {
-    m_senderObj   = sender;
-    m_senderEvent = event;
+    m_senderId.push_back(senderID);
+    m_senderComponent.push_back(senderComponent);
+    m_senderObj.push_back(senderObj);
+    m_senderEvent.push_back(event);
+
+    if(m_senderObj.last())
+        connect(m_senderObj.last(),m_senderEvent.last().toStdString().c_str(),this,SLOT(doAction()));
 }
 
-void sJarvisConnection::setDestAction (sJarvisNodeComponent* dest  , jarvisActions action)
+void sJarvisConnection::addDestAction (QString destID, QString destComponent, jarvisActions action, sJarvisNodeComponent *destObj)
 {
-    QString actString = dest->slotName(action);
-    setDestAction(dest,actString);
+    QString actString = sJarvisNodeComponent::slotName(action);
+    addDestAction(destID,destComponent,actString,destObj);
 }
 
-void sJarvisConnection::setDestAction (sJarvisNodeComponent* dest  , QString action)
+void sJarvisConnection::addDestAction (QString destID, QString destComponent,QString action, sJarvisNodeComponent *destObj)
 {
-    m_destObj    = dest;
-    m_destAction = action;
+    m_destId.push_back(destID);
+    m_destComponent.push_back(destComponent);
+    m_destObj.push_back(destObj);
+    m_destAction.push_back(action);
 }
 
 void sJarvisConnection::setDelay(quint16 delayms)
 {
-
+    m_delay = delayms;
 }
 
-void sJarvisConnection::setup(bool doOnSetup)
-{
-    if(!m_senderObj || !m_destObj)
-        return;
-
-    connect(m_senderObj,m_senderEvent.toStdString().c_str(),this,SLOT(doAction()));
-
-    if(doOnSetup)
-        doAction();
-}
 
 bool sJarvisConnection::isValid()
 {
@@ -65,13 +63,29 @@ void sJarvisConnection::setEnabled(bool en)
 //private slots:
 void sJarvisConnection::doAction()
 {
-    if(!m_destObj || !m_enabled)
+    if(m_delay >0)
+        m_delayTimer.start(m_delay);
+    else
+        actuallyDoAction();
+}
+
+void sJarvisConnection::actuallyDoAction()
+{
+    if(m_delay > 0)
+        m_delayTimer.stop();
+
+    if(!m_enabled)
         return;
 
-    QMetaObject::invokeMethod(m_destObj,m_destAction.toStdString().c_str());
+    for(int i = 0 ; i < m_destObj.count() ; i++)
+    {
+        if(m_destObj[i])
+            QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str());
+    }
 
     emit activated();
 }
+
 
 //public slots:
 void sJarvisConnection::enable()
@@ -82,4 +96,23 @@ void sJarvisConnection::enable()
 void sJarvisConnection::disable()
 {
     m_enabled = false;
+}
+
+void sJarvisConnection::registerNode(sJarvisNode *node)
+{
+    for(int i = 0 ; i < m_senderId.count() ; i++)
+    {
+        if(m_senderId[i] == node->getId())
+        {
+
+        }
+    }
+
+    for(int i = 0 ; i < m_destId.count() ; i++)
+    {
+        if(m_destId[i] == node->getId())
+        {
+
+        }
+    }
 }

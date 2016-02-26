@@ -49,7 +49,7 @@ void gJarvisServerWidget::removeItem(QObject *obj)
         //if(ui->nodeList->item(i))
     }
     //ui->nodeList->ite
-    ui->nodeList->removeItemWidget(item);
+    //ui->nodeList->removeItemWidget(item);
 }
 
 void gJarvisServerWidget::addNode(sJarvisNode *n)

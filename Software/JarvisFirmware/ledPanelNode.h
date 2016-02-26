@@ -10,7 +10,7 @@ class ledPanelNode : public jarvisNode
 {
 public:
     ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,false,true), m_dhtSensor(12)
-      , m_activateBtn(13), m_deactivateBtn(15), m_potenciometer(A0)
+      , m_activateBtn(3), m_deactivateBtn(15), m_potenciometer(A0)
     {
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
@@ -45,7 +45,7 @@ public:
 
     void dimm(uint8_t power)
     {
-        m_ledStrip.dimm(power);
+        m_ledStrip.setBrightness(power);
     }
 
     void display(std::vector<String>& args)
@@ -55,9 +55,9 @@ public:
 
     void setup()
     {
-        m_ledMatrix.setColor(100,100,100);
         jarvisNode::setup();
-        m_ledMatrix.setColor(150,150,150);
+        yield();
+        m_ledMatrix.setColor(0,0,200);
     }
 
     void update()

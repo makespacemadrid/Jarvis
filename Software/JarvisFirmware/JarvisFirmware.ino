@@ -100,6 +100,7 @@ void setup()
     }else if(type == termometroNodeModule){
         node = new termometroNode();
     }
+
     node->setup();
 }
 

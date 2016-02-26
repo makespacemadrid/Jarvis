@@ -21,10 +21,10 @@ public:
     QList<jarvisActions>   getActions()       {return m_actions;}
     QList<jarvisEvents>    getCapableEvents() {return m_CapableEvents;}
     void initArgs(QStringList args);
-    QString eventName   (jarvisEvents e);
-    QString signalName  (jarvisEvents e);
-    QString actionName  (jarvisActions e);
-    QString slotName    (jarvisActions e);
+    static QString eventName   (jarvisEvents e);
+    static QString signalName  (jarvisEvents e);
+    static QString actionName  (jarvisActions e);
+    static QString slotName    (jarvisActions e);
 
 protected:
     sJarvisNode*    m_parentNode;

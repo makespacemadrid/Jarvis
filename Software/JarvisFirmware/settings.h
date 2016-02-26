@@ -32,10 +32,10 @@ struct settingList
   uint16_t      remotePort      = 31416;
   int           localPort       = 31416;
   //jarvisModules moduleType      = simplePowerControlModule;
-  jarvisModules moduleType      = makeSwitchModule;
+  //jarvisModules moduleType      = makeSwitchModule;
   //jarvisModules moduleType      = coffeeMakerModule;
   //jarvisModules moduleType      = ledNotificationPanelModule;
-  //jarvisModules moduleType      = ledPanelModule;
+  jarvisModules moduleType      = ledPanelModule;
   //jarvisModules moduleType = testNodeModule;//Selecciona el tipo de modulo
   //jarvisModules moduleType = termometroNodeModule;
 /**
@@ -61,10 +61,10 @@ Tabla de correspondencia de pines nodemcu arduino
   int   currentMeterPin        = -1;
   int   relayTemperatureSensor = -1;
   int   fanPin                 = -1;
-//  int   piezoPin               = -1;
-  int   piezoPin               =  0;
-  int   ledStripPin            =  4; //makeswitch /coffeemaker
-//  int   ledStripPin            =  13; // LedPanel
+  int   piezoPin               = -1;
+  //int   piezoPin               =  0;
+ // int   ledStripPin            =  4; //makeswitch /coffeemaker
+    int   ledStripPin            =  13; // LedPanel
   int   factoryResetPin        = -1;
   #else
   //Pineado por defecto del arduino
@@ -80,10 +80,10 @@ Tabla de correspondencia de pines nodemcu arduino
 
   //Configuracion
   //int   ledStripLedNr          = 3;
-  int   ledStripLedNr          = 50; //cofeeMaker
+  //int   ledStripLedNr          = 50; //cofeeMaker
   //int   ledStripLedNr          = 25; //makeswitch
   //int   ledStripLedNr          = 256; //ledNotif
-//  int   ledStripLedNr          = 300; // ledpanel
+  int   ledStripLedNr          = 300; // ledpanel
   bool  bridgeMode             = false;
   //float currentMeterFactor     = 29.296875f;
   //int   currentMeterVolts      = 220;

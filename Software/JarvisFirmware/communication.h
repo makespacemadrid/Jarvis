@@ -35,8 +35,17 @@ class communicationModule : public jarvisParser , public nodeComponent
       arduinoThoughProxy
   };
     
-    communicationModule(commModes cmode, int localPort, int ledStripPin, int ledNr = 25) : jarvisParser() , m_localPort(localPort),
-    m_commMode(cmode), m_ledStrip(ledStripPin,ledNr), m_statusLed(&m_ledStrip,0,1,2) {} ;
+    communicationModule(commModes cmode, int localPort, int ledStripPin, int ledNr = 25) : jarvisParser()
+      , m_localPort(localPort), m_commMode(cmode), m_ledStrip(ledStripPin,ledNr), m_statusLed(&m_ledStrip,0,1,2)
+    {
+        if(m_ledStrip.isValid())
+        {
+          debugln(String(F("I:-WS2812")));
+          m_ledStrip.setup();
+          m_ledStrip.off();
+          m_statusLed.controllerInit();
+        }
+    }
 
     void setAP(String essid,String pass, uint8_t channel = 6)
     {
@@ -141,6 +150,7 @@ class communicationModule : public jarvisParser , public nodeComponent
               i_wifiDisConnected();
           }
       }
+
       if(m_reconnectJarvis)
       {
           m_reconnectTimer -= updateInterval/1000.0;
@@ -514,7 +524,6 @@ class espNative : public communicationModule
       debug("D: HTTPUpdateServer ready! Open http://");
       debug(m_id);
       debug(".local/update in your browser\n");
-
     }
 
     void update()

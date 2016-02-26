@@ -17,6 +17,9 @@ public:
 
 private:
     Ui::gJarvisConnectionManagerWidget *ui;
+
+protected slots:
+    void on_addBtn_clicked();
 };
 
 #endif // GJARVISCONNECTIONMANAGERWIDGET_H

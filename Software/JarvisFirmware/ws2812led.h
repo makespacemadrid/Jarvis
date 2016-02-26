@@ -19,6 +19,12 @@ public:
           m_b= blue;
       }
 
+      void dimm(int power)
+      {
+          float p = power /100;
+          dimm(p);
+      }
+
       void dimm(float factor = 0.75)
       {
           m_r *= factor;
@@ -61,10 +67,17 @@ public:
     }
   }
 
-  void dimm(uint8_t power)
+  void setBrightness(int b)
   {
-      if(power>100) power = 100;
-      m_brightness = power/100.0;
+      if(b>100) b = 100;
+      m_brightness = b/100.0;
+      update();
+  }
+
+  void setBrightness(float b = 1.0)
+  {
+      m_brightness = b;
+      update();
   }
 
   bool isValid() {return  (m_pin != -1);}
@@ -79,6 +92,7 @@ public:
   void setup()
   {
     if(!isValid()) return;
+    Serial.println("Setting up ws2812 strip....");
     m_pixels.begin();
     yield();
     test();
@@ -623,9 +637,12 @@ public:
     ledMatrix(uint8_t firstLednr, uint8_t cols, uint8_t rows, ws2812Strip* parentStrip,bool mirror = false, bool invertEachRow = false) : ledBar(parentStrip)
     {
         m_actions.push_back(A_DISPLAY);
-
+        Serial.println("Init matrix");
         for(int r = 0 ; r < rows ; r++)
         {
+            Serial.print("*row#");
+            Serial.println(r);
+
             m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
             if(mirror) invertedRow = !invertEachRow;
@@ -637,7 +654,11 @@ public:
             {
                 for(int i = start+count-1 ; i >= start ; i-- )
                 {
+                    Serial.print(",");
+                    Serial.print(i);
                     ws2812Strip::led* l = m_strip->getLed(i);
+                    l->red();
+                    m_strip->update();
                     m_leds.push_back(l);
                     m_matrix[r].push_back(l);
                 }
@@ -646,19 +667,27 @@ public:
             {
                 for(int i = start ; i < start+count ; i++ )
                 {
+                    Serial.print(",");
+                    Serial.print(i);
                     ws2812Strip::led* l = m_strip->getLed(i);
+                    l->green();
+                    m_strip->update();
                     m_leds.push_back(l);
                     m_matrix[r].push_back(l);
                 }
             }
+            Serial.println(".");
+            yield();
         }
+
         m_id = "ws2812Matrix-";
         m_id +=cols;
         m_id +="x";
         m_id += rows;
+        this->glow();
     }
 
-   void display(std::vector<String>& args)
+     void display(std::vector<String>& args)
     {
        Serial.print("L-start display: fm:");
        Serial.println(getFreeMem());

@@ -40,7 +40,7 @@ public:
 
     void dimm(uint8_t power)
     {
-        m_ledStrip.dimm(power);
+        m_ledStrip.setBrightness(power);
     }
 
     void display(std::vector<String>& args)

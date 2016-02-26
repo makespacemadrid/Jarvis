@@ -25,14 +25,12 @@ public:
     m_speaker(m_EEPROM.settings().piezoPin),
     m_dataLogger(&m_components)
   {
-      if(m_ledStrip.isValid())
-      {
-        debugln(String(F("I:-WS2812")));
-        m_ledStrip.setup();
-        m_ledStrip.off();
-        m_statusLed.controllerInit();
+    m_id = "jarvisNode";
+
+    if(m_ledStrip.isValid())
+    {
         m_components.push_back(&m_statusLed);
-      }
+    }
 
     if(m_speaker.isValid())
     {
@@ -41,15 +39,11 @@ public:
         debugln(m_speaker.pinNr());
         m_speaker.setup();
     }
-
-    m_id = "jarvisNode";
   }
 
   void setup()
   {
-    Serial.begin(115200);
-    yield();
-    debugln(String(F("I:INIT")));
+    debugln(String(F("I:SETUP:")));
     
     if(m_EEPROM.hasSettings())
       debugln(String(F("I:-EEPROM Settings")));
@@ -82,9 +76,10 @@ public:
       debugln(String(F("I:-Alive led")));
     }
 
-  m_dataLogger.setup();
-  debugln(String(F("I:INIT OK")));
-  m_statusLed.controllerOK();  
+    m_dataLogger.setup();
+    debugln(String(F("I:INIT OK")));
+    m_statusLed.controllerOK();
+
   }
 
   void update()
@@ -144,7 +139,7 @@ public:
 protected:
   jarvisModules         m_type;
   EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
-  uint16_t m_loopCount = 0;
+  uint16_t              m_loopCount = 0;
   std::vector<String>           m_pollingSensors;
   std::vector<nodeComponent*>   m_components;
   piezoSpeaker                  m_speaker;   //(m_EEPROM.settings().piezoPin);
@@ -157,7 +152,6 @@ protected:
        pinMode(m_EEPROM.settings().factoryResetPin, INPUT);
        if(digitalRead(m_EEPROM.settings().factoryResetPin) == LOW)
        {
-          m_ledStrip.setup();
           debugln(String(F("I:Factory reset!")));
           m_ledStrip.setColor(10,10,0);
           m_speaker.playTone(200,100);

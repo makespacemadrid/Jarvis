@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>388</width>
-    <height>293</height>
+    <width>574</width>
+    <height>225</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>gJarvisgui</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,2">
     <property name="sizeConstraint">
      <enum>QLayout::SetMinimumSize</enum>
     </property>
@@ -26,17 +26,11 @@
      </widget>
     </item>
     <item>
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="gJarvisConnectionManagerWidget" name="connManagerWidget">
+      <property name="title">
+       <string>ConnectionManager</string>
       </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -45,7 +39,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>388</width>
+     <width>574</width>
      <height>25</height>
     </rect>
    </property>
@@ -66,6 +60,12 @@
    <class>gJarvisServerWidget</class>
    <extends>QGroupBox</extends>
    <header>gjarvisserverwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>gJarvisConnectionManagerWidget</class>
+   <extends>QGroupBox</extends>
+   <header>gjarvisconnectionmanagerwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

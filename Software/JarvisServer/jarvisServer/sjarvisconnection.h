@@ -2,7 +2,10 @@
 #define SJARVISCONNECTION_H
 
 #include  <QObject>
-#include  "sjarvisnodecomponent.h"
+#include "sjarvisnode.h"
+
+#include "qtimer.h"
+
 
 class sJarvisConnection : public QObject
 {
@@ -10,35 +13,45 @@ class sJarvisConnection : public QObject
 public:
     explicit sJarvisConnection(QObject *parent = 0);
 
-    void setSenderEvent(sJarvisNodeComponent* sender, jarvisEvents event);
-    void setSenderEvent(sJarvisNodeComponent* sender, QString event);
-    void setDestAction (sJarvisNodeComponent* dest  , jarvisActions action);
-    void setDestAction (sJarvisNodeComponent* dest  , QString action);
+    void addSenderEvent(QString senderID, QString senderComponent, jarvisEvents event , sJarvisNodeComponent *senderObj = 0);
+    void addSenderEvent(QString senderID, QString senderComponent     , QString event , sJarvisNodeComponent *senderObj = 0);
+    void addDestAction (QString destID  , QString destComponent, jarvisActions action , sJarvisNodeComponent *destObj = 0);
+    void addDestAction (QString destID  , QString destComponent,       QString action , sJarvisNodeComponent *destObj = 0);
 
     void setId(QString id)  {m_id = id;}
     QString id()            {return m_id;}
 
     void setDelay(quint16 delayms);
-    void setup(bool doOnSetup = false);
     bool isValid();
     void setEnabled(bool en);
 
 private:
     bool                    m_enabled;
     QString                 m_id;
-    sJarvisNodeComponent*   m_senderObj;
-    QString                 m_senderEvent;
-    sJarvisNodeComponent*   m_destObj;
-    QString                 m_destAction;
+
+    quint16                 m_delay;
+    QTimer                  m_delayTimer;
+
+    QVector<QString>                 m_senderId;
+    QVector<QString>                 m_senderComponent;
+    QVector<sJarvisNodeComponent*>   m_senderObj;
+    QVector<QString>                 m_senderEvent;
+
+    QVector<QString>                 m_destId;
+    QVector<QString>                 m_destComponent;
+    QVector<sJarvisNodeComponent*>   m_destObj;
+    QVector<QString>                 m_destAction;
 
 
 signals:
     void activated();
 private slots:
     void doAction();
+    void actuallyDoAction();
 public slots:
     void enable();
     void disable();
+    void registerNode(sJarvisNode* node);
 
 };
 
