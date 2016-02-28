@@ -6,7 +6,9 @@ Se basa en un diseño modular que permite hacerlo escalable, de forma que inicia
 Pese a estar siendo desarrollado para un lugar concreto es fácilmente portable a otro tipo de ambientes (locales de trabajo, viviendas... )
 
 
-**Cómo colaborar:**
+****Cómo colaborar:****
+
+
 1- Haz un fork del repo y aprende a usar git a nivel basico:
 
     https://github.com/makespacemadrid/Jarvis/wiki/Git-b%C3%A1sico
