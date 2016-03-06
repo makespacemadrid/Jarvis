@@ -61,10 +61,17 @@
     </widget>
    </item>
    <item>
-    <widget class="QLCDNumber" name="lcdNumber"/>
+    <widget class="gBlinkWidget" name="lcdNumber"/>
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>gBlinkWidget</class>
+   <extends>QLCDNumber</extends>
+   <header location="global">gblinkwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

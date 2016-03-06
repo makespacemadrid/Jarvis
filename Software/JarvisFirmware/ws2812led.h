@@ -256,6 +256,7 @@ class ledGadget :  public nodeComponent
 
     virtual void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
+
         if(!m_enabled) return;
         resetAnimation();
         for(int i = 0 ; i < m_leds.size() ; i++)
@@ -637,11 +638,11 @@ public:
     ledMatrix(uint8_t firstLednr, uint8_t cols, uint8_t rows, ws2812Strip* parentStrip,bool mirror = false, bool invertEachRow = false) : ledBar(parentStrip)
     {
         m_actions.push_back(A_DISPLAY);
-        Serial.println("Init matrix");
+        //Serial.println("Init matrix");
         for(int r = 0 ; r < rows ; r++)
         {
-            Serial.print("*row#");
-            Serial.println(r);
+            //Serial.print("*row#");
+            //Serial.println(r);
 
             m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
@@ -654,11 +655,11 @@ public:
             {
                 for(int i = start+count-1 ; i >= start ; i-- )
                 {
-                    Serial.print(",");
-                    Serial.print(i);
+                    //Serial.print(",");
+                    //Serial.print(i);
                     ws2812Strip::led* l = m_strip->getLed(i);
-                    l->red();
-                    m_strip->update();
+                    //l->red();
+                    //m_strip->update();
                     m_leds.push_back(l);
                     m_matrix[r].push_back(l);
                 }
@@ -667,16 +668,16 @@ public:
             {
                 for(int i = start ; i < start+count ; i++ )
                 {
-                    Serial.print(",");
-                    Serial.print(i);
+                    //Serial.print(",");
+                    //Serial.print(i);
                     ws2812Strip::led* l = m_strip->getLed(i);
-                    l->green();
-                    m_strip->update();
+                    //l->green();
+                    //m_strip->update();
                     m_leds.push_back(l);
                     m_matrix[r].push_back(l);
                 }
             }
-            Serial.println(".");
+            //Serial.println(".");
             yield();
         }
 
@@ -687,7 +688,7 @@ public:
         this->glow();
     }
 
-     void display(std::vector<String>& args)
+    void display(std::vector<String>& args)
     {
        Serial.print("L-start display: fm:");
        Serial.println(getFreeMem());
@@ -707,6 +708,7 @@ public:
             args.erase(args.begin());
             uint8_t b = args[0].toInt();
             args.erase(args.begin());
+/*
             Serial.print("x:");
             Serial.print(row);
             Serial.print("y:");
@@ -724,6 +726,7 @@ public:
             Serial.print(m_matrix[0].size());
             Serial.print("rows-end:");
             Serial.print(m_matrix[m_matrix.size()-1].size());
+*/
             if(row < m_matrix.size() && col < m_matrix[row].size())
                 m_matrix[row][col]->setColor(r,g,b);
         }
@@ -736,13 +739,14 @@ protected:
     std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
     void animateCylon()
     {
-        setLeds(ledMatrixIcons::cylonIcon16x16());
-        m_animationType = animationCylon;
+        //setLeds(ledMatrixIcons::cylonIcon16x16());
+        //m_animationType = animationCylon;
         //contador 1 para la iteracion, 2 para la direccion
-        int min = 33;
-        int max = 47;
+        int min = 0;
+        int max = m_matrix[0].size();
         int count = max - min;
         //Serial.println(m_counter1);
+
         if(m_counter2 == 0)//incrementando
         {
             int i = 0;
@@ -750,13 +754,17 @@ protected:
             {
                 if(i == m_counter1)
                 {
-                   m_leds[l]->setColor(255,0,0);
-                   m_leds[l+16]->setColor(255,0,0);
-                   m_leds[l+32]->setColor(255,0,0);
+                    for(int c = 0 ; c < m_matrix.size() ; c++)
+                    {
+                        m_matrix[c][l]->setColor(255,0,0);
+                    }
                 }
                 else
                 {
-                    m_leds[l]->dimm();
+                    for(int c = 0 ; c < m_matrix.size() ; c++)
+                    {
+                        m_matrix[c][l]->dimm();
+                    }
                 }
 
                 if(m_counter1 >= count)
@@ -778,12 +786,17 @@ protected:
             {
                 if(i == m_counter1)
                 {
-                    m_leds[l]->setColor(255,0,0);
-                    m_leds[l+16]->setColor(255,0,0);
-                    m_leds[l+32]->setColor(255,0,0);                        }
+                    for(int c = 0 ; c < m_matrix.size() ; c++)
+                    {
+                        m_matrix[c][l]->setColor(255,0,0);
+                    }
+                }
                 else
                 {
-                    m_leds[l]->dimm();
+                    for(int c = 0 ; c < m_matrix.size() ; c++)
+                    {
+                        m_matrix[c][l]->dimm();
+                    }
                 }
 
                 if(m_counter1 <= 0)

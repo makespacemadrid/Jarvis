@@ -104,7 +104,14 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     {
         if(m_senderId[i] == node->getId())
         {
-
+            for(int c = 0 ; c < node->components().count() ; c++)
+            {
+                if(node->components()[c]->getId() == m_senderComponent[i])
+                {
+                    m_senderObj[i] = node->components()[c];
+                    connect(m_senderObj.last(),m_senderEvent.last().toStdString().c_str(),this,SLOT(doAction()));
+                }
+            }
         }
     }
 
@@ -112,7 +119,11 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     {
         if(m_destId[i] == node->getId())
         {
-
+            for(int c = 0 ; c < node->components().count() ; c++)
+            {
+                if(node->components()[c]->getId() == m_senderComponent[i])
+                    m_destObj[i] = node->components()[c];
+            }
         }
     }
 }

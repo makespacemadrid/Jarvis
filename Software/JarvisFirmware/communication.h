@@ -81,6 +81,7 @@ class communicationModule : public jarvisParser , public nodeComponent
       m_statusLed.wifiInit();
       m_lastConnectionStatus = connectionStatus();
       float i = 0;
+      debugln("I:Init wifi conn...");
       while (connectionStatus() != 3)
       {
 #ifdef VERBOSE_DEBUG
@@ -154,7 +155,7 @@ class communicationModule : public jarvisParser , public nodeComponent
       if(m_reconnectJarvis)
       {
           m_reconnectTimer -= updateInterval/1000.0;
-          if(m_reconnectTimer < 0.0f & !validatingConn())
+          if((m_reconnectTimer < 0.0f) && (!validatingConn()))
           {
               connectToJarvis();
           }
@@ -407,6 +408,9 @@ class communicationModule : public jarvisParser , public nodeComponent
         {
             if(args.size() == 1)
                 setUpdateInterval(args[0].toInt());
+        }else{
+            debug("D:Unknonw command:");
+            debugln(args[0]);
         }
     }
 

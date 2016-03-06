@@ -87,10 +87,6 @@ class relay : public nodeComponent
         pinMode(m_pin, OUTPUT);
     }
 
-//    virtual void update()
-//    {
-//    }
-
   protected:
 
     bool m_status = false;

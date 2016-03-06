@@ -57,7 +57,7 @@ public:
     {
         jarvisNode::setup();
         yield();
-        m_ledMatrix.setColor(0,0,200);
+        m_ledMatrix.setColor(200,200,0);
     }
 
     void update()
