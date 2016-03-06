@@ -155,7 +155,7 @@ class communicationModule : public jarvisParser , public nodeComponent
       if(m_reconnectJarvis)
       {
           m_reconnectTimer -= updateInterval/1000.0;
-          if((m_reconnectTimer < 0.0f) && (!validatingConn()))
+          if((m_reconnectTimer <= 0.0f) && (!validatingConn()))
           {
               connectToJarvis();
           }
