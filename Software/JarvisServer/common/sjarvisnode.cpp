@@ -89,12 +89,13 @@ void sJarvisNode::parseBuffer(QString& buf)
         return;
     }
     //extraccion de comandos
+    int packetStartLength = QString(P_PACKETSTART).size();
+    int packetEndLength   = QString(P_PACKETTERMINATOR).size();
     while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
     {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
-
-        QString packet = buf.mid(s_index+1,e_index-s_index-1);
+        QString packet = buf.mid(s_index+packetStartLength,e_index-s_index-packetStartLength);
         parsePacket(packet);
-        buf = buf.mid(e_index+1);
+        buf = buf.mid(e_index+packetEndLength);
         s_index = buf.indexOf(P_PACKETSTART);
         e_index = buf.indexOf(P_PACKETTERMINATOR);
     }
@@ -103,11 +104,11 @@ void sJarvisNode::parseBuffer(QString& buf)
 
 void sJarvisNode::parsePacket(QString& packet)
 {
-//    qDebug() << "Packet:" << packet;
+    //qDebug() << "Packet:" << packet;
     QStringList args;
     args = packet.split(P_PACKETSEPARATOR);
     if(args.count() < 2) return;
-//    qDebug() << "Packet:" << args;
+    qDebug() << "Packet:" << args;
     if (args[0] != M_JARVISMSG) return;
     args.removeFirst();
     QString arg = args[0];
@@ -127,6 +128,9 @@ void sJarvisNode::parsePacket(QString& packet)
     }else if(arg == C_SENSORS)
     {
         parseSensors(args);
+    }else if(arg == C_CONFIG)
+    {
+        parseConfig(args);
     }else if(arg == E_EVENT)
     {
         parseEvent(args);
@@ -170,6 +174,21 @@ void sJarvisNode::parseEvent(QStringList args)
     emit incomingEvent(component,event,args);
 }
 
+void sJarvisNode::parseConfig(QStringList args)
+{
+    if(args.count() != sizeof(settingList))
+    {
+        qDebug() << "[sJarvisNode::parseConfig]Length not as expected" << args.count() << "/" <<(int)sizeof(settingList) ;
+        return;
+    }
+    settingList s;
+    char * byteStorage = (char *)&s;
+    for (size_t i = 0; i < sizeof(settingList) ; i++)
+      byteStorage[i] = args[i].toInt();
+
+    qDebug() << "[sJarvisNode::parseConfig]" << s.id << s.wifiESSID;
+    m_nodeSettings = s;
+}
 
 //repuestas para el protocolo:
 
@@ -264,11 +283,18 @@ void sJarvisNode::readSocket()
     emit rx();
     m_rxCount++;
     QByteArray data = m_tcpClient->readAll();
-    m_commLog.append(data);
-    parseBuffer(m_rxBuffer);
+    m_commLog.append(data);    
     emit rawInput(data);
+    qDebug() << "Received:" << data.count();
+    for(int i = 0 ; i < data.count() ; i++)
+    {
+        qDebug() << (quint8)data[i];
+    }
     if(m_validated)
+    {
         m_rxBuffer.append(data);
+        parseBuffer(m_rxBuffer);
+    }
     else
         validateClient(data);
 }
@@ -297,6 +323,7 @@ void sJarvisNode::validateClient(QByteArray data)
     else
     {
         qDebug() << "sJarvisNode::validateClient-> Wrong greet, rejecting";
+        qDebug() << data;
         closeTCP();
         this->deleteLater();
     }
@@ -330,7 +357,7 @@ void sJarvisNode::initDone()
 
     m_initTimer.stop();
     m_initTimeout.stop();
-
+    reloadNodeSettings();
     if(m_id.isEmpty() || m_components.isEmpty())
     {
         qDebug() << "Incompatible client or some problem on the init stage!";
@@ -424,4 +451,39 @@ void sJarvisNode::setWifiConfig(QString essid, QString passwd,bool apMode)
         args << essid << passwd;
         send(encodeNodeMsg(args));
     }
+}
+
+void sJarvisNode::clearEEPROM()
+{
+    QStringList args;
+    args.append(C_CLEAR_EEPROM);
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::saveEEPROM()
+{
+    QStringList args;
+    args.append(C_SAVE_EEPROM);
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::reloadNodeSettings()
+{
+    QStringList args;
+    args.append(C_GET_CONFIG);
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::sendConfig(settingList config)
+{
+    char result[sizeof(settingList)];
+    char * byteStorage = (char *)&config;
+    for (size_t i = 0; i < sizeof(settingList) ; i++)
+      result[i] = byteStorage[i];
+
+    QString strdata;
+    strdata = result;
+    QStringList args;
+    args.append(C_SET_CONFIG);
+    send(encodeNodeMsg(args));
 }

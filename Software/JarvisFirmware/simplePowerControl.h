@@ -8,11 +8,13 @@
 class simplePowerControl : public jarvisNode
 {
 public:
-    simplePowerControl(int relayPin,int buttonPin = -1) : jarvisNode(), m_relay(relayPin), m_button(buttonPin)
+    simplePowerControl(EEPROMStorage* settings) :
+        jarvisNode(settings),
+        m_relay(m_eeprom->settings().relaypins[0]),
+        m_button(m_eeprom->settings().buttonPins[0])
     {
         m_components.push_back(&m_relay);
         m_components.push_back(&m_button);
-        m_id = "simplePowerControl";
     }
 
     void setup()

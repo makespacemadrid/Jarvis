@@ -8,14 +8,17 @@
 class coffeeMaker : public simplePowerControl
 {
 public:
-    coffeeMaker(int relayPin,int buttonPin = -1,int tempSensorPin = -1) : simplePowerControl(relayPin,buttonPin), m_leds(&m_ledStrip), m_heating(false), m_tempSensor(tempSensorPin)
+    coffeeMaker(EEPROMStorage* settings) :
+        simplePowerControl(settings),
+        m_leds(&m_ledStrip),
+        m_heating(false),
+        m_tempSensor(m_eeprom->settings().tempSensorPins[0])
     {
         m_relay.setup();
         m_button.setId("button");
-        heat();
+        heat();//Precalentar;
         //m_relay.setInvertedLogic(true);
         m_timeout = 0.0;
-        m_id = "coffeeMaker";
         m_leds.addLed(3,47);
         m_components.push_back(&m_leds);
         m_components.push_back(&m_tempSensor);
@@ -34,12 +37,12 @@ public:
     void setup()
     {
         simplePowerControl::setup();
-        heat();
     }
 
     void update()
     {
         simplePowerControl::update();
+
         if(m_timeout < 300.0)
         {
             m_timeout += (updateInterval+1)/1000.0f;
@@ -146,7 +149,6 @@ public:
         }
         m_leds.setColor(100,100,0);
         m_leds.glow();
-        //activar la cafetera
     }
 
     void stop()

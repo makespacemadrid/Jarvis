@@ -7,11 +7,12 @@
 class simpleSwitch : public jarvisNode
 {
 public:
-    simpleSwitch(int pin =16) : jarvisNode(), m_switch(pin)
+    simpleSwitch(EEPROMStorage* settings) :
+        jarvisNode(settings) ,
+        m_switch(m_eeprom->settings().buttonPins[0])
     {
         m_components.push_back(&m_switch);
         m_id = "simpleSwitch";
-
     }
 
     virtual void setup()
@@ -38,7 +39,11 @@ public:
         ShuttingDown
     };
 
-    makeSwitch() : simpleSwitch(), m_makeLed(&m_ledStrip), m_offLed(&m_ledStrip) , m_dhtSensor(5)
+    makeSwitch(EEPROMStorage* settings) :
+        simpleSwitch(settings),
+        m_makeLed(&m_ledStrip),
+        m_offLed(&m_ledStrip) ,
+        m_dhtSensor(m_eeprom->settings().tempSensorPins[0])
     {//inicializar los componentes extra y anadirlos a los arrays de sensores y actuadores.
         m_makeLed.addLed(3,6);
         m_makeLed.setId("makeLed");
@@ -51,7 +56,6 @@ public:
 
         addCapableEvent(E_ACTIVATED);
         addCapableEvent(E_DEACTIVATED);
-        m_id = "makeSwitch";
         disable();
     }
 

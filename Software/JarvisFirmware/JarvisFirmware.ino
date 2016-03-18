@@ -52,53 +52,50 @@ uint8_t updateInterval = 25;
 #include "testNode.h"
 #include "termometroNode.h"
 
-jarvisNode* node;
 
+jarvisNode* node;
+EEPROMStorage EEPROMSettings;
 
 void setup() 
 {
     Serial.begin(115200);
+    //EEPROMSettings.clearEEPROM();
+    EEPROMSettings.reload();
 
-    jarvisModules type = EEPROMStorage::getSettings().moduleType;
+    jarvisModules type = EEPROMSettings.settings().moduleType;
 
-    if      (type == unknownModule)
+    if      (type == unConfiguredModule)
     {
-        node = new jarvisNode();
+        node = new jarvisNode(&EEPROMSettings);
     }
-    #ifdef ESP8266
-    else if(type == espRepeaterModule)
-    {
-        node = new jarvisNode(jarvisNode::espRepeater);
-    }
-    #endif
     else if(type == simpleSwitchModule)
     {
-        node = new simpleSwitch();
+        node = new simpleSwitch(&EEPROMSettings);
     }else if(type == makeSwitchModule)
     {
-        node = new makeSwitch();
+        node = new makeSwitch(&EEPROMSettings);
     }else if(type == airQualityModule)
     {
 
     }else if(type == simplePowerControlModule)
     {
-        node = new simplePowerControl(14);
+        node = new simplePowerControl(&EEPROMSettings);
     }else if(type == advancedPowerControlModule)
     {
 
     }else if(type == coffeeMakerModule)
     {
-        node = new coffeeMaker(14,15,A0);
+        node = new coffeeMaker(&EEPROMSettings);
     }else if(type == ledPanelModule)
     {
-        node = new ledPanelNode();
+        node = new ledPanelNode(&EEPROMSettings);
     }else if(type == ledNotificationPanelModule)
     {
-        node = new ledNotificationPanelNode();
+        node = new ledNotificationPanelNode(&EEPROMSettings);
     }else if(type == testNodeModule){
-        node = new testNode();
+        node = new testNode(&EEPROMSettings);
     }else if(type == termometroNodeModule){
-        node = new termometroNode();
+        node = new termometroNode(&EEPROMSettings);
     }
 
     node->setup();

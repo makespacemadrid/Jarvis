@@ -2,6 +2,7 @@
 #include "ui_jarvisnodetestapp.h"
 
 #include "qwificonfigdialog.h"
+#include  "gnodeconfigdialog.h"
 
 jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
     QMainWindow(parent),
@@ -86,7 +87,7 @@ void jarvisNodeTestApp::nodeConnected()
         //l->addWidget(w,l->count()/2,l->count()%2);
         m_componentWidgets.append(w);
     }
-    m_statusLabel.setText("Node connected!");
+    m_statusLabel.setText("Node connected!");        
 }
 
 void jarvisNodeTestApp::nodeDisconnected()
@@ -165,6 +166,25 @@ void jarvisNodeTestApp::on_btnClearGraphs_clicked()
     }
     m_graphInit = false;
     m_graphs.clear();
+}
+
+void jarvisNodeTestApp::on_saveConfigBtn_clicked()
+{
+
+}
+
+void jarvisNodeTestApp::on_clearEepromBtn_clicked()
+{
+
+}
+
+void jarvisNodeTestApp::on_editConfigBtn_clicked()
+{
+    gNodeConfigDialog w(m_node->getNodeSettings());
+    if(w.exec())
+    {
+
+    }
 }
 
 void jarvisNodeTestApp::console_log(QByteArray data)

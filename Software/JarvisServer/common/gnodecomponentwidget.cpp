@@ -118,7 +118,7 @@ void gNodeComponentWidget::sendImage()
                 args.append(QString::number(color.red() ,'f',0));
                 args.append(QString::number(color.green() ,'f',0));
                 args.append(QString::number(color.blue() ,'f',0));
-                qDebug() << " - args:" << args.size() ;
+                //qDebug() << " - args:" << args.size() ;
                 if( args.size() >= (32*5) )
                 {
                     m_component->display(args);

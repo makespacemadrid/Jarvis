@@ -1,17 +1,16 @@
-#ifndef SETTINGS
-#define SETTINGS
-
-#include <EEPROM.h> //WTF hay que hacer el include en el main!
-
-
+#ifndef FIRMWARESETTINGS
+#define FIRMWARESETTINGS
 
 #ifndef ESP8266
-#include <avr/wdt.h>
+//buscar otra etiqueta que descarte el arduino
+//Por alguna razon no soy capaz de hacerlo funcionar con #ifdef QT
+    #include <QObject>
+    typedef quint16 uint16_t;
 #endif
+
 enum jarvisModules
 {
-    unknownModule,
-    espRepeaterModule,
+    unConfiguredModule,
     simpleSwitchModule,
     makeSwitchModule,
     airQualityModule,
@@ -27,18 +26,29 @@ enum jarvisModules
 struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
-  char          id[15]          = "Configureme";
-  char          remoteHost[17]  = "tesla";
-  uint16_t      remotePort      = 31416;
-  int           localPort       = 31416;
-  //jarvisModules moduleType      = simplePowerControlModule;
-  //jarvisModules moduleType      = makeSwitchModule;
-  //jarvisModules moduleType      = coffeeMakerModule;
-  //jarvisModules moduleType      = ledNotificationPanelModule;
+  //jarvisModules moduleType    = unConfiguredModule;
   jarvisModules moduleType      = ledPanelModule;
-  //jarvisModules moduleType = testNodeModule;//Selecciona el tipo de modulo
-  //jarvisModules moduleType = termometroNodeModule;
-/**
+  char          id[20]          = "Configureme";
+  char          wifiESSID[25]   = "ConfigureMe";
+  char          wifiPasswd[25]  = "configureme";
+  bool          wifiAPMode      = true;
+  char          remoteHost[25]  = "tesla";
+  uint16_t      remotePort      = 31416;
+  uint16_t      localPort       = 31416;
+  uint16_t      updateInterval  = 25;
+
+  int8_t            piezoPin            = -1;
+  int8_t            ledStripPin         = 13;
+  float             ledStripBrightness  = 0.05f;
+  uint16_t          ledCount            = 300;
+
+  int8_t           buttonPins[10]      = {-1};
+  int8_t           tempSensorPins[10]  = {-1};
+  int8_t           relaypins[10]       = {-1};
+
+  uint16_t      magicNumber            = 31415;
+
+  /**
 Tabla de correspondencia de pines nodemcu arduino
 0 [*]  GPIO16  
 1  GPIO5 
@@ -54,98 +64,16 @@ Tabla de correspondencia de pines nodemcu arduino
 11 GPIO9
 12  GPIO10
 **/  
-  #ifdef ESP8266
-  //Pineado por defecto del ESP8266
-  int   alivePin               =  2;
-  int   relayPin               = -1;
-  int   currentMeterPin        = -1;
-  int   relayTemperatureSensor = -1;
-  int   fanPin                 = -1;
-  int   piezoPin               = -1;
-  //int   piezoPin               =  0;
- // int   ledStripPin            =  4; //makeswitch /coffeemaker
-    int   ledStripPin            =  13; // LedPanel
-  int   factoryResetPin        = -1;
-  #else
-  //Pineado por defecto del arduino
-  int   alivePin               = 13;
-  int   relayPin               =  6;
-  int   currentMeterPin        = -1;
-  int   relayTemperatureSensor = -1;
-  int   fanPin                 = -1;
-  int   piezoPin               = -1;
-  int   ledStripPin            =  9;
-  int   factoryResetPin        =  -1;//8
-  #endif
 
-  //Configuracion
-  //int   ledStripLedNr          = 3;
-  //int   ledStripLedNr          = 50; //cofeeMaker
-  //int   ledStripLedNr          = 25; //makeswitch
-  //int   ledStripLedNr          = 256; //ledNotif
-  int   ledStripLedNr          = 300; // ledpanel
-  bool  bridgeMode             = false;
-  //float currentMeterFactor     = 29.296875f;
-  //int   currentMeterVolts      = 220;
-  //int   relayMaxAmps           = 15;
-  //bool  relayDimmable          = false;
-  //int   relayMaxTemp           = 60;
-  int   magicNumber            = 31416; 
+//Pineado por defecto de los nodos ESP8266
+//  int   alivePin               =  2;
+// int   ledStripPin            =  4; //makeswitch /coffeemaker
+//    int   ledStripPin            =  13; // LedPanel
+//      DHT makeswitch  5
+//  dht ledPanel    12
+//  dht termimetro  2
+
+
 };
-
-class EEPROMStorage
-{
-public:
-  EEPROMStorage()
-  {
-    refresh();
-  }
-
-  settingList& settings()
-  {
-    return m_settings;
-  }
-
-  void refresh()
-  {
-    m_settings = getSettings();
-  }
-    
-  static bool hasSettings()
-  {
-    settingList settings;
-    settings.magicNumber = 0;
-    //EEPROM.get(0,settings); // De momento dejo la EEPROM desactivada
-    return settings.magicNumber == 31416;
-  }
-  
-  static settingList getSettings()
-  {
-    settingList settings;
-    settings.magicNumber = 0;
-    //EEPROM.get(0,settings);  // De momento dejo la EEPROM desactivada
-    if(settings.magicNumber == 31416)
-      return settings;
-    else
-      return settingList(); // Si falla la comprobacion se devuelven los settings por defecto.
-  }
-  
-  static void storeSettings(settingList settings)
-  {
-    EEPROM.put(0,settings);
-  }
-
-  void clearEEPROM()
-  {
-#ifndef ESP8266
-    //no hay .length() en el ESP de momento
-    for ( int i = 0 ; i < EEPROM.length() ; i++ )
-      EEPROM.write(i, 0);
-#endif
-  }
-private:
-  settingList m_settings;
-};
-
 
 #endif

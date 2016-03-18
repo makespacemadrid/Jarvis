@@ -2,6 +2,7 @@
 #define SJARVISNODE_H
 
 #include "jarvisProtocol.h"
+#include "settings.h"
 #include "sjarvisnodecomponent.h"
 
 #include <QObject>
@@ -44,6 +45,11 @@ public:
         return (m_tcpClient->isOpen() && m_valid);
     }
 
+    settingList& getNodeSettings()
+    {
+        return m_nodeSettings;
+    }
+
     quint64 txCount() {return m_txCount;}
     quint64 rxCount() {return m_rxCount;}
     int     pingTime(){return m_lastPingTime;}
@@ -66,6 +72,7 @@ protected:
     u_int16_t         m_txCount;
     u_int16_t         m_rxCount;
 
+    settingList       m_nodeSettings;
 
     void parseBuffer(QString& buf);
     void parsePacket(QString& packet);
@@ -73,6 +80,7 @@ protected:
     //void parseSensor(QStringList args);
     void parseSensors(QStringList args);
     void parseEvent(QStringList args);
+    void parseConfig(QStringList args);
 
     static QByteArray encodeEspMsg(QStringList args);
     static QByteArray encodeNodeMsg(QStringList args);
@@ -112,6 +120,10 @@ public slots:
     void resetNode();
     void setWifiConfig(QString essid, QString passwd, bool apMode = false);
     void getComponents() {sendGetComponents();}
+    void clearEEPROM();
+    void saveEEPROM();
+    void reloadNodeSettings();
+    void sendConfig(settingList config);
 
 };
 

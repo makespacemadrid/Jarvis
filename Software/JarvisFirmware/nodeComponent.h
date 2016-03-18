@@ -47,6 +47,8 @@ public:
 
 //Sobrecargar en la herencia si es menester
     virtual bool isValid()      {return true;}
+    virtual bool isEnabled()    {return m_enabled;}
+
     virtual void setup()    {;}
     virtual void update()   {;}
 

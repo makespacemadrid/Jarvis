@@ -94,7 +94,14 @@ public:
 
     float readData()
     {
-        return readRaw()/10.f;
+        uint8_t samples = 5;
+        float value = readRaw();
+        for(int i = 1 ; i < samples ; samples++)
+        {
+            value += readRaw();
+            value /= 2;
+        }
+        return value/10.f;
     }
 
 protected:

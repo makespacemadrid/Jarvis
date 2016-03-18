@@ -6,14 +6,15 @@
 class testNode : public jarvisNode
 {
 public:
-    testNode() : jarvisNode() {
+    testNode(EEPROMStorage* settings) :
+        jarvisNode(settings)
+    {
 
         m_components.push_back(&m_sensor);
     }
 
     void setup(){
         jarvisNode::setup();//llama al setup del padre
-
     }
 
 protected:

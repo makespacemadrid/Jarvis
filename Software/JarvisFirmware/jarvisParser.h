@@ -19,7 +19,7 @@ static std::vector<String> splitStr(String& str,String sep){
   while (sep_index >= 0)
   {
     result.push_back(str.substring(0,sep_index));
-    str = str.substring(sep_index+1);
+    str = str.substring(sep_index+sep.length());
     sep_index = str.indexOf(sep);
   }
   if(str.length()) result.push_back(str);
@@ -91,11 +91,13 @@ protected:
             buf = "";
             return;
         }
+        int s_lenght = String(P_PACKETSTART).length();
+        int e_lenght = String(P_PACKETTERMINATOR).length();
         //extraccion de comandos
         while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
         {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
-        String packet = buf.substring(s_index+1,e_index);
-        buf = buf.substring(e_index+1);
+        String packet = buf.substring(s_index+s_lenght,e_index);
+        buf = buf.substring(e_index+e_lenght);
         parsePacket(packet);
         s_index = buf.indexOf(P_PACKETSTART);
         e_index = buf.indexOf(P_PACKETTERMINATOR);

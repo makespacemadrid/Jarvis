@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>458</width>
-    <height>242</height>
+    <height>357</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -128,6 +128,18 @@
          </layout>
         </item>
         <item>
+         <widget class="QGroupBox" name="groupBox_3">
+          <property name="title">
+           <string>dataArray</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <widget class="QPlainTextEdit" name="dataArrayEdit"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -172,7 +184,6 @@
         </item>
        </layout>
        <zorder>scaledView</zorder>
-       <zorder>scaledView</zorder>
        <zorder>origView</zorder>
        <zorder>label_5</zorder>
       </widget>
@@ -190,10 +201,6 @@
     </widget>
    </item>
   </layout>
-  <zorder>buttonBox</zorder>
-  <zorder>scaledView</zorder>
-  <zorder>groupBox</zorder>
-  <zorder>groupBox_2</zorder>
  </widget>
  <resources/>
  <connections>

@@ -5,18 +5,19 @@
 #include <Adafruit_NeoPixel.h> //WTF hay que hacer el include en el ino!
 #include <vector>
 #include "nodeComponent.h"
-#include "ledMatrixIcons.h"
+//#include "ledMatrixIcons.h"
 
 class ws2812Strip {
 public:
     class led{ // clase led dentro de la clase Strip
     public:
       led(int r = 0, int g = 0, int b = 0, float bright = 1.0): m_r(r), m_g(r), m_b(b), m_bright(bright) {;}
+
       void setColor(uint8_t red =0,uint8_t green=0,uint8_t blue=0)
       {
-          m_r= red;
-          m_g= green;
-          m_b= blue;
+          m_r = red;
+          m_g = green;
+          m_b = blue;
       }
 
       void dimm(int power)
@@ -39,17 +40,17 @@ public:
 
       void off()   {setColor(0,0,0);}
       void white() {setColor(200,200,200);}
-      void red()   {setColor(200,0,0);}
-      void green() {setColor(0,200,0);}
-      void blue()  {setColor(0,0,200);}
+      void red()   {setColor(230,0,0);}
+      void green() {setColor(0,230,0);}
+      void blue()  {setColor(0,0,230);}
 
       void setR(uint8_t val) {m_r = val;}
       void setG(uint8_t val) {m_g = val;}
       void setB(uint8_t val) {m_b = val;}
 
-      int r()   {return m_r*m_bright;}
-      int g()   {return m_g*m_bright;}
-      int b()   {return m_b*m_bright;}
+      int r()   {return m_r * m_bright;}
+      int g()   {return m_g * m_bright;}
+      int b()   {return m_b * m_bright;}
 
     private:
       uint8_t m_r;
@@ -69,8 +70,7 @@ public:
 
   void setBrightness(int b)
   {
-      if(b>100) b = 100;
-      m_brightness = b/100.0;
+      m_brightness = b/100.0f;
       update();
   }
 
@@ -78,6 +78,11 @@ public:
   {
       m_brightness = b;
       update();
+  }
+
+  float brightness()
+  {
+      return m_brightness;
   }
 
   bool isValid() {return  (m_pin != -1);}
@@ -103,10 +108,13 @@ public:
     if(!isValid()) return;
     for(int i=0;i<m_leds.size();i++)
     {
-      m_pixels.setPixelColor(i, m_leds[i].r()*m_brightness,m_leds[i].g()*m_brightness,m_leds[i].b()*m_brightness);
+        m_pixels.setPixelColor(i, (m_leds[i].r() * m_brightness) ,
+                                  (m_leds[i].g() * m_brightness) ,
+                                  (m_leds[i].b() * m_brightness) );
     }
-    m_pixels.show(); 
+
     yield();
+    m_pixels.show(); 
   }
 
   void off()
@@ -137,7 +145,7 @@ public:
       update();
     }
   }
-  
+
 private:
     std::vector<led>    m_leds;
     int                 m_pin;
@@ -155,7 +163,10 @@ class ledGadget :  public nodeComponent
         animationFade,
         animationGlow,
         animationBlink,
-        animationCylon
+        animationCylon,
+        animationChaoticLight,
+        animationRainbow,
+        animationScroll
     };
 
     ledGadget(ws2812Strip* m_parentStrip): m_strip(m_parentStrip) , m_bright(1.0)
@@ -320,6 +331,28 @@ class ledGadget :  public nodeComponent
         m_animationType = animationCylon;
     }
 
+    virtual void chaoticLight()
+    {
+        resetAnimation();
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        m_animationType = animationChaoticLight;
+    }
+
+    virtual void rainbow()
+    {
+        resetAnimation();
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        m_animationType = animationRainbow;
+    }
+
+    virtual void scroll()
+    {
+        resetAnimation();
+        m_counter1 = 0, m_counter2 = 0 ; m_counter3 = 0;
+        m_animationType = animationScroll;
+    }
+
+
     virtual void animate()
     {
         if(!m_enabled) return;
@@ -338,7 +371,17 @@ class ledGadget :  public nodeComponent
         }else if(m_animationType == animationCylon)
         {
             animateCylon();
+        }else if(m_animationType == animationChaoticLight)
+        {
+            animateChaoticLigth();
+        }else if(m_animationType == animationRainbow)
+        {
+            animateRainbow();
+        }else if(m_animationType == animationScroll)
+        {
+            animateScroll();
         }
+
         m_strip->update();
     }
 
@@ -478,7 +521,48 @@ class ledGadget :  public nodeComponent
             m_counter1--;
         }
     }
+    virtual void animateChaoticLigth()
+    {
+        for(int i = 0 ; i < m_leds.size() ; i++)
+        {
+            int random = rand() % 3;
+            if(random == 0)
+                m_leds[i]->red();
+            else if(random == 1)
+                m_leds[i]->green();
+            else if(random == 2)
+                m_leds[i]->blue();
+        }
+    }
 
+
+    virtual void animateRainbow()
+    {
+        if(m_counter1 > 256*5) m_counter1 = 0;
+
+        for(uint16_t i = 0;  i < m_leds.size() ; i++)
+        {
+            uint16_t WheelPos = 255 - (((i * 256 / m_leds.size()) + m_counter1) & 255);
+            if(WheelPos < 85)
+            {
+                m_leds[i]->setColor(255 - WheelPos * 3, 0, WheelPos * 3);
+            }
+            else if(WheelPos < 170)
+            {
+                WheelPos -= 85;
+                m_leds[i]->setColor(0, WheelPos * 3, 255 - WheelPos * 3);
+            }
+            else
+            {
+                WheelPos -= 170;
+                m_leds[i]->setColor(WheelPos * 3, 255 - WheelPos * 3, 0);
+            }
+            yield();
+        }
+        m_counter1 += 10;
+    }
+
+    virtual void animateScroll() {;}
 };
 
 class ledBar : public ledGadget
@@ -688,14 +772,24 @@ public:
         this->glow();
     }
 
+    void deactivate()
+    {
+        while(m_scrollImg.size())
+        {
+            m_scrollImg.erase(m_scrollImg.begin());
+        }
+        ledGadget::deactivate();
+    }
+
     void display(std::vector<String>& args)
     {
        Serial.print("L-start display: fm:");
        Serial.println(getFreeMem());
        Serial.print("args:");
        Serial.println(args.size());
-        m_animationType = animationNone;
-        if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5.
+        resetAnimation();
+
+        if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5. (x,y,r,g,b)
         while (args.size())
         {
             int row = args[0].toInt();
@@ -708,35 +802,67 @@ public:
             args.erase(args.begin());
             uint8_t b = args[0].toInt();
             args.erase(args.begin());
-/*
-            Serial.print("x:");
-            Serial.print(row);
-            Serial.print("y:");
-            Serial.print(col);
-            Serial.print("r:");
-            Serial.print(r);
-            Serial.print("g:");
-            Serial.print(g);
-            Serial.print("b:");
-            Serial.println(b);
 
-            Serial.print("cols:");
-            Serial.print(m_matrix.size());
-            Serial.print("rows:");
-            Serial.print(m_matrix[0].size());
-            Serial.print("rows-end:");
-            Serial.print(m_matrix[m_matrix.size()-1].size());
-*/
+            while(m_scrollImg.size() < (row+1))
+            {
+                m_scrollImg.push_back(std::vector<ws2812Strip::led>());
+            }
+
+            while(m_scrollImg[row].size() < (col+1))
+                m_scrollImg[row].push_back(ws2812Strip::led());
+
+            m_scrollImg[row][col].setColor(r,g,b);
+
             if(row < m_matrix.size() && col < m_matrix[row].size())
                 m_matrix[row][col]->setColor(r,g,b);
+        }
+
+        if(m_scrollImg[0].size() > m_matrix[0].size())
+            scroll();
+        else
+        {
+            while(m_scrollImg.size())
+            {
+                m_scrollImg.erase(m_scrollImg.begin());
+            }
         }
         Serial.print("L-display done:, fm:");
         Serial.println(getFreeMem());
         m_strip->update();
     }
 
+    void displayMatrix(std::vector<std::vector<ws2812Strip::led> > matrix)
+    {
+        if(matrix.size() == 0) return;
+
+        resetAnimation();
+
+        for(uint16_t l = 0 ; l < m_leds.size() ; l++) //clear display
+        {
+            m_leds[l]->off();
+        }
+
+        Serial.println("Display Clear");
+        yield();
+
+        for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
+        {
+            for(uint8_t col = 0 ; col < matrix[row].size() ; col++)
+            {
+                if((row < m_matrix.size()) && (col < m_matrix[row].size()))
+                {
+                    *m_matrix[row][col] = matrix[row][col];
+                }
+            }
+        }
+        update();
+    }
+
 protected:
     std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
+    std::vector<std::vector<ws2812Strip::led> >   m_scrollImg;
+
+
     void animateCylon()
     {
         //setLeds(ledMatrixIcons::cylonIcon16x16());
@@ -756,7 +882,7 @@ protected:
                 {
                     for(int c = 0 ; c < m_matrix.size() ; c++)
                     {
-                        m_matrix[c][l]->setColor(255,0,0);
+                        m_matrix[c][l]->setColor(0,0,255);
                     }
                 }
                 else
@@ -788,7 +914,7 @@ protected:
                 {
                     for(int c = 0 ; c < m_matrix.size() ; c++)
                     {
-                        m_matrix[c][l]->setColor(255,0,0);
+                        m_matrix[c][l]->setColor(0,0,255);
                     }
                 }
                 else
@@ -811,6 +937,17 @@ protected:
                 }
             }
             m_counter1--;
+        }
+    }
+
+    void animateScroll()
+    {
+        for(int row = 0 ; row < m_matrix.size() ; row++ )
+        {
+            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
+            {
+                *m_matrix[row][col] = m_scrollImg[row][col];
+            }
         }
     }
 };

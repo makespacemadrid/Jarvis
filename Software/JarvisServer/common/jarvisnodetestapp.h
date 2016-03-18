@@ -54,6 +54,10 @@ public slots:
     void on_wifiConfigBtn_clicked();
     void on_btnPing_clicked();
     void on_btnClearGraphs_clicked();
+    void on_saveConfigBtn_clicked();
+    void on_clearEepromBtn_clicked();
+    void on_editConfigBtn_clicked();
+
     void console_log(QByteArray data);
     void eventLog(QString component,jarvisEvents event,QStringList args);
     void sensorRead(QVector<QString> fields,QVector<double> data);

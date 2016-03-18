@@ -9,9 +9,15 @@
 class ledPanelNode : public jarvisNode
 {
 public:
-    ledPanelNode() : jarvisNode() ,m_ledMatrix(0,30,10,&m_ledStrip,false,true), m_dhtSensor(12)
-      , m_activateBtn(3), m_deactivateBtn(15), m_potenciometer(A0)
+    ledPanelNode(EEPROMStorage* settings) :
+        jarvisNode(settings) ,
+        m_ledMatrix(0,30,10,&m_ledStrip,false,true),
+        m_dhtSensor     (m_eeprom->settings().tempSensorPins[0])
+      , m_activateBtn   (m_eeprom->settings().buttonPins[0]),
+        m_deactivateBtn (m_eeprom->settings().buttonPins[1]),
+        m_potenciometer (m_eeprom->settings().buttonPins[2])
     {
+        m_effectIndex = 0;
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
@@ -21,7 +27,6 @@ public:
         m_deactivateBtn.setId("OffBtn");
         m_components.push_back(&m_potenciometer);
 
-        m_id = "ledPanel";
         m_actions.push_back(A_ACTIVATE);
         m_actions.push_back(A_DEACTIVATE);
         m_actions.push_back(A_DIMM);
@@ -30,22 +35,25 @@ public:
         m_capableEvents.push_back(E_ACTIVATED);
         m_capableEvents.push_back(E_DEACTIVATED);
         m_statusLed.disable();
+        m_ledMatrix.setColor(0,0,0);
     }
 
     void activate()
     {
-        m_ledMatrix.activate();
+        rotateEffects();
     }
 
     void deactivate()
     {
         m_ledMatrix.deactivate();
         m_events.push_back(E_DEACTIVATED);
+        m_effectIndex = 0;
     }
 
     void dimm(uint8_t power)
     {
         m_ledStrip.setBrightness(power);
+        m_eeprom->settings().ledStripBrightness = power/100.0;
     }
 
     void display(std::vector<String>& args)
@@ -55,16 +63,67 @@ public:
 
     void setup()
     {
+        //m_ledMatrix.displayMatrix(ledMatrixIcons::wifiGreenIcon16x16Matrix());
+        //m_ledMatrix.glow();
         jarvisNode::setup();
-        yield();
-        m_ledMatrix.setColor(200,200,0);
+        activate();
     }
 
     void update()
     {
         jarvisNode::update();
-        uint8_t power = m_potenciometer.readData();
-        dimm(power);
+        if(m_potenciometer.isEnabled())
+        {
+            uint8_t power = m_potenciometer.readData();
+            if( (power > 1) && (power < 98) )
+                dimm(power);
+        }
+    }
+
+    void rotateEffects()
+    {
+
+        if      (m_effectIndex == 0)
+            m_ledMatrix.rainbow();     //Luz rainbow
+        else if (m_effectIndex == 1)
+            m_ledMatrix.chaoticLight();//Luz caotica
+        else if (m_effectIndex == 2)
+            m_ledMatrix.setColor(250,0,0);  //Rojo
+        else if (m_effectIndex == 3)
+            m_ledMatrix.setColor(0,250,0);  //Verde
+        else if (m_effectIndex == 4)
+            m_ledMatrix.setColor(0,0,250);  //Azul
+        else if (m_effectIndex == 5)
+            m_ledMatrix.setColor(250,250,0);//Amarillo
+        else if (m_effectIndex == 6)
+        {
+            m_ledMatrix.setColor(250,0,0);  //Rojo GLOW
+            m_ledMatrix.glow();
+        }
+        else if (m_effectIndex == 7)
+        {
+            m_ledMatrix.setColor(0,250,0);  //Verde GLOW
+            m_ledMatrix.glow();
+        }
+        else if (m_effectIndex == 8)
+        {
+            m_ledMatrix.setColor(0,0,250);  //Azul GLOW
+            m_ledMatrix.glow();
+        }
+        else if (m_effectIndex == 9)
+        {
+            m_ledMatrix.setColor(250,250,0);//Amarillo GLOW
+            m_ledMatrix.glow();
+        }
+        else if (m_effectIndex == 10)
+            m_ledMatrix.cylon();            //Cylon
+        else
+        {
+            m_effectIndex = 0;
+            return;
+        }
+
+        m_effectIndex++;
     }
 
 protected:
@@ -73,6 +132,7 @@ protected:
     button          m_activateBtn;
     button          m_deactivateBtn;
     potenciometer   m_potenciometer;
+    uint8_t         m_effectIndex;
 
 };
 
