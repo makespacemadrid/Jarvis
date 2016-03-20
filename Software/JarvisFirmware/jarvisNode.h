@@ -35,6 +35,10 @@ public:
         m_speaker.setup();
     }
     updateInterval = m_eeprom->settings().updateInterval;
+    if(m_eeprom->settings().alivePin != -1)
+    {
+        pinMode(m_eeprom->settings().alivePin, OUTPUT);
+    }
 
   }
 
