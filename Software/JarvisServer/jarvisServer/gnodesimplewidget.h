@@ -23,8 +23,6 @@ private:
 
 public slots:
     void on_btnView_clicked();
-    void on_btnKill_clicked();
-
 };
 
 #endif // GNODESIMPLEWIDGET_H

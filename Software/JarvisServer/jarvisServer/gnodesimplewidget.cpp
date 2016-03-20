@@ -39,9 +39,3 @@ void gNodeSimpleWidget::on_btnView_clicked()
     w->setAttribute( Qt::WA_DeleteOnClose, true );
     w->show();
 }
-
-void gNodeSimpleWidget::on_btnKill_clicked()
-{
-    m_node->deleteLater();
-    this->deleteLater();
-}

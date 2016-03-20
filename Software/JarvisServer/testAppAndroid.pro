@@ -30,6 +30,9 @@ SOURCES += \
     common/sjarvisnodecomponent.cpp \
     testAppAndroid/main.cpp \
     common/jarvisnodetestapp.cpp \
+    common/gnodeconfigdialog.cpp \
+    common/qwificonfigdialog.cpp \
+    common/grtttlplayer.cpp
 
 
 HEADERS += \
@@ -45,6 +48,10 @@ HEADERS += \
     common/sjarvisnode.h \
     common/sjarvisnodecomponent.h \
     common/jarvisnodetestapp.h \
+    common/gnodeconfigdialog.h \
+    common/qwificonfigdialog.h \
+    common/grtttlplayer.h \
+    ../JarvisFirmware/settings.h
 
 
 FORMS   += \
@@ -55,6 +62,9 @@ FORMS   += \
     common/gwidgetnode.ui \
     common/qimageselectionwidget.ui \
     common/jarvisnodetestapp.ui \
+    common/gnodeconfigdialog.ui \
+    common/qwificonfigdialog.ui \
+    common/grtttlplayer.ui
 
 DISTFILES += \
     testAppAndroid/android/AndroidManifest.xml \

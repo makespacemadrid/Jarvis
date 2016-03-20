@@ -2,7 +2,9 @@
 #define SJARVISNODE_H
 
 #include "jarvisProtocol.h"
+#include "settings.h"
 #include "sjarvisnodecomponent.h"
+
 #include <QObject>
 #include <QString>
 #include <QList>
@@ -22,7 +24,9 @@ public:
 
     sJarvisNode(QTcpSocket *tcpClient = 0, QObject* parent = 0);
     ~sJarvisNode();
-    QString getId() {return m_id;}
+    void setTcpClient(QTcpSocket *tcpClient);
+    QTcpSocket* releaseTcpClient();
+    QString getId() {return m_nodeSettings.id;}
     QList<sJarvisNodeComponent*> components() {return m_components;}
 
     void connectTCP(QString host, quint16 port);
@@ -41,12 +45,16 @@ public:
         return (m_tcpClient->isOpen() && m_valid);
     }
 
+    settingList& getNodeSettings()
+    {
+        return m_nodeSettings;
+    }
+
     quint64 txCount() {return m_txCount;}
     quint64 rxCount() {return m_rxCount;}
     int     pingTime(){return m_lastPingTime;}
 
 protected:
-    QString           m_id;
     QTcpSocket       *m_tcpClient;
     QString           m_rxBuffer;
     QString           m_commLog;
@@ -63,6 +71,7 @@ protected:
     u_int16_t         m_txCount;
     u_int16_t         m_rxCount;
 
+    settingList       m_nodeSettings;
 
     void parseBuffer(QString& buf);
     void parsePacket(QString& packet);
@@ -70,6 +79,7 @@ protected:
     //void parseSensor(QStringList args);
     void parseSensors(QStringList args);
     void parseEvent(QStringList args);
+    void parseConfig(QStringList args);
 
     static QByteArray encodeEspMsg(QStringList args);
     static QByteArray encodeNodeMsg(QStringList args);
@@ -107,7 +117,12 @@ public slots:
     void pollSensor(QString sen = "ALL",int interval = -1);
     void stopPollingSensors();
     void resetNode();
+    void setWifiConfig(QString essid, QString passwd, bool apMode = false);
     void getComponents() {sendGetComponents();}
+    void clearEEPROM();
+    void saveEEPROM();
+    void reloadNodeSettings();
+    void sendConfig(settingList config);
 
 };
 

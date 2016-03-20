@@ -14,6 +14,16 @@ void sJarvisNodeServer::handleNewConn()
 
 void sJarvisNodeServer::addNode(sJarvisNode *nNode)
 {
+    for(int i = 0 ; i < m_nodes.count() ; i++)
+    {
+        if(m_nodes[i]->getId() == nNode->getId())
+        {
+            qDebug() << "sJarvisNodeServer::addNode -> Reconnecting node" << nNode->getId();
+            m_nodes[i]->setTcpClient(nNode->releaseTcpClient());
+            nNode->deleteLater();
+            return;
+        }
+    }
     m_nodes.append(nNode);
     connect(nNode,SIGNAL(destroyed(QObject*)),this,SLOT(removeNode(QObject*)));
     emit new_node(nNode);

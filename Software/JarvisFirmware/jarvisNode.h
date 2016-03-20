@@ -11,48 +11,42 @@
 #include "dataLogger.h"
 
 
-#ifdef ESP8266
+
 class jarvisNode : public espNative
 {
 public:
-  jarvisNode(commModes cmode = nativeNode) : espNative(cmode , EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin,EEPROMStorage::getSettings().ledStripLedNr) ,
-#else 
-class jarvisNode : public espProxy
-{
-public:
-  jarvisNode() : espProxy(EEPROMStorage::getSettings().localPort,EEPROMStorage::getSettings().ledStripPin,EEPROMStorage::getSettings().ledStripLedNr) ,
-#endif
-    m_speaker(m_EEPROM.settings().piezoPin),
+  jarvisNode(EEPROMStorage* settings) :
+   espNative(settings) ,
+    m_speaker(m_eeprom->settings().piezoPin),
     m_dataLogger(&m_components)
   {
-      if(m_ledStrip.isValid())
-      {
-        debugln(String(F("I:-WS2812")));
-        m_ledStrip.setup();
-        m_ledStrip.off();
-        m_statusLed.controllerInit();
+    m_id = m_eeprom->settings().id;
+
+    if(m_ledStrip.isValid())
+    {
         m_components.push_back(&m_statusLed);
-      }
+    }
 
     if(m_speaker.isValid())
+    {
         m_components.push_back(&m_speaker);
-    m_id = "jarvisNode";
+        debug(String(F("I:-Piezo on: ")));
+        debugln(m_speaker.pinNr());
+        m_speaker.setup();
+    }
+    updateInterval = m_eeprom->settings().updateInterval;
+
   }
 
   void setup()
   {
-    Serial.begin(115200);
-    yield();
-    debugln(String(F("I:INIT")));
+    debugln(String(F("I:SETUP:")));
     
-    if(m_EEPROM.hasSettings())
+    if(m_eeprom->hasSettings())
       debugln(String(F("I:-EEPROM Settings")));
     else
       debugln(String(F("I:-Hardcoded Settings")));
-    
-    ///////////
-    //if(m_EEPROM.settings().factoryResetPin != -1) debugln(String(F("I:-Factory reset button")));
-    //checkFactoryReset();
+    checkFactoryReset();
   
   #ifdef ESP8266
     debugln(String(F("I:-ESP8266")));
@@ -62,6 +56,8 @@ public:
     espProxy::setup();
   #endif
 
+    yield();
+
     for(int c = 0 ; c < m_components.size() ; c++ )
     {
         m_components[c]->setup();
@@ -70,21 +66,21 @@ public:
         #endif
     }
 
-    if(m_EEPROM.settings().alivePin != -1)
-    {
-      pinMode(m_EEPROM.settings().alivePin,OUTPUT);
-      debugln(String(F("I:-Alive led")));
-    }
+    m_dataLogger.setup();
 
-  m_dataLogger.setup();
-  debugln(String(F("I:INIT OK")));
-  m_statusLed.controllerOK();  
+    debugln(String(F("I:INIT OK")));
+    m_statusLed.controllerOK();
+    m_initDone = true;
+    yield();
+
+//Resetear el Serie, aveces se queda pillado despues de hacer el setup() y no recibe
+    Serial.begin(115200);
   }
 
   void update()
   {
-//    checkFreeMem();
-    imAlive();
+   imAlive();
+
   #ifdef ESP8266
     espNative::update();
   #else
@@ -136,57 +132,73 @@ public:
   }
 
 protected:
-  jarvisModules         m_type;
-  EEPROMStorage         m_EEPROM;// Toda la configuracion está en el settings.h
-  uint16_t m_loopCount = 0;
+  jarvisModules                 m_type;
+  float                         m_loopCount = 0;
   std::vector<String>           m_pollingSensors;
   std::vector<nodeComponent*>   m_components;
   piezoSpeaker                  m_speaker;   //(m_EEPROM.settings().piezoPin);
   dataLogger                    m_dataLogger;
 
-  void checkFactoryReset()
+  virtual bool checkFactoryReset()
   {
-    if(m_EEPROM.settings().factoryResetPin != -1)
-    {
-       pinMode(m_EEPROM.settings().factoryResetPin, INPUT);
-       if(digitalRead(m_EEPROM.settings().factoryResetPin) == LOW)
-       {
-          m_ledStrip.setup();
-          debugln(String(F("I:Factory reset!")));
-          m_ledStrip.setColor(10,10,0);
-          m_speaker.playTone(200,100);
-          m_speaker.playTone(500,100);
-          m_speaker.playTone(200,100);
-  
-          m_EEPROM.clearEEPROM();
-          m_speaker.playTone(500,100);
-          m_ledStrip.leds()[0].setColor(0,0,20);
-  
-          m_EEPROM.refresh();
-          m_speaker.playTone(500,100);
-          m_ledStrip.leds()[1].setColor(0,0,20);
-  
-          m_EEPROM.storeSettings(m_EEPROM.settings());
-          m_speaker.playTone(1000,300);
-          m_ledStrip.leds()[2].setColor(0,0,20);
+      return false; // Proveer de un metodo por defecto para hacer el reset!
+  }
 
-          softReset();
-       }
-    }
+  void factoryReset()
+  {
+    debugln(String(F("I:Factory reset!")));
+    m_ledStrip.setColor(10,10,0);
+    m_speaker.playTone(200,100);
+    m_speaker.playTone(500,100);
+    m_speaker.playTone(200,100);
+
+    m_eeprom->clearEEPROM();
+    m_speaker.playTone(500,100);
+    m_ledStrip.leds()[0].setColor(0,0,20);
+
+    m_eeprom->reload();
+    m_speaker.playTone(500,100);
+    m_ledStrip.leds()[1].setColor(0,0,20);
+
+    m_eeprom->storeSettings();
+    m_speaker.playTone(1000,300);
+    m_ledStrip.leds()[2].setColor(0,0,20);
+
+    softReset();
   }
 
   void imAlive()
   {
-    if(m_loopCount >= (1000/updateInterval))
+    if(m_loopCount > 2)
     {
-      digitalWrite(m_EEPROM.settings().alivePin, !digitalRead(m_EEPROM.settings().alivePin));
+      if(m_eeprom->settings().alivePin != -1)   digitalWrite(m_eeprom->settings().alivePin, !digitalRead(m_eeprom->settings().alivePin));
       m_loopCount = 0;
       m_statusLed.controllerOK();
-      debug(String(F("D:ImAlive! - FreeMem:")));
-      debugln(getFreeMem());
+      debugln("\nD:ImAlive!");
+
+      debug("\tFreeMem:");
+      debug(getFreeMem());
+      debug("\tIP:");
+      debug(localIP());
+      debug("\twifiStatus:");
+      debug(connectionStatus());
+      debug("\tEstablished conns:");
+      debug((int)m_validatedConns.size());
+      debug("\tIncoming conns:");
+      debugln((int)m_validatingConns.size());
+
+      debug("\tComponents:");
+      debug((int)m_components.size());
+      debug("\tUpdateInterval:");
+      debug(updateInterval);
+      debug("\tSerialBuffer:");
+      debug((int)m_serialBuffer.length());
+      debug("\tWifiBuffer:");
+      debugln((int)m_rxBuffer.length());
     }
     else
-      m_loopCount++;
+      m_loopCount += (updateInterval+10)/1000.0f;
+    yield();
   }
   
 
@@ -235,23 +247,6 @@ protected:
             m_pollingSensors.push_back(comp->id());
         }
       }
-
-//      std::vector<String> args;
-//      args.push_back(C_SENSORS);
-//      for(int i  = 0 ; i < m_components.size() ; i++ )
-//      {
-//        nodeComponent* comp = m_components[i];
-//        if(comp->canRead())
-//        {
-//          args.push_back(comp->id());
-//          args.push_back(String(comp->read()));
-//        }
-//      }
-//      args.push_back(F("FreeMem"));
-//      args.push_back(String(getFreeMem()));
-//      args.push_back(F("BufferSize"));
-//      args.push_back(String(bufferCount()));
-//      send(encodeJarvisMsg(args));
   }
 
   virtual void pollSensor(String id,int delay = -1)
@@ -259,19 +254,6 @@ protected:
       if(delay != -1)
           setUpdateInterval(delay);
       m_pollingSensors.push_back(id);
-
-//      std::vector<String> args;
-//      args.push_back(C_SENSOR);
-//      for(int i  = 0 ; i < m_components.size() ; i++ )
-//      {
-//        nodeComponent* comp = m_components[i];
-//        if(comp->id() == id)
-//        {
-//          args.push_back(comp->id());
-//          args.push_back(String(comp->read()));
-//        }
-//      }
-//      send(encodeJarvisMsg(args));
   }
 
   virtual void stopPolling()
@@ -305,7 +287,6 @@ protected:
         }
       }
   }
-
 };
 
 #endif

@@ -27,25 +27,26 @@ void qImageSelectionWidget::on_selectFileBtn_clicked()
     image = image.scaled(256,256,Qt::KeepAspectRatio);
     scaledImage = image.scaled(ui->widthSpin->value(),ui->heightSpin->value());
     ui->origView->setPixmap(QPixmap::fromImage(image, Qt::AutoColor));
-    ui->scaledView->setPixmap(QPixmap::fromImage(scaledImage, Qt::AutoColor));
-
-//    QImage img = scaledImage.convertToFormat(QImage::Format_RGB888);
-//    uchar *bits = img.bits();
-//    QString args;
-//    args.append("Data for array:\n{");
-//    int count = (img.width() * img.height() * 3);
-//    for (int i = 0 ; i < count-1 ; i++)
-//    {
-//        args.append(QString::number((int) bits[i],'f',0));
-//        args.append(",");
-//    }
-//    args.append(QString::number((int) bits[count-1],'f',0));
-//    args.append("}");
-//    qDebug() << args;
+    //resizeImg();
 }
 
 void qImageSelectionWidget::resizeImg()
 {
     scaledImage = image.scaled(ui->widthSpin->value(),ui->heightSpin->value(),Qt::KeepAspectRatio);
     ui->scaledView->setPixmap(QPixmap::fromImage(scaledImage, Qt::AutoColor));
+
+    QImage img = scaledImage.convertToFormat(QImage::Format_RGB888);
+    uchar *bits = img.bits();
+    QString args;
+    args.append("static constexpr uint8_t icon[] = {");
+    int count = (img.width() * img.height() * 3);
+    for (int i = 0 ; i < count-1 ; i++)
+    {
+        args.append(QString::number((int) bits[i],'f',0));
+        args.append(",");
+    }
+    args.append(QString::number((int) bits[count-1],'f',0));
+    args.append("}");
+    ui->dataArrayEdit->clear();
+    ui->dataArrayEdit->appendPlainText(args);
 }

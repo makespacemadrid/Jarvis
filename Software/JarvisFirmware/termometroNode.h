@@ -6,18 +6,17 @@
 
 class termometroNode : public jarvisNode{
 public:
-    termometroNode() : jarvisNode(), m_dhtSensor(2){
-
+    termometroNode(EEPROMStorage* settings) :
+        jarvisNode(settings),
+        m_dhtSensor(m_eeprom->settings().tempSensorPins[0])
+    {
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
-
-        m_id = "termometro";
         disable();
     }   
 
     void setup(){
         jarvisNode::setup();
-
     }
 
 

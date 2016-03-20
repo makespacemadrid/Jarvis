@@ -9,14 +9,15 @@
 class ledNotificationPanelNode : public jarvisNode
 {
 public:
-    ledNotificationPanelNode() : jarvisNode() ,m_ledMatrix(0,16,16,&m_ledStrip,true,true), m_dhtSensor(12)
+    ledNotificationPanelNode(EEPROMStorage* settings) :
+        jarvisNode(settings),
+        m_ledMatrix(0,16,16,&m_ledStrip,false,true),
+        m_dhtSensor(m_eeprom->settings().tempSensorPins[0])
     {
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
 
-
-        m_id = "ledNotificationPanel";
         m_actions.push_back(A_ACTIVATE);
         m_actions.push_back(A_DEACTIVATE);
         m_actions.push_back(A_DIMM);
@@ -40,7 +41,7 @@ public:
 
     void dimm(uint8_t power)
     {
-        m_ledStrip.dimm(power);
+        m_ledStrip.setBrightness(power);
     }
 
     void display(std::vector<String>& args)

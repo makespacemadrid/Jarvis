@@ -72,6 +72,10 @@ QString sJarvisNodeComponent::actionName(jarvisActions a)
         result = "display";
     else if(a == A_BEEP)
         result = "beep";
+    else if(a == A_PLAYTONE)
+        result = "playTone";
+    else if(a == A_PLAYRTTTL)
+        result = "playRtttl";
     else if(a == A_MAKE_COFFEE)
         result = "makeCoffe";
 
@@ -176,11 +180,24 @@ void sJarvisNodeComponent::cylon()
     m_parentNode->doAction(m_id,A_CYLON);
 }
 
-void sJarvisNodeComponent::beep(int freq, int dur)
+void sJarvisNodeComponent::beep()
 {
     QStringList args;
-    args << QString(freq) << QString(dur);
     m_parentNode->doAction(m_id,A_BEEP,args);
+}
+
+void sJarvisNodeComponent::playTone(int freq, int dur)
+{
+    QStringList args;
+    args << QString::number(freq) << QString::number(dur);
+    m_parentNode->doAction(m_id,A_PLAYTONE,args);
+}
+
+void sJarvisNodeComponent::playRtttl(QString songrtttl)
+{
+    QStringList args;
+    args << songrtttl;
+    m_parentNode->doAction(m_id,A_PLAYRTTTL,args);
 }
 
 void sJarvisNodeComponent::makeCoffe()

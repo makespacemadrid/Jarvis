@@ -1,6 +1,9 @@
 #include "jarvisnodetestapp.h"
 #include "ui_jarvisnodetestapp.h"
 
+#include "qwificonfigdialog.h"
+#include  "gnodeconfigdialog.h"
+
 jarvisNodeTestApp::jarvisNodeTestApp(sJarvisNode* node, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::jarvisNodeTestApp)
@@ -50,6 +53,7 @@ void jarvisNodeTestApp::connectNodeSignals(sJarvisNode* node)
     connect(node,SIGNAL(disconnected()),this,SLOT(nodeDisconnected()));
     connect(ui->sliderUpdateInterval,SIGNAL(sliderMoved(int)),node,SLOT(setUpdateInterval(int)));
     connect(ui->btnReset,SIGNAL(clicked()),node,SLOT(resetNode()));
+    connect(ui->reloadConfigBtn,SIGNAL(clicked()),node,SLOT(reloadNodeSettings()));
 }
 
 sJarvisNode* jarvisNodeTestApp::newNode()
@@ -84,7 +88,7 @@ void jarvisNodeTestApp::nodeConnected()
         //l->addWidget(w,l->count()/2,l->count()%2);
         m_componentWidgets.append(w);
     }
-    m_statusLabel.setText("Node connected!");
+    m_statusLabel.setText("Node connected!");        
 }
 
 void jarvisNodeTestApp::nodeDisconnected()
@@ -125,6 +129,16 @@ void jarvisNodeTestApp::on_sendCmdBtn_clicked()
     m_node->send(ui->editCommand->text().toUtf8());
 }
 
+void jarvisNodeTestApp::on_wifiConfigBtn_clicked()
+{
+    qWifiConfigDialog w;
+    if(w.exec())
+    {
+        m_node->setWifiConfig(w.essid(),w.passwd(),w.apMode());
+    }
+}
+
+
 void jarvisNodeTestApp::on_stopReadBtn_clicked()
 {
     m_node->stopPollingSensors();
@@ -153,6 +167,25 @@ void jarvisNodeTestApp::on_btnClearGraphs_clicked()
     }
     m_graphInit = false;
     m_graphs.clear();
+}
+
+void jarvisNodeTestApp::on_saveConfigBtn_clicked()
+{
+    m_node->saveEEPROM();
+}
+
+void jarvisNodeTestApp::on_clearEepromBtn_clicked()
+{
+    m_node->clearEEPROM();
+}
+
+void jarvisNodeTestApp::on_editConfigBtn_clicked()
+{
+    gNodeConfigDialog w(m_node->getNodeSettings());
+    if(w.exec())
+    {
+        m_node->sendConfig(w.getSettings());
+    }
 }
 
 void jarvisNodeTestApp::console_log(QByteArray data)

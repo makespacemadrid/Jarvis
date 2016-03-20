@@ -43,9 +43,12 @@ public:
 
     String  id()                {return m_id;}
     void    setId(String nID)   {m_id = nID;}
+    int     pinNr()             {return m_pin;}
 
 //Sobrecargar en la herencia si es menester
     virtual bool isValid()      {return true;}
+    virtual bool isEnabled()    {return m_enabled;}
+
     virtual void setup()    {;}
     virtual void update()   {;}
 
@@ -84,16 +87,18 @@ public:
         m_events.push_back(e);
     }
 
-    virtual void dimm(uint8_t power)                      {;}
-    virtual void blink()                                  {;}
-    virtual void glow()                                   {;}
-    virtual void fade()                                   {;}
-    virtual void setColor(uint8_t r, uint8_t g,uint8_t b) {;}
-    virtual void cylon()                                  {;}
-    virtual void setLeds(std::vector<String>&  args)      {;}
-    virtual void display(std::vector<String>&  args)       {;}
-    virtual void beep(int tone,int toneDuration)          {;}
-    virtual void makeCoffee()                             {;}
+    virtual void dimm(uint8_t power)                            {;}
+    virtual void blink()                                        {;}
+    virtual void glow()                                         {;}
+    virtual void fade()                                         {;}
+    virtual void setColor(uint8_t r, uint8_t g,uint8_t b)       {;}
+    virtual void cylon()                                        {;}
+    virtual void setLeds(std::vector<String>&  args)            {;}
+    virtual void display(std::vector<String>&  args)            {;}
+    virtual void beep()                                         {;}
+    virtual void playTone(int tone =50,int toneDuration=100)    {;}
+    virtual void playRtttl(char *p)                             {;}
+    virtual void makeCoffee()                                   {;}
 
 
     //Acciones y eventos
@@ -105,12 +110,12 @@ public:
 
     virtual void doAction(jarvisActions act,std::vector<String>& args)
     {
-        //Serial.print("C-processing action:, fm:");
+        //Serial.print("processing action:");
         //Serial.println(getFreeMem());
         //Serial.print("act:");
-        //Serial.print(act);
-        //Serial.print(" args:");
-        //Serial.println(args.size());
+        Serial.print(act);
+        Serial.print(" args:");
+        Serial.println(args.size());
         if          (act == A_ENABLE) {
             enable();
         } else if   (act == A_DISABLE) {
@@ -146,13 +151,18 @@ public:
         } else if   (act == A_DISPLAY) {
             display(args);
         } else if   (act == A_BEEP) {
+            beep();
+        } else if   (act == A_PLAYTONE) {
             if(args.size() != 2) return;
-            beep(args[0].toInt(),args[1].toInt());
+            playTone(args[0].toInt(),args[1].toInt());
+        } else if   (act == A_PLAYRTTTL) {
+            if(args.size() < 1) return;
+            char song[args[0].length()];
+            args[0].toCharArray(song, sizeof(song));
+            playRtttl(song);
         } else if   (act == A_MAKE_COFFEE) {
             makeCoffee();
         }
-        //Serial.print("C-action processed:, fm:");
-        //Serial.println(getFreeMem());
     }
 
     void addEvent(event nevent)

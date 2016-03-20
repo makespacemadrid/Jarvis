@@ -24,6 +24,7 @@ private:
 private slots:
     void sendImage();
     void selectComponentColor();
+    void openRtttlPlayer();
 };
 
 #endif // GNODECOMPONENTWIDGET_H

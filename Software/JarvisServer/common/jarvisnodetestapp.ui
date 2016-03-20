@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>351</width>
-    <height>595</height>
+    <width>457</width>
+    <height>420</height>
    </rect>
   </property>
   <property name="palette">
@@ -552,7 +552,7 @@
               </font>
              </property>
              <property name="text">
-              <string>10.0.1.106</string>
+              <string>192.168.4.1</string>
              </property>
             </widget>
            </item>
@@ -776,85 +776,7 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
-         <item>
-          <widget class="QToolButton" name="btnGetComps">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>get_comps</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btnPing">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>ping</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="btnReset">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>reset</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="toolButton_5">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="toolButton_6">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QToolButton" name="toolButton_7">
-           <property name="font">
-            <font>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>...</string>
-           </property>
-          </widget>
-         </item>
+        <layout class="QVBoxLayout" name="verticalLayout_11">
          <item>
           <spacer name="horizontalSpacer_4">
            <property name="font">
@@ -873,6 +795,113 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <item>
+            <widget class="QToolButton" name="wifiConfigBtn">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>WifiConfig</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="editConfigBtn">
+             <property name="text">
+              <string>EditConfig</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="saveConfigBtn">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>SaveConfig</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="reloadConfigBtn">
+             <property name="text">
+              <string>ReloadConfig</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="clearEepromBtn">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>ClearEEPROM</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QToolButton" name="btnPing">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>ping</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="btnGetComps">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>get_comps</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="btnReset">
+             <property name="font">
+              <font>
+               <weight>50</weight>
+               <bold>false</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>reset</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QToolButton" name="toolButton_2">
+             <property name="text">
+              <string>...</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
@@ -969,8 +998,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>335</width>
-             <height>347</height>
+             <width>441</width>
+             <height>149</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout"/>
@@ -1055,8 +1084,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>335</width>
-             <height>314</height>
+             <width>441</width>
+             <height>117</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -1223,8 +1252,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>322</width>
-             <height>347</height>
+             <width>427</width>
+             <height>149</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout">

@@ -21,10 +21,10 @@ public:
     QList<jarvisActions>   getActions()       {return m_actions;}
     QList<jarvisEvents>    getCapableEvents() {return m_CapableEvents;}
     void initArgs(QStringList args);
-    QString eventName   (jarvisEvents e);
-    QString signalName  (jarvisEvents e);
-    QString actionName  (jarvisActions e);
-    QString slotName    (jarvisActions e);
+    static QString eventName   (jarvisEvents e);
+    static QString signalName  (jarvisEvents e);
+    static QString actionName  (jarvisActions e);
+    static QString slotName    (jarvisActions e);
 
 protected:
     sJarvisNode*    m_parentNode;
@@ -58,7 +58,9 @@ public slots:
     void fade();
     void blink(int freq, int r=0, int g=0, int b=0);
     void cylon();
-    void beep(int freq = 300, int dur = 300);
+    void beep();
+    void playTone(int freq = 100, int dur = 150);
+    void playRtttl(QString songrtttl = "imperial:d=6,o=5,b=80:8d.,8d.,8d.,8a#4,16f,8d.,8a#4,16f,d.,16p,8a.,8a.,8a.,8a#,16f,8c#.,8a#4,16f,8d.");
     void makeCoffe();
     void setColor(int r, int g, int b);
     void parseEvent(QString component, jarvisEvents event, QStringList args = QStringList());

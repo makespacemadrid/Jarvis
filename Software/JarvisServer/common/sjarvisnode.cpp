@@ -7,25 +7,22 @@ sJarvisNode::sJarvisNode(QTcpSocket* tcpClient, QObject* parent) : QObject(paren
 {
     m_txCount = 0;
     m_rxCount = 0;
+    m_tcpClient = 0;
     m_validated = false;
+    m_nodeSettings.magicNumber = 0;
     if(tcpClient == 0)
     {
-        m_tcpClient = new QTcpSocket(this);
+        setTcpClient(new QTcpSocket(this));
     }
     else
     {
-        m_tcpClient = tcpClient;
+        setTcpClient(tcpClient);
     }
 
     connect(&m_pingTimer,SIGNAL(timeout()),this,SLOT(ping()));
     connect(&m_commTimeout,SIGNAL(timeout()),this,SLOT(commTimedOut()));
     connect(&m_initTimer,SIGNAL(timeout()),this,SLOT(initDone()));
     connect(&m_initTimeout,SIGNAL(timeout()),this,SLOT(initTimeout()));
-//Slots del nodo tcp
-    //connect(&m_tcpClient,SIGNAL(socket_rx(QByteArray)),this,SLOT(data_rx(QByteArray)));
-    connect(m_tcpClient,SIGNAL(readyRead()),this,SLOT(readSocket()));
-    connect(m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
-    connect(m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
 
     if(m_tcpClient->isOpen())
         initNode();
@@ -33,7 +30,33 @@ sJarvisNode::sJarvisNode(QTcpSocket* tcpClient, QObject* parent) : QObject(paren
 
 sJarvisNode::~sJarvisNode()
 {
-    m_tcpClient->deleteLater();
+    if(m_tcpClient != 0)
+        m_tcpClient->deleteLater();
+}
+
+void sJarvisNode::setTcpClient(QTcpSocket *tcpClient)
+{
+
+    if(m_tcpClient != 0)
+        m_tcpClient->deleteLater();
+
+    m_tcpClient = tcpClient;
+
+    connect(m_tcpClient,SIGNAL(readyRead()),this,SLOT(readSocket()));
+    connect(m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
+    connect(m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
+
+    if(m_validated) initDone();
+}
+
+QTcpSocket *sJarvisNode::releaseTcpClient()
+{
+    disconnect(m_tcpClient,SIGNAL(readyRead()),this,SLOT(readSocket()));
+    disconnect(m_tcpClient,SIGNAL(connected()),this,SLOT(initNode()));
+    disconnect(m_tcpClient,SIGNAL(disconnected()),this,SLOT(socketDisconected()));
+    QTcpSocket* sock = m_tcpClient;
+    m_tcpClient = 0;
+    return sock;
 }
 
 void sJarvisNode::connectTCP(QString host, quint16 port)
@@ -43,9 +66,10 @@ void sJarvisNode::connectTCP(QString host, quint16 port)
 
 void sJarvisNode::closeTCP()
 {
+    qDebug() << "sJarvisNode::closeTCP()" << sender();
     m_tcpClient->close();
     m_pingTimer.stop();
-    deleteComponents();
+    //deleteComponents();
 }
 
 //protected:
@@ -66,12 +90,13 @@ void sJarvisNode::parseBuffer(QString& buf)
         return;
     }
     //extraccion de comandos
+    int packetStartLength = QString(P_PACKETSTART).size();
+    int packetEndLength   = QString(P_PACKETTERMINATOR).size();
     while ((s_index >= 0) && (e_index >= 0)) //Si hay inicio y fin de paquete se extrae el comando.
     {// lo que haya en el buffer hasta el inicio de paquete se descarta(basura)
-
-        QString packet = buf.mid(s_index+1,e_index-s_index-1);
+        QString packet = buf.mid(s_index+packetStartLength,e_index-s_index-packetStartLength);
         parsePacket(packet);
-        buf = buf.mid(e_index+1);
+        buf = buf.mid(e_index+packetEndLength);
         s_index = buf.indexOf(P_PACKETSTART);
         e_index = buf.indexOf(P_PACKETTERMINATOR);
     }
@@ -80,11 +105,11 @@ void sJarvisNode::parseBuffer(QString& buf)
 
 void sJarvisNode::parsePacket(QString& packet)
 {
-//    qDebug() << "Packet:" << packet;
+    //qDebug() << "Packet:" << packet;
     QStringList args;
     args = packet.split(P_PACKETSEPARATOR);
     if(args.count() < 2) return;
-//    qDebug() << "Packet:" << args;
+    //qDebug() << "Packet:" << args;
     if (args[0] != M_JARVISMSG) return;
     args.removeFirst();
     QString arg = args[0];
@@ -92,9 +117,11 @@ void sJarvisNode::parsePacket(QString& packet)
 
     if      (arg == C_ID)
     {
-        if(args.count() == 1)
-            m_id = args[0];
-
+        if(args.count() != 1) return;
+        for(uint i = 0 ; (i < sizeof(m_nodeSettings.id)) && (i < args[0].length()) ; i++)
+        {
+            m_nodeSettings.id[i] = args[0].toLatin1().data()[i];
+        }
     }else if(arg == C_PONG)
     {
         pong();
@@ -104,6 +131,9 @@ void sJarvisNode::parsePacket(QString& packet)
     }else if(arg == C_SENSORS)
     {
         parseSensors(args);
+    }else if(arg == C_CONFIG)
+    {
+        parseConfig(args);
     }else if(arg == E_EVENT)
     {
         parseEvent(args);
@@ -147,6 +177,21 @@ void sJarvisNode::parseEvent(QStringList args)
     emit incomingEvent(component,event,args);
 }
 
+void sJarvisNode::parseConfig(QStringList args)
+{
+    if(args.count() != sizeof(settingList))
+    {
+        qDebug() << "[sJarvisNode::parseConfig]Length not as expected" << args.count() << "/" <<(int)sizeof(settingList) ;
+        return;
+    }
+    settingList s;
+    char * byteStorage = (char *)&s;
+    for (size_t i = 0; i < sizeof(settingList) ; i++)
+      byteStorage[i] = args[i].toInt();
+
+    //qDebug() << "[sJarvisNode::parseConfig]" << s.id << s.wifiESSID;
+    m_nodeSettings = s;
+}
 
 //repuestas para el protocolo:
 
@@ -241,11 +286,18 @@ void sJarvisNode::readSocket()
     emit rx();
     m_rxCount++;
     QByteArray data = m_tcpClient->readAll();
-    m_commLog.append(data);
-    parseBuffer(m_rxBuffer);
+    m_commLog.append(data);    
     emit rawInput(data);
+    //qDebug() << "Received:" << data.count();
+    //for(int i = 0 ; i < data.count() ; i++)
+    //{
+    //    qDebug() << (quint8)data[i];
+    //}
     if(m_validated)
+    {
         m_rxBuffer.append(data);
+        parseBuffer(m_rxBuffer);
+    }
     else
         validateClient(data);
 }
@@ -270,9 +322,15 @@ void sJarvisNode::validateClient(QByteArray data)
     if(data == greet)
     {
         m_validated = true;
+        reloadNodeSettings();
     }
     else
+    {
+        qDebug() << "sJarvisNode::validateClient-> Wrong greet, rejecting";
+        qDebug() << data;
         closeTCP();
+        this->deleteLater();
+    }
 }
 
 void sJarvisNode::ping()
@@ -280,7 +338,7 @@ void sJarvisNode::ping()
     sendPing();
     if(!m_commTimeout.isActive())
     {
-        m_commTimeout.start(m_pingTimer.interval()*2.5);
+        m_commTimeout.start(m_pingTimer.interval()*3.5);
         m_pingTime.start();
     }
 }
@@ -303,17 +361,16 @@ void sJarvisNode::initDone()
 
     m_initTimer.stop();
     m_initTimeout.stop();
-
-    if(m_id.isEmpty() || m_components.isEmpty())
+    if( (m_nodeSettings.magicNumber != 31415) || m_components.isEmpty())
     {
         qDebug() << "Incompatible client or some problem on the init stage!";
+        qDebug() << "Magic number" << m_nodeSettings.magicNumber;
         m_valid = false;
     }
     else
     {
         m_valid = true;
     }
-
 
     m_initDone = true;
     m_pingTimer.start(10000);
@@ -322,16 +379,18 @@ void sJarvisNode::initDone()
 
 void sJarvisNode::initTimeout()
 {
+    qDebug() << "sJarvisNode::initTimeout()";
     closeTCP();
     m_initTimeout.stop();
 }
 
 void sJarvisNode::socketDisconected()
 {
+    qDebug() << "sJarvisNode::socketDisconected()";
     m_pingTimer.stop();
     m_initTimer.stop();
     m_commTimeout.stop();
-    deleteComponents();
+    //deleteComponents();
     emit disconnected();
 }
 
@@ -378,4 +437,55 @@ void sJarvisNode::resetNode()
     QStringList args;
     args.append(C_RESET);
     send(encodeNodeMsg(args));
+}
+
+
+void sJarvisNode::setWifiConfig(QString essid, QString passwd,bool apMode)
+{
+    if(apMode)
+    {
+        QStringList args;
+        args.append(C_SETAP);
+        args << essid << passwd;
+        send(encodeNodeMsg(args));
+    }else{
+        QStringList args;
+        args.append(C_SETCLIENT);
+        args << essid << passwd;
+        send(encodeNodeMsg(args));
+    }
+}
+
+void sJarvisNode::clearEEPROM()
+{
+    QStringList args;
+    args.append(C_CLEAR_EEPROM);
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::saveEEPROM()
+{
+    QStringList args;
+    args.append(C_SAVE_EEPROM);
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::reloadNodeSettings()
+{
+    QStringList args;
+    args.append(C_GET_CONFIG);
+    send(encodeNodeMsg(args));
+}
+
+void sJarvisNode::sendConfig(settingList config)
+{
+    QStringList args;
+    args.append(C_SET_CONFIG);
+
+    char * byteStorage = (char *)&config;
+    for (size_t i = 0; i < sizeof(settingList) ; i++)
+      args.append(QString::number((quint8)byteStorage[i]));
+
+    send(encodeNodeMsg(args));
+    reloadNodeSettings();
 }

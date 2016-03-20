@@ -41,12 +41,26 @@ void gJarvisServerWidget::on_btnConnectNode_clicked()
     }
 }
 
+void gJarvisServerWidget::removeItem(QObject *obj)
+{
+    QListWidgetItem *item = 0;
+    for(int i = 0 ; i < ui->nodeList->count() ; i++)
+    {
+        //if(ui->nodeList->item(i))
+    }
+    //ui->nodeList->ite
+    //ui->nodeList->removeItemWidget(item);
+}
+
 void gJarvisServerWidget::addNode(sJarvisNode *n)
 {
     gNodeSimpleWidget* w = new gNodeSimpleWidget(n,this);
     QListWidgetItem *item = new QListWidgetItem();
     connect(n,SIGNAL(tx()),ui->txWidget,SLOT(tx()));
     connect(n,SIGNAL(rx()),ui->txWidget,SLOT(rx()));
+    item->setSizeHint(w->sizeHint());
     ui->nodeList->addItem(item);
     ui->nodeList->setItemWidget(item,w);
+    connect(w,SIGNAL(destroyed(QObject*)),this,SLOT(removeItem(QObject*)));
 }
+
