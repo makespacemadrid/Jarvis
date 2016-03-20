@@ -171,7 +171,7 @@ protected:
   {
     if(m_loopCount > 2)
     {
-      //digitalWrite(m_EEPROM.settings().alivePin, !digitalRead(m_EEPROM.settings().alivePin));
+      if(m_eeprom->settings().alivePin != -1)   digitalWrite(m_eeprom->settings().alivePin, !digitalRead(m_eeprom->settings().alivePin));
       m_loopCount = 0;
       m_statusLed.controllerOK();
       debugln("\nD:ImAlive!");

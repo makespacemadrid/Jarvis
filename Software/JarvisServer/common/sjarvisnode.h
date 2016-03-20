@@ -26,7 +26,7 @@ public:
     ~sJarvisNode();
     void setTcpClient(QTcpSocket *tcpClient);
     QTcpSocket* releaseTcpClient();
-    QString getId() {return m_id;}
+    QString getId() {return m_nodeSettings.id;}
     QList<sJarvisNodeComponent*> components() {return m_components;}
 
     void connectTCP(QString host, quint16 port);
@@ -55,7 +55,6 @@ public:
     int     pingTime(){return m_lastPingTime;}
 
 protected:
-    QString           m_id;
     QTcpSocket       *m_tcpClient;
     QString           m_rxBuffer;
     QString           m_commLog;

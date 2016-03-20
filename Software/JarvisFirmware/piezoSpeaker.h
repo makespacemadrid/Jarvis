@@ -55,8 +55,8 @@ class piezoSpeaker : public nodeComponent
     void playRtttl(char *p)
     {
       // Absolutely no error checking in here
-      Serial.print("Playing:");
-      Serial.println(p);
+      //Serial.print("Playing:");
+      //Serial.println(p);
       byte default_dur = 4;
       byte default_oct = 6;
       int bpm = 63;

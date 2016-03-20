@@ -11,7 +11,7 @@ class ledNotificationPanelNode : public jarvisNode
 public:
     ledNotificationPanelNode(EEPROMStorage* settings) :
         jarvisNode(settings),
-        m_ledMatrix(0,16,16,&m_ledStrip,true,true),
+        m_ledMatrix(0,16,16,&m_ledStrip,false,true),
         m_dhtSensor(m_eeprom->settings().tempSensorPins[0])
     {
         m_components.push_back(&m_ledMatrix);
@@ -51,7 +51,7 @@ public:
 
     void setup()
     {
-        //m_ledMatrix.setLeds(ledMatrixIcons::wifiYellowIcon16x16());
+        m_ledMatrix.setLeds(ledMatrixIcons::wifiYellowIcon16x16());
         m_ledMatrix.glow();
         jarvisNode::setup();
     }
@@ -60,23 +60,23 @@ public:
     {
         if(connectionStatus() == 3)
         {
-            //m_ledMatrix.setLeds(ledMatrixIcons::wifiGreenIcon16x16());
+            m_ledMatrix.setLeds(ledMatrixIcons::wifiGreenIcon16x16());
             m_ledMatrix.glow();
         }
         else if(connectionStatus() == 0)
         {
-            //m_ledMatrix.setLeds(ledMatrixIcons::wifiBlueIcon16x16());
+            m_ledMatrix.setLeds(ledMatrixIcons::wifiBlueIcon16x16());
         }
     }
 
     void wifiDisConnected()
     {
-        //m_ledMatrix.setLeds(ledMatrixIcons::wifiRedIcon16x16());
+        m_ledMatrix.setLeds(ledMatrixIcons::wifiRedIcon16x16());
     }
 
     void jarvisConnected()
     {
-        //m_ledMatrix.setLeds(ledMatrixIcons::mMakeSpaceIcon16x16());
+        m_ledMatrix.setLeds(ledMatrixIcons::mMakeSpaceIcon16x16());
         m_ledMatrix.glow();
     }
 
@@ -84,12 +84,12 @@ public:
     {
         if(connectionStatus() == 3)
         {
-            //m_ledMatrix.setLeds(ledMatrixIcons::wifiGreenIcon16x16());
+            m_ledMatrix.setLeds(ledMatrixIcons::wifiGreenIcon16x16());
             m_ledMatrix.glow();
         }
         else if(connectionStatus() == 0)
         {
-            //m_ledMatrix.setLeds(ledMatrixIcons::wifiBlueIcon16x16());
+            m_ledMatrix.setLeds(ledMatrixIcons::wifiBlueIcon16x16());
         }
     }
 

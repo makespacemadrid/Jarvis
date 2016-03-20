@@ -41,6 +41,7 @@ public:
     void activate()
     {
         rotateEffects();
+        m_events.push_back(E_ACTIVATED);
     }
 
     void deactivate()

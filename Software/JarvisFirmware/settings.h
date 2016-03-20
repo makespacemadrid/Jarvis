@@ -9,7 +9,9 @@
 #endif
 
 enum jarvisModules
-{
+{// el orden de los elementos tiene que coincidir con el de la ventana de configuracion del lado del server
+ // Añadir elementos por el final, no reordenarlos.
+    unknownModule,
     unConfiguredModule,
     simpleSwitchModule,
     makeSwitchModule,
@@ -26,25 +28,25 @@ enum jarvisModules
 struct settingList
 {//Configuracion por defecto (Factory)
   //Datos de conexion
-  //jarvisModules moduleType    = unConfiguredModule;
-  jarvisModules moduleType      = ledPanelModule;
+  jarvisModules moduleType    = unConfiguredModule;
   char          id[20]          = "Configureme";
   char          wifiESSID[25]   = "ConfigureMe";
   char          wifiPasswd[25]  = "configureme";
   bool          wifiAPMode      = true;
-  char          remoteHost[25]  = "tesla";
+  char          remoteHost[25]  = "Jarvis";
   uint16_t      remotePort      = 31416;
   uint16_t      localPort       = 31416;
   uint16_t      updateInterval  = 25;
 
+  int8_t            alivePin            =  2;
   int8_t            piezoPin            = -1;
   int8_t            ledStripPin         = 13;
   float             ledStripBrightness  = 0.05f;
-  uint16_t          ledCount            = 300;
+  uint16_t          ledCount            = 3;
 
-  int8_t           buttonPins[10]      = {-1};
-  int8_t           tempSensorPins[10]  = {-1};
-  int8_t           relaypins[10]       = {-1};
+  int8_t           buttonPins[10]      = {  16,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
+  int8_t           tempSensorPins[10]  = {   5,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
+  int8_t           relaypins[10]       = {  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
 
   uint16_t      magicNumber            = 31415;
 

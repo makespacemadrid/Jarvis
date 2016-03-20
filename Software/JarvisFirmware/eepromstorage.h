@@ -48,7 +48,17 @@ public:
   bool setSettings(uint8_t * bytes)
   {
       settingList s;
-      uint8_t * byteStorage = (uint8_t *)&s;
+      s.magicNumber = 0 ;
+      for(int i = 0 ; i < sizeof(s.id) ; i++)
+          s.id[i] = 0;
+      for(int i = 0 ; i < sizeof(s.wifiESSID) ; i++)
+          s.wifiESSID[i] = 0;
+      for(int i = 0 ; i < sizeof(s.wifiPasswd) ; i++)
+          s.wifiPasswd[i] = 0;
+      for(int i = 0 ; i < sizeof(s.remoteHost) ; i++)
+          s.remoteHost[i] = 0;
+
+      char * byteStorage = (char *)&s;
       for (size_t i = 0; i < sizeof(settingList) ; i++)
         byteStorage[i] = bytes[i];
 

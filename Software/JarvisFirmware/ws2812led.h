@@ -803,29 +803,25 @@ public:
             uint8_t b = args[0].toInt();
             args.erase(args.begin());
 
-            while(m_scrollImg.size() < (row+1))
-            {
-                m_scrollImg.push_back(std::vector<ws2812Strip::led>());
-            }
-
-            while(m_scrollImg[row].size() < (col+1))
-                m_scrollImg[row].push_back(ws2812Strip::led());
-
-            m_scrollImg[row][col].setColor(r,g,b);
+//            while(m_scrollImg.size() < (row+1))
+//                m_scrollImg.push_back(std::vector<ws2812Strip::led>());
+//            while(m_scrollImg[row].size() < (col+1))
+//                m_scrollImg[row].push_back(ws2812Strip::led());
+//            m_scrollImg[row][col].setColor(r,g,b);
 
             if(row < m_matrix.size() && col < m_matrix[row].size())
                 m_matrix[row][col]->setColor(r,g,b);
         }
 
-        if(m_scrollImg[0].size() > m_matrix[0].size())
-            scroll();
-        else
-        {
-            while(m_scrollImg.size())
-            {
-                m_scrollImg.erase(m_scrollImg.begin());
-            }
-        }
+//        if(m_scrollImg[0].size() > m_matrix[0].size())
+//            scroll();
+//        else
+//        {
+//            while(m_scrollImg.size())
+//            {
+//                m_scrollImg.erase(m_scrollImg.begin());
+//            }
+//        }
         Serial.print("L-display done:, fm:");
         Serial.println(getFreeMem());
         m_strip->update();
@@ -841,8 +837,6 @@ public:
         {
             m_leds[l]->off();
         }
-
-        Serial.println("Display Clear");
         yield();
 
         for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
@@ -882,7 +876,7 @@ protected:
                 {
                     for(int c = 0 ; c < m_matrix.size() ; c++)
                     {
-                        m_matrix[c][l]->setColor(0,0,255);
+                        m_matrix[c][l]->setColor(255,0,0);
                     }
                 }
                 else
@@ -914,7 +908,7 @@ protected:
                 {
                     for(int c = 0 ; c < m_matrix.size() ; c++)
                     {
-                        m_matrix[c][l]->setColor(0,0,255);
+                        m_matrix[c][l]->setColor(255,0,0);
                     }
                 }
                 else
@@ -942,13 +936,13 @@ protected:
 
     void animateScroll()
     {
-        for(int row = 0 ; row < m_matrix.size() ; row++ )
-        {
-            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
-            {
-                *m_matrix[row][col] = m_scrollImg[row][col];
-            }
-        }
+//        for(int row = 0 ; row < m_matrix.size() ; row++ )
+//        {
+//            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
+//            {
+//                *m_matrix[row][col] = m_scrollImg[row][col];
+//            }
+//        }
     }
 };
 

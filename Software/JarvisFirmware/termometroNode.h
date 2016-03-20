@@ -10,7 +10,6 @@ public:
         jarvisNode(settings),
         m_dhtSensor(m_eeprom->settings().tempSensorPins[0])
     {
-
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
         disable();

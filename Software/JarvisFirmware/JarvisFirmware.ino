@@ -29,18 +29,18 @@ extern "C" {
 #endif
 
 //Magia negra con ifdefs
-//#define I2C_TRANSPORT (no implementado)
-//#define DEBUG_STRINGS
-//#define BIG_FLASH
-#define EXTRA_CARRIAGE_RETURN //añade un retorno de carro a los paquetes de protocolo para leerlos mejor
+
+//#define DEBUG_PROTOCOL
+//#define EXTRA_CARRIAGE_RETURN //añade un retorno de carro a los paquetes de protocolo para leerlos mejor
 
 #ifdef ESP8266
-    #define DEBUG_STRINGS
+    #define DEBUG_STRINGS //Se esta usando?
     #define VERBOSE_DEBUG
     #define BIG_FLASH
 #endif
 
 uint8_t updateInterval = 25;
+
 
 #include "helpers.h"
 #include "jarvisNode.h"

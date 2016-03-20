@@ -321,8 +321,12 @@ class communicationModule : public jarvisParser , public nodeComponent
         else if(command == C_SET_CONFIG)
         {
             char data[sizeof(settingList)];
-            args[0].toCharArray(data,sizeof(data));
-            m_eeprom->setSettings((uint8_t*)&data);
+            for(int i = 0 ; (i < sizeof(data)) && (i < args.size()) ; i++)
+                data[i] = (char)args[i].toInt();
+            if(!m_eeprom->setSettings((uint8_t*)&data))
+            {
+                debugln("D:Bad Settings");
+            }
         }
         else if(command == C_GET_CONFIG)
         {
@@ -697,6 +701,10 @@ class espNative : public communicationModule
       {
          m_statusLed.wifiTX();
          m_validatedConns[i].write(sbuf, sizeof(sbuf));
+#ifdef DEBUG_PROTOCOL
+            debug("D:Send: ");
+            debugln(str);
+#endif
         #ifdef EXTRA_CARRIAGE_RETURN
           m_validatedConns[i].write("\n", 1);
         #endif
@@ -719,6 +727,10 @@ class espNative : public communicationModule
               buff += b;
             }
             m_rxBuffer += buff;
+#ifdef DEBUG_PROTOCOL
+            debug("D:read: ");
+            debugln(buff);
+#endif
           }
         }
       }

@@ -9,6 +9,7 @@ sJarvisNode::sJarvisNode(QTcpSocket* tcpClient, QObject* parent) : QObject(paren
     m_rxCount = 0;
     m_tcpClient = 0;
     m_validated = false;
+    m_nodeSettings.magicNumber = 0;
     if(tcpClient == 0)
     {
         setTcpClient(new QTcpSocket(this));
@@ -108,7 +109,7 @@ void sJarvisNode::parsePacket(QString& packet)
     QStringList args;
     args = packet.split(P_PACKETSEPARATOR);
     if(args.count() < 2) return;
-    qDebug() << "Packet:" << args;
+    //qDebug() << "Packet:" << args;
     if (args[0] != M_JARVISMSG) return;
     args.removeFirst();
     QString arg = args[0];
@@ -116,9 +117,11 @@ void sJarvisNode::parsePacket(QString& packet)
 
     if      (arg == C_ID)
     {
-        if(args.count() == 1)
-            m_id = args[0];
-
+        if(args.count() != 1) return;
+        for(uint i = 0 ; (i < sizeof(m_nodeSettings.id)) && (i < args[0].length()) ; i++)
+        {
+            m_nodeSettings.id[i] = args[0].toLatin1().data()[i];
+        }
     }else if(arg == C_PONG)
     {
         pong();
@@ -186,7 +189,7 @@ void sJarvisNode::parseConfig(QStringList args)
     for (size_t i = 0; i < sizeof(settingList) ; i++)
       byteStorage[i] = args[i].toInt();
 
-    qDebug() << "[sJarvisNode::parseConfig]" << s.id << s.wifiESSID;
+    //qDebug() << "[sJarvisNode::parseConfig]" << s.id << s.wifiESSID;
     m_nodeSettings = s;
 }
 
@@ -285,11 +288,11 @@ void sJarvisNode::readSocket()
     QByteArray data = m_tcpClient->readAll();
     m_commLog.append(data);    
     emit rawInput(data);
-    qDebug() << "Received:" << data.count();
-    for(int i = 0 ; i < data.count() ; i++)
-    {
-        qDebug() << (quint8)data[i];
-    }
+    //qDebug() << "Received:" << data.count();
+    //for(int i = 0 ; i < data.count() ; i++)
+    //{
+    //    qDebug() << (quint8)data[i];
+    //}
     if(m_validated)
     {
         m_rxBuffer.append(data);
@@ -319,6 +322,7 @@ void sJarvisNode::validateClient(QByteArray data)
     if(data == greet)
     {
         m_validated = true;
+        reloadNodeSettings();
     }
     else
     {
@@ -357,17 +361,16 @@ void sJarvisNode::initDone()
 
     m_initTimer.stop();
     m_initTimeout.stop();
-    reloadNodeSettings();
-    if(m_id.isEmpty() || m_components.isEmpty())
+    if( (m_nodeSettings.magicNumber != 31415) || m_components.isEmpty())
     {
         qDebug() << "Incompatible client or some problem on the init stage!";
+        qDebug() << "Magic number" << m_nodeSettings.magicNumber;
         m_valid = false;
     }
     else
     {
         m_valid = true;
     }
-
 
     m_initDone = true;
     m_pingTimer.start(10000);
@@ -476,14 +479,13 @@ void sJarvisNode::reloadNodeSettings()
 
 void sJarvisNode::sendConfig(settingList config)
 {
-    char result[sizeof(settingList)];
-    char * byteStorage = (char *)&config;
-    for (size_t i = 0; i < sizeof(settingList) ; i++)
-      result[i] = byteStorage[i];
-
-    QString strdata;
-    strdata = result;
     QStringList args;
     args.append(C_SET_CONFIG);
+
+    char * byteStorage = (char *)&config;
+    for (size_t i = 0; i < sizeof(settingList) ; i++)
+      args.append(QString::number((quint8)byteStorage[i]));
+
     send(encodeNodeMsg(args));
+    reloadNodeSettings();
 }

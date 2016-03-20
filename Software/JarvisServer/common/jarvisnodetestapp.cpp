@@ -53,6 +53,7 @@ void jarvisNodeTestApp::connectNodeSignals(sJarvisNode* node)
     connect(node,SIGNAL(disconnected()),this,SLOT(nodeDisconnected()));
     connect(ui->sliderUpdateInterval,SIGNAL(sliderMoved(int)),node,SLOT(setUpdateInterval(int)));
     connect(ui->btnReset,SIGNAL(clicked()),node,SLOT(resetNode()));
+    connect(ui->reloadConfigBtn,SIGNAL(clicked()),node,SLOT(reloadNodeSettings()));
 }
 
 sJarvisNode* jarvisNodeTestApp::newNode()
@@ -170,12 +171,12 @@ void jarvisNodeTestApp::on_btnClearGraphs_clicked()
 
 void jarvisNodeTestApp::on_saveConfigBtn_clicked()
 {
-
+    m_node->saveEEPROM();
 }
 
 void jarvisNodeTestApp::on_clearEepromBtn_clicked()
 {
-
+    m_node->clearEEPROM();
 }
 
 void jarvisNodeTestApp::on_editConfigBtn_clicked()
@@ -183,7 +184,7 @@ void jarvisNodeTestApp::on_editConfigBtn_clicked()
     gNodeConfigDialog w(m_node->getNodeSettings());
     if(w.exec())
     {
-
+        m_node->sendConfig(w.getSettings());
     }
 }
 

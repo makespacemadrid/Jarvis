@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>353</width>
-    <height>433</height>
+    <width>457</width>
+    <height>420</height>
    </rect>
   </property>
   <property name="palette">
@@ -832,6 +832,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QToolButton" name="reloadConfigBtn">
+             <property name="text">
+              <string>ReloadConfig</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QToolButton" name="clearEepromBtn">
              <property name="font">
               <font>
@@ -991,8 +998,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>337</width>
-             <height>170</height>
+             <width>441</width>
+             <height>149</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout"/>
@@ -1077,8 +1084,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>98</width>
-             <height>28</height>
+             <width>441</width>
+             <height>117</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_10">
@@ -1245,8 +1252,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>109</width>
-             <height>55</height>
+             <width>427</width>
+             <height>149</height>
             </rect>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout">
