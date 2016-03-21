@@ -12,7 +12,6 @@ public:
         m_switch(m_eeprom->settings().buttonPins[0])
     {
         m_components.push_back(&m_switch);
-        m_id = "simpleSwitch";
     }
 
     virtual void setup()
@@ -199,9 +198,9 @@ public:
         {
             m_activationCounter = 0;
             m_status = Off;
-            m_makeLed.off();
-            m_offLed.setColor(250,0,0);
+            m_makeLed.setColor(0,0,250);
             m_makeLed.glow();
+            m_offLed.setColor(250,0,0);
             m_speaker.beep();
             m_speaker.playTone(555,100);
         }

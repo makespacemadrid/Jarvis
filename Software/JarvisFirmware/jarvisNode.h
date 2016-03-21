@@ -20,8 +20,6 @@ public:
     m_speaker(m_eeprom->settings().piezoPin),
     m_dataLogger(&m_components)
   {
-    m_id = m_eeprom->settings().id;
-
     if(m_ledStrip.isValid())
     {
         m_components.push_back(&m_statusLed);
@@ -94,7 +92,7 @@ public:
     {
         std::vector<nodeComponent::event> events = this->getEvents();
         for(int e = 0 ; e <  events.size() ; e++)
-          sendEvent(m_id,events[e]);
+          sendEvent(m_eeprom->settings().id,events[e]);
     }
 
     for(int c = 0 ; c<m_components.size() ; c++ )
@@ -274,8 +272,8 @@ protected:
       args.erase(args.begin());
       jarvisActions action = jarvisActions(args[0].toInt());
       args.erase(args.begin());
-
-      if(m_id == dest)
+      String id = m_eeprom->settings().id;
+      if(id == dest)
       {
           doAction(action,args);
           return;

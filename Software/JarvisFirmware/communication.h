@@ -49,6 +49,7 @@ class communicationModule : public jarvisParser , public nodeComponent
           m_ledStrip.off();
           m_statusLed.controllerInit();
         }
+        m_id = m_eeprom->settings().id;
     }
 
     void setAP(String essid,String pass)
@@ -191,7 +192,6 @@ class communicationModule : public jarvisParser , public nodeComponent
     bool     m_jarvisConnected          = false;
     bool     m_reconnectJarvis          = false;
     float    m_reconnectTimer           = 0.0f;
-
     ws2812Strip           m_ledStrip;
     ledStatusTrio         m_statusLed;
     
@@ -203,14 +203,12 @@ class communicationModule : public jarvisParser , public nodeComponent
 
     void i_wifiConnected()
     {
-        char c_id[m_id.length()+1];
-        m_id.toCharArray(c_id, sizeof(c_id));
         debug("D: Starting mdns responder...  ");
 
-        if(MDNS.begin(c_id))
+        if(MDNS.begin(m_eeprom->settings().id))
         {
             debug("OK! : ");
-            debug(c_id);
+            debug(m_eeprom->settings().id);
             debugln(".local");
         }
         else
@@ -420,7 +418,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     {
         std::vector<String> args;
         args.push_back(C_ID);
-        args.push_back(m_id);
+        args.push_back(m_eeprom->settings().id);
         send(encodeJarvisMsg(args));
     }
 

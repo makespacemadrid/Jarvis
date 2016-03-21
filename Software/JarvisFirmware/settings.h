@@ -2,10 +2,12 @@
 #define FIRMWARESETTINGS
 
 #ifndef ESP8266
+#ifndef __AVR_ATmega2560__
 //buscar otra etiqueta que descarte el arduino
 //Por alguna razon no soy capaz de hacerlo funcionar con #ifdef QT
     #include <QObject>
     typedef quint16 uint16_t;
+#endif
 #endif
 
 enum jarvisModules

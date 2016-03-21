@@ -3,7 +3,7 @@
 #define LED_PIN     13
 
 const uint16_t defaultDelay      = 1000; //ms
-const uint16_t defaultResetDelay = 1000  //ms
+const uint16_t defaultResetDelay = 1000; //ms
 const float defaultTimeout       = 20.0; //s
 float timeout                    = defaultTimeout;
 
@@ -17,6 +17,8 @@ void setup() {
 
     Serial.begin(115200);
     Serial.println("Watchdog on duty!");
+}
+
 void loop() {
     Serial.print("Timeout:");
     Serial.println(timeout);
