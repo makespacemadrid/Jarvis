@@ -40,7 +40,8 @@ SOURCES += \
     jarvisServer/gjarvisconnectionwidget.cpp \
     common/grtttlplayer.cpp \
     common/qwificonfigdialog.cpp \
-    common/gnodeconfigdialog.cpp
+    common/gnodeconfigdialog.cpp \
+    jarvisServer/gruleeditorwidget.cpp
 
 HEADERS += \
     ../JarvisFirmware/jarvisProtocol.h \
@@ -68,7 +69,8 @@ HEADERS += \
     common/grtttlplayer.h \
     common/qwificonfigdialog.h \
     ../JarvisFirmware/settings.h \
-    common/gnodeconfigdialog.h
+    common/gnodeconfigdialog.h \
+    jarvisServer/gruleeditorwidget.h
 
 FORMS   += \
     common/gblinkwidget.ui \
@@ -86,7 +88,8 @@ FORMS   += \
     jarvisServer/gjarvisconnectionwidget.ui \
     common/grtttlplayer.ui \
     common/qwificonfigdialog.ui \
-    common/gnodeconfigdialog.ui
+    common/gnodeconfigdialog.ui \
+    jarvisServer/gruleeditorwidget.ui
 
 RESOURCES += \
     common/resources.qrc

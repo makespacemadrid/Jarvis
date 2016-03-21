@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>210</width>
-    <height>398</height>
+    <width>480</width>
+    <height>441</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,7 +63,7 @@
   <customwidget>
    <class>gWidgetTxRx</class>
    <extends>QWidget</extends>
-   <header location="global">gwidgettxrx.h</header>
+   <header>gwidgettxrx.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

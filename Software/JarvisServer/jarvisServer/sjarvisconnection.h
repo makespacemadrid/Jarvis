@@ -21,9 +21,18 @@ public:
     void setId(QString id)  {m_id = id;}
     QString id()            {return m_id;}
 
-    void setDelay(quint16 delayms);
-    bool isValid();
-    void setEnabled(bool en);
+    void    setDelay(quint16 delayms);
+    quint16 getDelay()              {return m_delay;}
+    bool    isValid();
+    void    setEnabled(bool en);
+
+    QVector<QString>    senderIds()     {return m_senderId;}
+    QVector<QString>    senderComp()    {return m_senderComponent;}
+    QVector<QString>    senderEvents()  {return m_senderEvent;}
+
+    QVector<QString>    destIds()       {return m_destId;}
+    QVector<QString>    destComp()      {return m_destComponent;}
+    QVector<QString>    destActions()   {return m_destAction;}
 
 private:
     bool                    m_enabled;

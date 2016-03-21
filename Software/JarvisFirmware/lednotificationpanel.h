@@ -30,7 +30,9 @@ public:
 
     void activate()
     {
-        m_ledMatrix.activate();
+        m_ledMatrix.setLeds(ledMatrixIcons::mMakeSpaceIcon16x16());
+        m_ledMatrix.glow();
+        m_events.push_back(E_ACTIVATED);
     }
 
     void deactivate()
@@ -76,8 +78,7 @@ public:
 
     void jarvisConnected()
     {
-        m_ledMatrix.setLeds(ledMatrixIcons::mMakeSpaceIcon16x16());
-        m_ledMatrix.glow();
+        activate();
     }
 
     void jarvisDisConnected()
