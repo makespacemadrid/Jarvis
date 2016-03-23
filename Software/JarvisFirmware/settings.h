@@ -66,7 +66,8 @@ Tabla de correspondencia de pines nodemcu arduino
 9  GPIO3 (UART RX)
 10 GPIO1 (UART TX)
 11 GPIO9
-12  GPIO10
+12 GPIO10
+A0 17
 **/  
 
 //Pineado por defecto de los nodos ESP8266
