@@ -24,10 +24,11 @@ private:
 protected slots:
     void nodeConnected();
     void nodeDisconnected();
-
+    void deleteWNode();
 public slots:
     void on_btnView_clicked();
     void on_btnEditConf_clicked();
+    void deleteLater(){qDebug()<<"gnodeSimpleWidget::deleteLater() Sender:" << sender();QObject::deleteLater();}
 };
 
 #endif // GNODESIMPLEWIDGET_H

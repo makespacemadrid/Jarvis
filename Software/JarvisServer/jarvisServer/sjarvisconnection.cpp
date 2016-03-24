@@ -103,6 +103,7 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     {
         if(m_senderId[i] == node->getId())
         {
+            connect(node,SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterNode(QObject*)));
             for(int c = 0 ; c < node->components().count() ; c++)
             {
                 if(node->components()[c]->getId() == m_senderComponent[i])
@@ -120,6 +121,7 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     {
         if(m_destId[i] == node->getId())
         {
+            connect(node,SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterNode(QObject*)));
             for(int c = 0 ; c < node->components().count() ; c++)
             {
                 if(node->components()[c]->getId() == m_destComponent[i])
@@ -130,5 +132,14 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
 
             }
         }
+    }
+}
+
+void sJarvisConnection::deRegisterNode(QObject *node)
+{
+    qDebug() << "sJarvisConnection::deRegisterNode -> removing:" <<(sJarvisNode*)node;
+    for(int i = 0 ; i < m_destObj.count() ; i++)
+    {
+        if(m_destObj[i] == (sJarvisNode*)node) m_destObj[i] = 0;
     }
 }

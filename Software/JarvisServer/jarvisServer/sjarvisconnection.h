@@ -61,6 +61,7 @@ public slots:
     void enable();
     void disable();
     void registerNode(sJarvisNode* node);
+    void deRegisterNode(QObject* node);
 
 };
 

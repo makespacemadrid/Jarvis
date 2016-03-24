@@ -54,6 +54,5 @@ void sJarvisNodeServer::nodeReady()
 
 void sJarvisNodeServer::removeNode(QObject *obj)
 {
-    sJarvisNode* n = qobject_cast<sJarvisNode*>(sender());
-    m_nodes.removeAll(n);
+    m_nodes.removeAll((sJarvisNode*)obj);
 }
