@@ -28,7 +28,6 @@ protected slots:
 public slots:
     void on_btnView_clicked();
     void on_btnEditConf_clicked();
-    void deleteLater(){qDebug()<<"gnodeSimpleWidget::deleteLater() Sender:" << sender();QObject::deleteLater();}
 };
 
 #endif // GNODESIMPLEWIDGET_H

@@ -74,6 +74,7 @@ public:
     void wifiDisConnected()
     {
         m_ledMatrix.setLeds(ledMatrixIcons::wifiRedIcon16x16());
+        m_ledMatrix.glow();
     }
 
     void jarvisConnected()

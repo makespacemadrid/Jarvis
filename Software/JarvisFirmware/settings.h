@@ -40,17 +40,17 @@ struct settingList
   uint16_t      localPort       = 31416;
   uint16_t      updateInterval  = 25;
 
-  int8_t            alivePin            =  2;
-  int8_t            piezoPin            = -1;
-  int8_t            ledStripPin         = 13;
-  float             ledStripBrightness  = 0.05f;
-  uint16_t          ledCount            = 3;
+  int8_t            alivePin            =   2;
+  int8_t            piezoPin            =  -1;
+  int8_t            ledStripPin         =  13;
+  float             ledStripBrightness  =   0.1f;
+  uint16_t          ledCount            =   3;
 
   int8_t           buttonPins[10]      = {  16,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
   int8_t           tempSensorPins[10]  = {   5,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
-  int8_t           relaypins[10]       = {  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
+  int8_t           relaypins[10]       = {  12,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
 
-  uint16_t      magicNumber            = 31415;
+  uint16_t          magicNumber            = 31415;
 
   /**
 Tabla de correspondencia de pines nodemcu arduino
@@ -71,12 +71,10 @@ A0 17
 **/  
 
 //Pineado por defecto de los nodos ESP8266
-//  int   alivePin               =  2;
-// int   ledStripPin            =  4; //makeswitch /coffeemaker
-//    int   ledStripPin            =  13; // LedPanel
-//      DHT makeswitch  5
-//  dht ledPanel    12
-//  dht termimetro  2
+//    int   ledStripPin            =  4; //makeswitch
+//    int   ledStripPin            =  13; // LedPanel /coffeemaker
+//    DHT    makeswitch  5
+//    dht MMMtermimetro  2
 
 
 };

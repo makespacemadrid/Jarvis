@@ -40,7 +40,7 @@ void gNodeSimpleWidget::connectNode()
     connect(m_node,SIGNAL(rx()),ui->txWidget,SLOT(rx()));
     connect(m_node,SIGNAL(ready()),this,SLOT(nodeConnected()));
     connect(m_node,SIGNAL(disconnected()),this,SLOT(nodeDisconnected()));
-    //connect(m_node,SIGNAL(destroyed(QObject*)),this,SLOT(deleteLater()));
+    connect(m_node,SIGNAL(destroyed(QObject*)),this,SLOT(deleteLater()));
 }
 
 void gNodeSimpleWidget::nodeConnected()
@@ -68,7 +68,7 @@ void gNodeSimpleWidget::deleteWNode()
 {
     qDebug() << "gNodeSimpleWidget::deleteWNode - > Destroying interface and node:" << this;
     m_node->deleteLater();// la destruccion del nodo desencadena la destruccion del widget
-    this->deleteLater();
+    //this->deleteLater();
 }
 
 void gNodeSimpleWidget::on_btnView_clicked()

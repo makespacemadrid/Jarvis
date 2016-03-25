@@ -32,6 +32,7 @@ sJarvisNode::~sJarvisNode()
 {
     if(m_tcpClient != 0)
         m_tcpClient->deleteLater();
+    deleteComponents();
 }
 
 void sJarvisNode::setTcpClient(QTcpSocket *tcpClient)

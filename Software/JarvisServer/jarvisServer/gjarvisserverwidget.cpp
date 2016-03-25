@@ -44,7 +44,13 @@ void gJarvisServerWidget::on_btnConnectNode_clicked()
 void gJarvisServerWidget::removeItem(QObject *obj)
 {
     //qDebug() << "Removing from list: " << obj;
-    m_nodeWidgets.removeOne((gNodeSimpleWidget*) obj);
+    m_nodeWidgets.removeAll((gNodeSimpleWidget*)obj);
+    for(int i = 0 ; i < m_nodeWidgets.count() ; i++)
+    {//WTF
+        disconnect(m_nodeWidgets[i],SIGNAL(destroyed(QObject*)),this,SLOT(removeItem(QObject*)));
+        m_nodeWidgets[i]->deleteLater();
+    }
+    m_nodeWidgets.clear();
     reloadNodeWidgets();
 }
 
@@ -53,25 +59,27 @@ void gJarvisServerWidget::addNode(sJarvisNode *n)
     gNodeSimpleWidget* w = new gNodeSimpleWidget(n);
     w->setObjectName(n->getId()+"Widget");
     qDebug() << "gJarvisServerWidget::addNode -> Adding widget:" << w << " for client:" <<n;
-    QListWidgetItem *item = new QListWidgetItem();
+    QListWidgetItem *item = new QListWidgetItem(ui->nodeList);
+    item->setSizeHint(w->sizeHint());
+    ui->nodeList->setItemWidget(item,w);
     connect(n,SIGNAL(tx()),ui->txWidget,SLOT(tx()));
     connect(n,SIGNAL(rx()),ui->txWidget,SLOT(rx()));
-    item->setSizeHint(w->sizeHint());
-    ui->nodeList->addItem(item);
-    ui->nodeList->setItemWidget(item,w);
     m_nodeWidgets.append(w);
     connect(m_nodeWidgets.last(),SIGNAL(destroyed(QObject*)),this,SLOT(removeItem(QObject*)));
 }
 
 void gJarvisServerWidget::reloadNodeWidgets()
 {
+    qDebug() << "Reloading nodeWidgets";
     ui->nodeList->clear();
+    ui->nodeList->updateGeometry();
+
     for(int i = 0 ; i < m_nodeServer->nodes().count() ; i++)
     {
+        qDebug() << "Adding widget: "<< m_nodeServer->nodes()[i];
         gNodeSimpleWidget*  w = new gNodeSimpleWidget(m_nodeServer->nodes()[i]);
-        QListWidgetItem *item = new QListWidgetItem();
+        QListWidgetItem *item = new QListWidgetItem(ui->nodeList);
         item->setSizeHint(w->sizeHint());
-        ui->nodeList->addItem(item);
         ui->nodeList->setItemWidget(item,w);
     }
 }

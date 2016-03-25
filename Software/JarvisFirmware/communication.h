@@ -98,7 +98,7 @@ class communicationModule : public jarvisParser , public nodeComponent
           connectStation();
       }
 
-      m_lastConnectionStatus = connectionStatus();
+      m_lastConnectionStatus = 6;
     }
     
     virtual void update()
@@ -250,7 +250,7 @@ class communicationModule : public jarvisParser , public nodeComponent
         {
             debugln("D:Will reconnect in ~10s");
             m_reconnectJarvis = true;
-            m_reconnectTimer = 10.0;
+            m_reconnectTimer = 5.0f;
         }
         else
         {
@@ -513,7 +513,7 @@ class espNative : public communicationModule
         {
             debugln("D:Wifi connected but setup not completed yet, will connect to Jarvis in ~10s");
             m_reconnectJarvis = true;
-            m_reconnectTimer = 10.0f;
+            m_reconnectTimer = 1.0f;
             return;
         }
 
@@ -530,7 +530,7 @@ class espNative : public communicationModule
             debugln("D:Can't connect!");
             client.stop();
             m_reconnectJarvis = true;
-            m_reconnectTimer = 10.0f;
+            m_reconnectTimer = 5.0f;
         }
 
     }

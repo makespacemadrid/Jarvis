@@ -103,7 +103,6 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     {
         if(m_senderId[i] == node->getId())
         {
-            connect(node,SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterNode(QObject*)));
             for(int c = 0 ; c < node->components().count() ; c++)
             {
                 if(node->components()[c]->getId() == m_senderComponent[i])
@@ -112,6 +111,7 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
                     m_senderObj[i] = node->components()[c];
                     disconnect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction()));// Para evitar conexiones redundantes de desconecta por si ya esta conectada.
                     connect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction()));
+                    connect(m_senderObj[i],SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterComp(QObject*)));
                 }
             }
         }
@@ -121,13 +121,13 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     {
         if(m_destId[i] == node->getId())
         {
-            connect(node,SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterNode(QObject*)));
             for(int c = 0 ; c < node->components().count() ; c++)
             {
                 if(node->components()[c]->getId() == m_destComponent[i])
                 {
                     qDebug() << "sJarvisConnection::registerNode -> Registering" << m_id << m_destAction[i];
                     m_destObj[i] = node->components()[c];
+                    connect(m_destObj[i],SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterComp(QObject*)));
                 }
 
             }
@@ -135,11 +135,16 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
     }
 }
 
-void sJarvisConnection::deRegisterNode(QObject *node)
+void sJarvisConnection::deRegisterComp(QObject *comp)
 {
-    qDebug() << "sJarvisConnection::deRegisterNode -> removing:" <<(sJarvisNode*)node;
+    qDebug() << "sJarvisConnection::deRegisterComp -> removing:" <<(sJarvisNodeComponent*)comp;
     for(int i = 0 ; i < m_destObj.count() ; i++)
     {
-        if(m_destObj[i] == (sJarvisNode*)node) m_destObj[i] = 0;
+        if(m_destObj[i] == (sJarvisNodeComponent*) comp) m_destObj[i] = 0;
+    }
+
+    for(int i = 0 ; i < m_senderObj.count() ; i++)
+    {
+        if(m_senderObj[i] == (sJarvisNodeComponent*) comp) m_senderObj[i] = 0;
     }
 }
