@@ -142,7 +142,7 @@ public:
     for( uint16_t i = 0 ; i < m_leds.size() ; i++)
     {
       m_leds[i].setColor(20,20,20);
-      update();
+      if(i%2 == 0)update();
     }
   }
 

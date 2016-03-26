@@ -10,15 +10,19 @@ class sJarvisConnectionManager : public QObject
     Q_OBJECT
 public:
     explicit sJarvisConnectionManager(sJarvisNodeServer* nodeServer, QObject *parent = 0);
-    void addConnection(sJarvisNodeComponent* sender, jarvisEvents event, sJarvisNodeComponent* dest,jarvisActions act, u_int16_t delayms = 0);
-    void addConnection(sJarvisNodeComponent* sender, QString      event, sJarvisNodeComponent* dest,QString       act, u_int16_t delayms = 0);
+    sJarvisConnection*          addConnection();
+    void                        addConnection(sJarvisNodeComponent* sender, jarvisEvents event, sJarvisNodeComponent* dest,jarvisActions act, u_int16_t delayms = 0);
+    void                        addConnection(sJarvisNodeComponent* sender, QString      event, sJarvisNodeComponent* dest,QString       act, u_int16_t delayms = 0);
+    QVector<sJarvisConnection*> connections()   {return m_conns;}
+    sJarvisNodeServer*          nodeServer()    {return m_nodeServer;}
+
 private:
     QVector<sJarvisConnection*> m_conns;
     sJarvisNodeServer*          m_nodeServer;
 signals:
 
 public slots:
-
+    void reconnectSignals();
 };
 
 #endif // SJARVISCONNECTIONMANAGER_H

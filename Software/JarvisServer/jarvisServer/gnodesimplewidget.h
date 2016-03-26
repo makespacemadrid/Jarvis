@@ -21,8 +21,13 @@ private:
     sJarvisNode*           m_node;
     void connectNode();
 
+protected slots:
+    void nodeConnected();
+    void nodeDisconnected();
+    void deleteWNode();
 public slots:
     void on_btnView_clicked();
+    void on_btnEditConf_clicked();
 };
 
 #endif // GNODESIMPLEWIDGET_H

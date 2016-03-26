@@ -39,7 +39,7 @@ extern "C" {
     #define BIG_FLASH
 #endif
 
-uint8_t updateInterval = 25;
+uint16_t updateInterval = 25;
 
 
 #include "helpers.h"

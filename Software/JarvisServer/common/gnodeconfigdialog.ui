@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>534</width>
-    <height>430</height>
+    <width>551</width>
+    <height>462</height>
    </rect>
   </property>
   <property name="font">
@@ -22,15 +22,9 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_7">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_19">
-     <property name="spacing">
-      <number>0</number>
-     </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_5">
-       <property name="spacing">
-        <number>0</number>
-       </property>
        <item>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="font">
@@ -246,26 +240,60 @@
         <widget class="QLabel" name="label_18">
          <property name="font">
           <font>
-           <pointsize>7</pointsize>
+           <pointsize>10</pointsize>
           </font>
          </property>
          <property name="text">
-          <string>Tabla de correspondencia de pines nodemcu arduino
-0 [*]  GPIO16  
-1  GPIO5 
-2  GPIO4
-3  GPIO0
-4  GPIO2
-5  GPIO14 (SPI CLK)    
-6  GPIO12 (SPI MISO)   
-7  GPIO13 (SPI MOSI)   
-8  GPIO15 (SPI CS)
-9  GPIO3 (UART RX)
-10 GPIO1 (UART TX)
-11 GPIO9
-12  GPIO10</string>
+          <string>Correspondencia de pines arduino -&gt; Nodemcu</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QLabel" name="label_10">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>A0   GPIO17
+D0    GPIO16[*]  
+D1    GPIO5 
+D2    GPIO4
+D3    GPIO0
+D4    GPIO2
+D5    GPIO14 (SPI CLK)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="font">
+            <font>
+             <pointsize>8</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>D6    GPIO12 (SPI MISO)   
+D7    GPIO13 (SPI MOSI)   
+D8    GPIO15 (SPI CS)
+D9    GPIO3 (UART RX)
+D10   GPIO1 (UART TX)
+D11   GPIO9
+D12   GPIO10</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>

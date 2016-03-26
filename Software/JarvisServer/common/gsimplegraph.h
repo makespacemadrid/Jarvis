@@ -28,6 +28,7 @@ private:
     void mouseReleaseEvent(QMouseEvent *e);
     void draw_graph(QPainter* p, QRect rect);
 
+    quint8  m_loopCount;
     quint16 m_maxData;
     bool m_draggingEvent;
     QVector<QString> m_fields;

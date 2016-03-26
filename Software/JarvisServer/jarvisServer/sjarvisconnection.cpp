@@ -23,11 +23,12 @@ void sJarvisConnection::addSenderEvent(QString senderID, QString senderComponent
 
     if(m_senderObj.last())
         connect(m_senderObj.last(),m_senderEvent.last().toStdString().c_str(),this,SLOT(doAction()));
+    emit updated();
 }
 
 void sJarvisConnection::addDestAction (QString destID, QString destComponent, jarvisActions action, sJarvisNodeComponent *destObj)
 {
-    QString actString = sJarvisNodeComponent::slotName(action);
+    QString actString = sJarvisNodeComponent::actionName(action);
     addDestAction(destID,destComponent,actString,destObj);
 }
 
@@ -37,6 +38,30 @@ void sJarvisConnection::addDestAction (QString destID, QString destComponent,QSt
     m_destComponent.push_back(destComponent);
     m_destObj.push_back(destObj);
     m_destAction.push_back(action);
+    emit updated();
+}
+
+void sJarvisConnection::removeSenderEvent(int index)
+{
+    if(index >= m_senderId.count()) return;
+    if(m_senderObj[index])
+    {
+        m_senderObj[index]->disconnect();
+    }
+
+    m_senderId.remove(index);
+    m_senderComponent.remove(index);
+    m_senderEvent.remove(index);
+    m_senderObj.remove(index);
+}
+
+void sJarvisConnection::removeDestAction(int index)
+{
+    if(index >= m_destId.count()) return;
+    m_destId.remove(index);
+    m_destComponent.remove(index);
+    m_destAction.remove(index);
+    m_destObj.remove(index);
 }
 
 void sJarvisConnection::setDelay(quint16 delayms)
@@ -71,8 +96,7 @@ void sJarvisConnection::doAction()
 
 void sJarvisConnection::actuallyDoAction()
 {
-    if(m_delay > 0)
-        m_delayTimer.stop();
+    m_delayTimer.stop();
 
     if(!m_enabled)
         return;
@@ -108,8 +132,11 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
             {
                 if(node->components()[c]->getId() == m_senderComponent[i])
                 {
+                    qDebug() << "sJarvisConnection::registerNode -> Registering" << m_id << m_senderEvent[i];
                     m_senderObj[i] = node->components()[c];
-                    connect(m_senderObj.last(),m_senderEvent.last().toStdString().c_str(),this,SLOT(doAction()));
+                    disconnect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction()));// Para evitar conexiones redundantes de desconecta por si ya esta conectada.
+                    connect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction()));
+                    connect(m_senderObj[i],SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterComp(QObject*)));
                 }
             }
         }
@@ -121,9 +148,28 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
         {
             for(int c = 0 ; c < node->components().count() ; c++)
             {
-                if(node->components()[c]->getId() == m_senderComponent[i])
+                if(node->components()[c]->getId() == m_destComponent[i])
+                {
+                    qDebug() << "sJarvisConnection::registerNode -> Registering" << m_id << m_destAction[i];
                     m_destObj[i] = node->components()[c];
+                    connect(m_destObj[i],SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterComp(QObject*)));
+                }
+
             }
         }
+    }
+}
+
+void sJarvisConnection::deRegisterComp(QObject *comp)
+{
+    qDebug() << "sJarvisConnection::deRegisterComp -> removing:" <<(sJarvisNodeComponent*)comp;
+    for(int i = 0 ; i < m_destObj.count() ; i++)
+    {
+        if(m_destObj[i] == (sJarvisNodeComponent*) comp) m_destObj[i] = 0;
+    }
+
+    for(int i = 0 ; i < m_senderObj.count() ; i++)
+    {
+        if(m_senderObj[i] == (sJarvisNodeComponent*) comp) m_senderObj[i] = 0;
     }
 }

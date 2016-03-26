@@ -21,7 +21,7 @@
 //WL_CONNECTION_LOST  5
 //WL_DISCONNECTED   6
 
-extern uint8_t updateInterval;
+extern uint16_t updateInterval;
 
 
 class communicationModule : public jarvisParser , public nodeComponent
@@ -49,6 +49,7 @@ class communicationModule : public jarvisParser , public nodeComponent
           m_ledStrip.off();
           m_statusLed.controllerInit();
         }
+        m_id = m_eeprom->settings().id;
     }
 
     void setAP(String essid,String pass)
@@ -97,7 +98,7 @@ class communicationModule : public jarvisParser , public nodeComponent
           connectStation();
       }
 
-      m_lastConnectionStatus = connectionStatus();
+      m_lastConnectionStatus = 6;
     }
     
     virtual void update()
@@ -191,7 +192,6 @@ class communicationModule : public jarvisParser , public nodeComponent
     bool     m_jarvisConnected          = false;
     bool     m_reconnectJarvis          = false;
     float    m_reconnectTimer           = 0.0f;
-
     ws2812Strip           m_ledStrip;
     ledStatusTrio         m_statusLed;
     
@@ -203,14 +203,12 @@ class communicationModule : public jarvisParser , public nodeComponent
 
     void i_wifiConnected()
     {
-        char c_id[m_id.length()+1];
-        m_id.toCharArray(c_id, sizeof(c_id));
         debug("D: Starting mdns responder...  ");
 
-        if(MDNS.begin(c_id))
+        if(MDNS.begin(m_eeprom->settings().id))
         {
             debug("OK! : ");
-            debug(c_id);
+            debug(m_eeprom->settings().id);
             debugln(".local");
         }
         else
@@ -252,7 +250,7 @@ class communicationModule : public jarvisParser , public nodeComponent
         {
             debugln("D:Will reconnect in ~10s");
             m_reconnectJarvis = true;
-            m_reconnectTimer = 10.0;
+            m_reconnectTimer = 5.0f;
         }
         else
         {
@@ -420,7 +418,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     {
         std::vector<String> args;
         args.push_back(C_ID);
-        args.push_back(m_id);
+        args.push_back(m_eeprom->settings().id);
         send(encodeJarvisMsg(args));
     }
 
@@ -515,7 +513,7 @@ class espNative : public communicationModule
         {
             debugln("D:Wifi connected but setup not completed yet, will connect to Jarvis in ~10s");
             m_reconnectJarvis = true;
-            m_reconnectTimer = 10.0f;
+            m_reconnectTimer = 1.0f;
             return;
         }
 
@@ -532,7 +530,7 @@ class espNative : public communicationModule
             debugln("D:Can't connect!");
             client.stop();
             m_reconnectJarvis = true;
-            m_reconnectTimer = 10.0f;
+            m_reconnectTimer = 5.0f;
         }
 
     }

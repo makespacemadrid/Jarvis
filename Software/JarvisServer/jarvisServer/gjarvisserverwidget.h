@@ -10,6 +10,7 @@ namespace Ui {
 class gJarvisServerWidget;
 }
 
+
 class gJarvisServerWidget : public QGroupBox
 {
     Q_OBJECT
@@ -22,13 +23,14 @@ public:
 private:
     Ui::gJarvisServerWidget   *ui;
     sJarvisNodeServer*         m_nodeServer;
-    QList<gNodeSimpleWidget>   m_nodeWidgets;
+    QList<gNodeSimpleWidget*>   m_nodeWidgets;
 
 private slots:
     void on_btnConnectNode_clicked();
     void removeItem(QObject* obj);
 public slots:
     void addNode(sJarvisNode* n);
+    void reloadNodeWidgets();
 };
 
 #endif // GJARVISSERVERWIDGET_H

@@ -22,6 +22,11 @@ private:
     Ui::gJarvisConnectionWidget *ui;
     sJarvisConnection*           m_conn;
     bool                         m_sharedConn;
+signals:
+    void configureme(sJarvisConnection*);
+protected slots:
+    void on_editBtn_clicked();
+    void reload();
 
 };
 

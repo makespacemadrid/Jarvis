@@ -32,6 +32,7 @@ sJarvisNode::~sJarvisNode()
 {
     if(m_tcpClient != 0)
         m_tcpClient->deleteLater();
+    deleteComponents();
 }
 
 void sJarvisNode::setTcpClient(QTcpSocket *tcpClient)
@@ -358,13 +359,12 @@ void sJarvisNode::pong()
 
 void sJarvisNode::initDone()
 {
-
     m_initTimer.stop();
     m_initTimeout.stop();
     if( (m_nodeSettings.magicNumber != 31415) || m_components.isEmpty())
     {
         qDebug() << "Incompatible client or some problem on the init stage!";
-        qDebug() << "Magic number" << m_nodeSettings.magicNumber;
+        qDebug() << "Magic number" << m_nodeSettings.magicNumber << "ID:" << m_nodeSettings.id << "Components:" << m_components.count();
         m_valid = false;
     }
     else
@@ -382,6 +382,7 @@ void sJarvisNode::initTimeout()
     qDebug() << "sJarvisNode::initTimeout()";
     closeTCP();
     m_initTimeout.stop();
+    emit disconnected();
 }
 
 void sJarvisNode::socketDisconected()
@@ -390,7 +391,6 @@ void sJarvisNode::socketDisconected()
     m_pingTimer.stop();
     m_initTimer.stop();
     m_commTimeout.stop();
-    //deleteComponents();
     emit disconnected();
 }
 
