@@ -21,7 +21,7 @@
 //WL_CONNECTION_LOST  5
 //WL_DISCONNECTED   6
 
-extern uint8_t updateInterval;
+extern uint16_t updateInterval;
 
 
 class communicationModule : public jarvisParser , public nodeComponent

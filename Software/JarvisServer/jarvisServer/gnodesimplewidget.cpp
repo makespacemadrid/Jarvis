@@ -45,23 +45,35 @@ void gNodeSimpleWidget::connectNode()
 
 void gNodeSimpleWidget::nodeConnected()
 {
-    this->setEnabled(true);
+
     QPalette Pal(palette());
     Pal.setColor(QPalette::Background, Qt::green);
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
     this->repaint();
+    ui->btnConnectStatus->setChecked(true);
+    ui->btnEditConf->setEnabled(true);
+    ui->btnConnectStatus->setPalette(Pal);
+    if(!m_node->isValid())
+    {
+        Pal.setColor(QPalette::Background, Qt::yellow);
+        ui->btnConnectStatus->setPalette(Pal);
+        QIcon icon(":/resources/iconos/warning.bmp");
+        ui->btnConnectStatus->setIcon(icon);
+    }
+    ui->signalWidget_2->blink(QColor(255,0,0));
 }
 
 void gNodeSimpleWidget::nodeDisconnected()
 {
-    this->setEnabled(false);
     QPalette Pal(palette());
     Pal.setColor(QPalette::Background, Qt::red);
     this->setAutoFillBackground(true);
     this->setPalette(Pal);
-    ui->btnDelete->setEnabled(true);
     this->repaint();
+    ui->btnConnectStatus->setChecked(false);
+    ui->btnConnectStatus->setPalette(Pal);
+    ui->btnEditConf->setEnabled(false);
 }
 
 void gNodeSimpleWidget::deleteWNode()

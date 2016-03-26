@@ -6,22 +6,55 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>414</width>
-    <height>504</height>
+    <width>482</width>
+    <height>467</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_8">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>5</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <property name="spacing">
+      <number>0</number>
+     </property>
      <item>
       <widget class="QGroupBox" name="groupBox_5">
        <property name="title">
         <string>Rule Config</string>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_7">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
@@ -54,7 +87,7 @@
           <item>
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>Delay</string>
+             <string>Delayms</string>
             </property>
            </widget>
           </item>
@@ -72,7 +105,11 @@
            </spacer>
           </item>
           <item>
-           <widget class="QSpinBox" name="spinDelay"/>
+           <widget class="QSpinBox" name="spinDelay">
+            <property name="maximum">
+             <number>100000</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -137,6 +174,12 @@
           <string>Trigger events:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QComboBox" name="comboSourceNode"/>
           </item>
@@ -159,6 +202,12 @@
           <string>Configured Events:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_3">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QToolButton" name="btnRemoveEvent">
             <property name="text">
@@ -182,6 +231,12 @@
           <string>Destination actions:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QComboBox" name="comboDestNode"/>
           </item>
@@ -204,6 +259,12 @@
           <string>Configured Actions:</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QToolButton" name="btnRemoveAction">
             <property name="text">

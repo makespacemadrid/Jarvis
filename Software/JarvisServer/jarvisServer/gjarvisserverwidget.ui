@@ -25,7 +25,7 @@
      <item>
       <widget class="QToolButton" name="btnConnectNode">
        <property name="text">
-        <string>Connect</string>
+        <string>ConnectToNode</string>
        </property>
       </widget>
      </item>

@@ -23,6 +23,7 @@ void sJarvisConnection::addSenderEvent(QString senderID, QString senderComponent
 
     if(m_senderObj.last())
         connect(m_senderObj.last(),m_senderEvent.last().toStdString().c_str(),this,SLOT(doAction()));
+    emit updated();
 }
 
 void sJarvisConnection::addDestAction (QString destID, QString destComponent, jarvisActions action, sJarvisNodeComponent *destObj)
@@ -37,6 +38,30 @@ void sJarvisConnection::addDestAction (QString destID, QString destComponent,QSt
     m_destComponent.push_back(destComponent);
     m_destObj.push_back(destObj);
     m_destAction.push_back(action);
+    emit updated();
+}
+
+void sJarvisConnection::removeSenderEvent(int index)
+{
+    if(index >= m_senderId.count()) return;
+    if(m_senderObj[index])
+    {
+        m_senderObj[index]->disconnect();
+    }
+
+    m_senderId.remove(index);
+    m_senderComponent.remove(index);
+    m_senderEvent.remove(index);
+    m_senderObj.remove(index);
+}
+
+void sJarvisConnection::removeDestAction(int index)
+{
+    if(index >= m_destId.count()) return;
+    m_destId.remove(index);
+    m_destComponent.remove(index);
+    m_destAction.remove(index);
+    m_destObj.remove(index);
 }
 
 void sJarvisConnection::setDelay(quint16 delayms)

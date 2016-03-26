@@ -6,30 +6,95 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>574</width>
-    <height>225</height>
+    <width>572</width>
+    <height>234</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>gJarvisgui</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,2">
-    <property name="sizeConstraint">
-     <enum>QLayout::SetMinimumSize</enum>
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,20">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>2</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
     </property>
     <item>
-     <widget class="gJarvisServerWidget" name="nodeServerWidget">
-      <property name="title">
-       <string>Node Server</string>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QToolButton" name="toolButton">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_2">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QToolButton" name="toolButton_3">
+        <property name="text">
+         <string>...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="gJarvisConnectionManagerWidget" name="connManagerWidget">
-      <property name="title">
-       <string>ConnectionManager</string>
+     <widget class="QSplitter" name="splitter">
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
       </property>
+      <property name="lineWidth">
+       <number>1</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>10</number>
+      </property>
+      <widget class="gJarvisServerWidget" name="nodeServerWidget">
+       <property name="title">
+        <string>Node Server</string>
+       </property>
+      </widget>
+      <widget class="gJarvisConnectionManagerWidget" name="connManagerWidget">
+       <property name="title">
+        <string>ConnectionManager</string>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
     </item>
    </layout>
@@ -39,7 +104,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>574</width>
+     <width>572</width>
      <height>25</height>
     </rect>
    </property>

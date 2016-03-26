@@ -10,6 +10,7 @@ namespace Ui {
 class gJarvisServerWidget;
 }
 
+
 class gJarvisServerWidget : public QGroupBox
 {
     Q_OBJECT

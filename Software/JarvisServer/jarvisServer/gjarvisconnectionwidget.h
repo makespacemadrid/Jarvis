@@ -26,6 +26,7 @@ signals:
     void configureme(sJarvisConnection*);
 protected slots:
     void on_editBtn_clicked();
+    void reload();
 
 };
 

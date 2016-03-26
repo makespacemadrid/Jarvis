@@ -6,13 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>180</width>
+    <width>150</width>
     <height>25</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>180</width>
+    <width>150</width>
     <height>25</height>
    </size>
   </property>
@@ -30,7 +30,7 @@
   <property name="frameShadow">
    <enum>QFrame::Raised</enum>
   </property>
-  <layout class="QHBoxLayout" name="horizontalLayout">
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,1,1">
    <property name="spacing">
     <number>1</number>
    </property>
@@ -48,6 +48,11 @@
    </property>
    <item>
     <widget class="QLabel" name="idLabel">
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
      <property name="text">
       <string>Configureme</string>
      </property>

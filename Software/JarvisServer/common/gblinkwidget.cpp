@@ -6,9 +6,11 @@ gBlinkWidget::gBlinkWidget(QWidget *parent) :
     ui(new Ui::gBlinkWidget)
 {
     ui->setupUi(this);
-    m_timer.setInterval(25);
+    m_timer.setInterval(32);
     m_decay_step = 50;
     connect(&m_timer,SIGNAL(timeout()),this,SLOT(decay_animation()));
+    m_color.setAlpha(255);
+    m_timer.start();
 }
 
 gBlinkWidget::~gBlinkWidget()

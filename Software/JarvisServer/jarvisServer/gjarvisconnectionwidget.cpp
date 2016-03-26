@@ -24,6 +24,7 @@ void gJarvisConnectionWidget::setJarvisConnection(sJarvisConnection *conn, bool 
 
     ui->idLabel->setText(m_conn->id());
     connect(m_conn,SIGNAL(activated()),ui->lcdNumber,SLOT(blink()));
+    connect(m_conn,SIGNAL(updated()),this,SLOT(reload()));
 }
 
 
@@ -34,6 +35,11 @@ gJarvisConnectionWidget::~gJarvisConnectionWidget()
         m_conn->deleteLater();
 }
 
+
+void gJarvisConnectionWidget::reload()
+{
+    ui->idLabel->setText(m_conn->id());
+}
 
 
 void gJarvisConnectionWidget::on_editBtn_clicked()

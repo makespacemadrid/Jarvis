@@ -124,8 +124,8 @@ public:
             }
         args.push_back(F("Freemem:"));
         args.push_back(String(getFreeMem()));
-        args.push_back(F("BufferLength:"));
-        args.push_back(String(bufferCount()));
+        //args.push_back(F("BufferLength:"));
+        //args.push_back(String(bufferCount()));
         send(encodeJarvisMsg(args));
     }
 
@@ -171,7 +171,7 @@ protected:
 
   void imAlive()
   {
-    if(m_loopCount > 2)
+    if(m_loopCount > 5)
     {
       if(m_eeprom->settings().alivePin != -1)   digitalWrite(m_eeprom->settings().alivePin, !digitalRead(m_eeprom->settings().alivePin));
       m_loopCount = 0;

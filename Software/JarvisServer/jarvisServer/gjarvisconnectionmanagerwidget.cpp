@@ -45,6 +45,9 @@ void gJarvisConnectionManagerWidget::configureRule(sJarvisConnection *conn)
     gRuleEditorWidget w(m_connManager->nodeServer(),conn);
     if(w.exec())
     {
-
+        w.save();
+        sJarvisConnection nconn = w.getConfiguredConn();
+        *conn = nconn;
+        m_connManager->reconnectSignals();
     }
 }
