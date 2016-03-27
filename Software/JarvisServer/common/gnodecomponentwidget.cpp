@@ -102,6 +102,7 @@ void gNodeComponentWidget::sendImage()
     qImageSelectionWidget w;
     if(w.exec())
     {
+        m_component->setColor(0,0,0);
         QImage img = w.scaledImage.convertToFormat(QImage::Format_RGB888);
         QStringList args;
         for(int x = 0 ; x < img.width() ; x++)
@@ -118,6 +119,7 @@ void gNodeComponentWidget::sendImage()
                 args.append(QString::number(color.red() ,'f',0));
                 args.append(QString::number(color.green() ,'f',0));
                 args.append(QString::number(color.blue() ,'f',0));
+
                 //qDebug() << " - args:" << args.size() ;
                 if( args.size() >= (32*5) )
                 {

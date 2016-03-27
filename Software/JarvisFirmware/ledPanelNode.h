@@ -52,6 +52,11 @@ public:
         m_effectIndex = 0;
     }
 
+    void setColor(uint8_t r,uint8_t g,uint8_t b)
+    {
+        m_ledMatrix.setColor(r,g,b);
+    }
+
     void dimm(uint8_t power)
     {
         m_ledStrip.setBrightness(power);

@@ -11,6 +11,8 @@ qImageSelectionWidget::qImageSelectionWidget(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->widthSpin,SIGNAL(valueChanged(int)),this,SLOT(resizeImg()));
     connect(ui->heightSpin,SIGNAL(valueChanged(int)),this,SLOT(resizeImg()));
+    connect(ui->aspectRatioCheck,SIGNAL(clicked(bool)),this,SLOT(resizeImg()));
+    connect(ui->scaleCheckbox,SIGNAL(clicked(bool)),this,SLOT(resizeImg()));
 }
 
 
@@ -24,16 +26,34 @@ void qImageSelectionWidget::on_selectFileBtn_clicked()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),"",tr("image (*.*)"));
     ui->fileLabel->setText(fileName);
     image.load(fileName);
-    image = image.scaled(256,256,Qt::KeepAspectRatio);
-    scaledImage = image.scaled(ui->widthSpin->value(),ui->heightSpin->value());
-    ui->origView->setPixmap(QPixmap::fromImage(image, Qt::AutoColor));
-    //resizeImg();
+    if((image.width() > 256) || (image.height() > 256))
+    {
+        image = image.scaled(256,256,Qt::KeepAspectRatio);
+        ui->origView->setPixmap(QPixmap::fromImage(image, Qt::AutoColor));
+    }
+    else
+    {
+        ui->origView->setPixmap(QPixmap::fromImage(image.scaled(256,256,Qt::KeepAspectRatio), Qt::AutoColor));
+    }
+
+
+    resizeImg();
 }
 
 void qImageSelectionWidget::resizeImg()
 {
-    scaledImage = image.scaled(ui->widthSpin->value(),ui->heightSpin->value(),Qt::KeepAspectRatio);
-    ui->scaledView->setPixmap(QPixmap::fromImage(scaledImage, Qt::AutoColor));
+    if(image.isNull()) return;
+    if(ui->scaleCheckbox->isChecked())
+    {
+        if(ui->aspectRatioCheck)
+            scaledImage = image.scaled(ui->widthSpin->value(),ui->heightSpin->value(),Qt::KeepAspectRatio);
+        else
+            scaledImage = image.scaled(ui->widthSpin->value(),ui->heightSpin->value());
+    }
+    else
+        scaledImage = image;
+
+    ui->scaledView->setPixmap(QPixmap::fromImage(scaledImage.scaled(256,256,Qt::KeepAspectRatio), Qt::AutoColor));
 
     QImage img = scaledImage.convertToFormat(QImage::Format_RGB888);
     uchar *bits = img.bits();

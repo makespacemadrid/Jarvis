@@ -293,7 +293,7 @@ class ledGadget :  public nodeComponent
         m_strip->update();
     }
 
-    void resetAnimation()
+    virtual void resetAnimation()
     {
         if(m_animationType == animationGlow)
         {
@@ -730,7 +730,7 @@ public:
 
             m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
-            if(mirror) invertedRow = !invertEachRow;
+            if(mirror) invertedRow = !invertedRow;
 
             int start = r*cols+firstLednr;
             int count = cols;
@@ -781,50 +781,53 @@ public:
         ledGadget::deactivate();
     }
 
+
     void display(std::vector<String>& args)
     {
-       Serial.print("L-start display: fm:");
-       Serial.println(getFreeMem());
-       Serial.print("args:");
-       Serial.println(args.size());
-        resetAnimation();
-
-        if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5. (x,y,r,g,b)
-        while (args.size())
+        std::vector<uint8_t> argsInt;
+        while(args.size())
         {
-            int row = args[0].toInt();
+            argsInt.push_back(args[0].toInt());
             args.erase(args.begin());
-            int col = args[0].toInt();
-            args.erase(args.begin());
-            uint8_t r = args[0].toInt();
-            args.erase(args.begin());
-            uint8_t g = args[0].toInt();
-            args.erase(args.begin());
-            uint8_t b = args[0].toInt();
-            args.erase(args.begin());
-
-//            while(m_scrollImg.size() < (row+1))
-//                m_scrollImg.push_back(std::vector<ws2812Strip::led>());
-//            while(m_scrollImg[row].size() < (col+1))
-//                m_scrollImg[row].push_back(ws2812Strip::led());
-//            m_scrollImg[row][col].setColor(r,g,b);
-
-            if(row < m_matrix.size() && col < m_matrix[row].size())
-                m_matrix[row][col]->setColor(r,g,b);
         }
+        yield();
+        display(argsInt);
+    }
 
-//        if(m_scrollImg[0].size() > m_matrix[0].size())
-//            scroll();
-//        else
-//        {
-//            while(m_scrollImg.size())
-//            {
-//                m_scrollImg.erase(m_scrollImg.begin());
-//            }
-//        }
-        Serial.print("L-display done:, fm:");
-        Serial.println(getFreeMem());
-        m_strip->update();
+    void display(std::vector<uint8_t>& args)
+    {
+         resetAnimation();
+
+         if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5. (x,y,r,g,b)
+         while (args.size())
+         {
+             int row = args[0];
+             args.erase(args.begin());
+             int col = args[0];
+             args.erase(args.begin());
+             uint8_t r = args[0];
+             args.erase(args.begin());
+             uint8_t g = args[0];
+             args.erase(args.begin());
+             uint8_t b = args[0];
+             args.erase(args.begin());
+
+             while(m_scrollImg.size() < (row+1))
+                 m_scrollImg.push_back(std::vector<ws2812Strip::led>());
+             while(m_scrollImg[row].size() < (col+1))
+                 m_scrollImg[row].push_back(ws2812Strip::led());
+             m_scrollImg[row][col].setColor(r,g,b);
+
+             if(row < m_matrix.size() && col < m_matrix[row].size())
+                 m_matrix[row][col]->setColor(r,g,b);
+         }
+        yield();
+        if(m_scrollImg[0].size() > m_matrix[0].size())
+             scroll();
+
+         Serial.print("L-display done:, fm:");
+         Serial.println(getFreeMem());
+         m_strip->update();
     }
 
     void displayMatrix(std::vector<std::vector<ws2812Strip::led> > matrix)
@@ -837,7 +840,6 @@ public:
         {
             m_leds[l]->off();
         }
-        yield();
 
         for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
         {
@@ -936,13 +938,31 @@ protected:
 
     void animateScroll()
     {
-//        for(int row = 0 ; row < m_matrix.size() ; row++ )
-//        {
-//            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
-//            {
-//                *m_matrix[row][col] = m_scrollImg[row][col];
-//            }
-//        }
+        for(int row = 0 ; row < m_matrix.size() ; row++ )
+        {
+            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
+            {
+                if( (m_scrollImg.size()      > row) &&
+                    (m_scrollImg[row].size() > col+m_counter1) )
+                    *m_matrix[row][col] = m_scrollImg[row][col+m_counter1];
+            }
+        }
+
+        if      (m_counter1 == m_scrollImg[0].size()-m_matrix[0].size())
+            m_counter2 = 1;//contador 2 para controlar la direccion
+        else if (m_counter1 == 0)
+            m_counter2 = 0;
+
+        if(m_counter3 > 5)//contador 3 para hacer un divisor y que el efecto sea mas lento
+        {
+            m_counter3 = 0;
+            if(m_counter2 == 0)
+                m_counter1++;//contador 1 para el offset de la imagen.
+            else
+                m_counter1--;
+        }
+
+        m_counter3++;
     }
 };
 
