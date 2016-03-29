@@ -53,7 +53,7 @@ gNodeComponentWidget::gNodeComponentWidget(sJarvisNodeComponent* comp,QWidget *p
             b->setText(m_component->actionName((m_component->getActions()[i])));
             l->addWidget(b,l->count()/2,l->count()%2);
         }else{
-            QString slotName = m_component->slotName(m_component->getActions()[i]);
+            QString slotName = m_component->slotName(m_component->getActions()[i],false);
             b->setText(m_component->actionName((m_component->getActions()[i])));
             l->addWidget(b,l->count()/2,l->count()%2);
             connect(b,SIGNAL(clicked()),m_component,slotName.toStdString().c_str());

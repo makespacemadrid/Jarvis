@@ -24,10 +24,11 @@ public:
         m_senderObj         = conn->m_senderObj;
         m_senderEvent       = conn->m_senderEvent;
 
-        m_destId        = conn->m_destId;
-        m_destComponent = conn->m_destComponent;
-        m_destObj       = conn->m_destObj;
-        m_destAction    = conn->m_destAction;
+        m_destId         = conn->m_destId;
+        m_destComponent  = conn->m_destComponent;
+        m_destObj        = conn->m_destObj;
+        m_destAction     = conn->m_destAction;
+        m_destActionArgs = conn->m_destActionArgs;
         emit updated();
     }
 
@@ -43,8 +44,8 @@ public:
 
     void addSenderEvent(QString senderID, QString senderComponent, jarvisEvents event , sJarvisNodeComponent *senderObj = 0);
     void addSenderEvent(QString senderID, QString senderComponent     , QString event , sJarvisNodeComponent *senderObj = 0);
-    void addDestAction (QString destID  , QString destComponent, jarvisActions action , sJarvisNodeComponent *destObj = 0);
-    void addDestAction (QString destID  , QString destComponent,       QString action , sJarvisNodeComponent *destObj = 0);
+    void addDestAction (QString destID  , QString destComponent, jarvisActions action , QString actionArgs = QString(), sJarvisNodeComponent *destObj = 0);
+    void addDestAction (QString destID  , QString destComponent,       QString action , QString actionArgs = QString(), sJarvisNodeComponent *destObj = 0);
 
     void removeSenderEvent(int index);
     void removeDestAction(int index);
@@ -81,14 +82,16 @@ private:
     QVector<QString>                 m_destComponent;
     QVector<sJarvisNodeComponent*>   m_destObj;
     QVector<QString>                 m_destAction;
+    QVector<QString>                 m_destActionArgs;
 
 
 signals:
     void activated();
     void updated();
+    void actuallyDoAction(QStringList args = QStringList());
+
 private slots:
-    void doAction();
-    void actuallyDoAction();
+    void doAction(QStringList args = QStringList());
 public slots:
     void enable();
     void disable();

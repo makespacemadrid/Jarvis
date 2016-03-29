@@ -33,7 +33,7 @@ QString sJarvisNodeComponent::signalName(jarvisEvents e)
 {
     QString result = ":";
     result.append(eventName(e));
-    result.append("()");
+    result.append("(QStringList)");
     return result;
 }
 
@@ -82,11 +82,21 @@ QString sJarvisNodeComponent::actionName(jarvisActions a)
     return result;
 }
 
-QString sJarvisNodeComponent::slotName(jarvisActions a)
+QString sJarvisNodeComponent::slotName(jarvisActions a,bool withArgs)
 {
     QString result = "1";
+    result.append(slotMethodName(a,withArgs));
+    return result;
+}
+
+QString sJarvisNodeComponent::slotMethodName(jarvisActions a,bool withArgs)
+{
+    QString result;
     result.append(actionName(a));
-    result.append("()");
+    if(withArgs)
+        result.append("(QStringList)");
+    else
+        result.append("()");
     return result;
 }
 
@@ -111,96 +121,95 @@ void sJarvisNodeComponent::initArgs(QStringList args)
     }
 }
 
-void sJarvisNodeComponent::enable()
+void sJarvisNodeComponent::enable(QStringList args)
 {
     m_parentNode->doAction(m_id,A_ENABLE);
 }
 
-void sJarvisNodeComponent::disable()
+void sJarvisNodeComponent::disable(QStringList args)
 {
     m_parentNode->doAction(m_id,A_DISABLE);
 }
 
-void sJarvisNodeComponent::activate()
+void sJarvisNodeComponent::activate(QStringList args)
 {
     m_parentNode->doAction(m_id,A_ACTIVATE);
 }
 
-void sJarvisNodeComponent::deactivate()
+void sJarvisNodeComponent::deactivate(QStringList args)
 {
     m_parentNode->doAction(m_id,A_DEACTIVATE);
 }
 
-void sJarvisNodeComponent::toggle()
+void sJarvisNodeComponent::toggle(QStringList args)
 {
     m_parentNode->doAction(m_id,A_TOGGLE);
 }
 
-void sJarvisNodeComponent::readRaw()
+void sJarvisNodeComponent::readRaw(QStringList args)
 {
     m_parentNode->doAction(m_id,A_READ_RAW);
 }
 
-void sJarvisNodeComponent::readData()
+void sJarvisNodeComponent::readData(QStringList args)
 {
     m_parentNode->doAction(m_id,A_READ_DATA);
 }
 
-void sJarvisNodeComponent::dimm(int power)
+void sJarvisNodeComponent::dimm(QStringList args)
 {
-    m_parentNode->doAction(m_id,A_DIMM, QStringList(QString::number(power)));
+    if(args.count() == 0)
+        args << QString::number(50);
+    m_parentNode->doAction(m_id,A_DIMM, args);
 }
 
-void sJarvisNodeComponent::blink(int freq, int r,int g,int b)
+void sJarvisNodeComponent::blink(QStringList args)
 {
-    QStringList args;
-    args << QString(freq) << QString(r) << QString(g) << QString(b);
     m_parentNode->doAction(m_id,A_BLINK,args);
 }
 
-void sJarvisNodeComponent::glow()
+void sJarvisNodeComponent::glow(QStringList args)
 {
     m_parentNode->doAction(m_id,A_GLOW);
 }
 
-void sJarvisNodeComponent::fade()
+void sJarvisNodeComponent::fade(QStringList args)
 {
     m_parentNode->doAction(m_id,A_FADE);
 }
 
-void sJarvisNodeComponent::setColor(int r,int g,int b)
+void sJarvisNodeComponent::setColor(QStringList args)
 {
-    QStringList args;
-    args << QString::number(r) << QString::number(g) << QString::number(b);
+    if(args.count() == 0)
+        args << QString::number(100) << QString::number(100) << QString::number(100);
     m_parentNode->doAction(m_id,A_SET_COLOR,args);
 }
 
-void sJarvisNodeComponent::cylon()
+void sJarvisNodeComponent::cylon(QStringList args)
 {
     m_parentNode->doAction(m_id,A_CYLON);
 }
 
-void sJarvisNodeComponent::beep()
+void sJarvisNodeComponent::beep(QStringList args)
 {
-    QStringList args;
     m_parentNode->doAction(m_id,A_BEEP,args);
 }
 
-void sJarvisNodeComponent::playTone(int freq, int dur)
+void sJarvisNodeComponent::playTone(QStringList args)
 {
-    QStringList args;
-    args << QString::number(freq) << QString::number(dur);
+    if(args.count() == 0)
+        args << QString::number(150) << QString::number(100);
     m_parentNode->doAction(m_id,A_PLAYTONE,args);
 }
 
-void sJarvisNodeComponent::playRtttl(QString songrtttl)
+void sJarvisNodeComponent::playRtttl(QStringList args)
 {
-    QStringList args;
-    args << songrtttl;
+    if(args.count() == 0)
+        args << "imperial:d=6,o=5,b=80:8d.,8d.,8d.,8a#4,16f,8d.,8a#4,16f,d.,16p,8a.,8a.,8a.,8a#,16f,8c#.,8a#4,16f,8d.";
     m_parentNode->doAction(m_id,A_PLAYRTTTL,args);
 }
 
-void sJarvisNodeComponent::makeCoffe()
+void sJarvisNodeComponent::makeCoffe(QStringList args)
 {
     m_parentNode->doAction(m_id,A_MAKE_COFFEE);
 }
@@ -232,11 +241,9 @@ void sJarvisNodeComponent::parseEvent(QString component, jarvisEvents event, QSt
         emit deactivated();
     }else if(event == E_RAW_READ)
     {
-        emit rawRead();
         emit rawRead(args);
     }else if(event == E_DATA_READ)
     {
-        emit dataRead();
         emit dataRead(args);
     }else if(event == E_COFFEE_MAKING)
     {
