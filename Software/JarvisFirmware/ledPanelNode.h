@@ -87,40 +87,44 @@ public:
 
     void rotateEffects()
     {
-
         if      (m_effectIndex == 0)
-            m_ledMatrix.rainbow();     //Luz rainbow
+        {
+            //m_ledMatrix.displayMatrix(ledMatrixIcons::makeSpace50x10Matrix());
+            m_ledMatrix.setColor(255,255,0);
+        }
         else if (m_effectIndex == 1)
-            m_ledMatrix.chaoticLight();//Luz caotica
+            m_ledMatrix.rainbow();     //Luz rainbow
         else if (m_effectIndex == 2)
-            m_ledMatrix.setColor(250,0,0);  //Rojo
+            m_ledMatrix.chaoticLight();//Luz caotica
         else if (m_effectIndex == 3)
-            m_ledMatrix.setColor(0,250,0);  //Verde
+            m_ledMatrix.setColor(250,0,0);  //Rojo
         else if (m_effectIndex == 4)
-            m_ledMatrix.setColor(0,0,250);  //Azul
+            m_ledMatrix.setColor(0,250,0);  //Verde
         else if (m_effectIndex == 5)
-            m_ledMatrix.setColor(250,250,0);//Amarillo
+            m_ledMatrix.setColor(0,0,250);  //Azul
         else if (m_effectIndex == 6)
+            m_ledMatrix.setColor(250,250,0);//Amarillo
+        else if (m_effectIndex == 7)
         {
             m_ledMatrix.setColor(250,0,0);  //Rojo GLOW
             m_ledMatrix.glow();
         }
-        else if (m_effectIndex == 7)
+        else if (m_effectIndex == 8)
         {
             m_ledMatrix.setColor(0,250,0);  //Verde GLOW
             m_ledMatrix.glow();
         }
-        else if (m_effectIndex == 8)
+        else if (m_effectIndex == 9)
         {
             m_ledMatrix.setColor(0,0,250);  //Azul GLOW
             m_ledMatrix.glow();
         }
-        else if (m_effectIndex == 9)
+        else if (m_effectIndex == 10)
         {
             m_ledMatrix.setColor(250,250,0);//Amarillo GLOW
             m_ledMatrix.glow();
         }
-        else if (m_effectIndex == 10)
+        else if (m_effectIndex == 11)
             m_ledMatrix.cylon();            //Cylon
         else
         {

@@ -841,13 +841,20 @@ public:
             m_leds[l]->off();
         }
 
-        for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
+        if( (matrix.size() > m_matrix.size()) || (matrix[0].size() > m_matrix[0].size()))
         {
-            for(uint8_t col = 0 ; col < matrix[row].size() ; col++)
+            m_scrollImg = matrix;
+        }
+        else
+        {
+            for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
             {
-                if((row < m_matrix.size()) && (col < m_matrix[row].size()))
+                for(uint8_t col = 0 ; col < matrix[row].size() ; col++)
                 {
-                    *m_matrix[row][col] = matrix[row][col];
+                    if((row < m_matrix.size()) && (col < m_matrix[row].size()))
+                    {
+                        *m_matrix[row][col] = matrix[row][col];
+                    }
                 }
             }
         }
