@@ -2,8 +2,8 @@
 #define COMM
 
 #ifdef ESP8266
+#include "espWebServer.h"
 #include <ESP8266WiFi.h>
-#include "webconfigurator.h"
 #include <WiFiClient.h> 
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
@@ -784,8 +784,8 @@ class espNative : public communicationModule
 
     std::vector<WiFiClient> m_validatedConns;
     std::vector<WiFiClient> m_validatingConns;
-    float                  m_validateTimeout;
-    webConfigurator         m_webServer;
+    float                   m_validateTimeout;
+    espWebServer            m_webServer;
     ESP8266HTTPUpdateServer m_httpUpdater;
 
 
