@@ -26,6 +26,8 @@ public:
         m_capableEvents.push_back(E_ACTIVATED);
         m_capableEvents.push_back(E_DEACTIVATED);
         m_statusLed.disable();
+        //m_ledMatrix.writeMatrixToFile("/makespacebanner",ledMatrixIcons::makeSpace50x10Matrix());
+
     }
 
     void activate()

@@ -861,9 +861,97 @@ public:
         update();
     }
 
+    void writeMatrixToFile(String filename,const std::vector<std::vector<ws2812Strip::led> >& matrix)
+    {
+        return;
+        if(!m_matrix.size() || !m_matrix[0].size())
+        {
+            Serial.println("Bad Matrix");
+            return;
+        }
+        File f = SPIFFS.open(filename, "w+");
+        if (!f) {
+            Serial.println("file open failed");
+            return;
+        }
+//        f.close();//esto deberia de vaciar el fichero
+//        f = SPIFFS.open(filename, "a");
+        Serial.println("File Opened for write");
+
+        uint8_t rows,cols;
+        rows = matrix.size();
+        cols = matrix[0].size();
+        //f.print(rows);
+        //f.print(cols);
+        Serial.print("header written:");
+        Serial.print(f.size());
+        yield();
+
+        for(int row = 0 ; row < rows ; row++)
+        {
+            for(int col = 0 ; col < cols ; col++)
+            {
+                uint8_t r = m_matrix[row][col]->r();
+                uint8_t g = m_matrix[row][col]->g();
+                uint8_t b = m_matrix[row][col]->b();
+                f.write(r);
+                //f.write(g);
+                //f.write(b);
+                //yield();
+            }
+        }
+        Serial.print("File Saved:");
+        Serial.println(f.size());
+        f.close();
+        yield();
+    }
+
+    void displayFromFile(String filename)
+    {
+        File f = SPIFFS.open(filename, "r");
+        if (!f) {
+            Serial.println("file open failed");
+            return;
+        }
+        uint8_t rows,cols;
+        rows = f.read();
+        cols = f.read();
+
+        if(f.size() < (rows*cols*3)+2)
+        {
+            Serial.print("File to small:");
+            Serial.print((rows*cols*3)+2);
+            Serial.print("/");
+            Serial.print(f.size());
+            return;
+        }
+
+        if( (rows >= m_matrix.size()) || (cols >= m_matrix.size()) )
+        {
+            m_file = filename;
+            scroll();
+        }
+
+        for(int row = 0 ; row < m_matrix.size() ; row++)
+        {
+            for(int col = 0 ; col < m_matrix[row].size() ; col++)
+            {
+                if( (row >= m_matrix.size()) || (col>=m_matrix[row].size()) )
+                    continue;
+                uint16_t offset = (( (row*cols) + col) * 3) + 2;
+                f.seek(offset ,SeekSet);
+                uint8_t r = f.read();
+                uint8_t g = f.read();
+                uint8_t b = f.read();
+                m_matrix[row][col]->setColor(r,g,b);
+            }
+        }
+    }
+
 protected:
     std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
     std::vector<std::vector<ws2812Strip::led> >   m_scrollImg;
+    String                                        m_file;
 
 
     void animateCylon()
@@ -945,15 +1033,6 @@ protected:
 
     void animateScroll()
     {
-        for(int row = 0 ; row < m_matrix.size() ; row++ )
-        {
-            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
-            {
-                if( (m_scrollImg.size()      > row) &&
-                    (m_scrollImg[row].size() > col+m_counter1) )
-                    *m_matrix[row][col] = m_scrollImg[row][col+m_counter1];
-            }
-        }
 
         if      (m_counter1 == m_scrollImg[0].size()-m_matrix[0].size())
             m_counter2 = 1;//contador 2 para controlar la direccion

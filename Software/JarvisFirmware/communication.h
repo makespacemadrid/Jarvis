@@ -7,6 +7,7 @@
 #include <WiFiClient.h> 
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
+#include "spifsstorage.h"
 #endif
 
 #include "jarvisParser.h"
@@ -39,6 +40,7 @@ class communicationModule : public jarvisParser , public nodeComponent
       m_eeprom(eeprom), m_ledStrip(eeprom->settings().ledStripPin,eeprom->settings().ledCount)
     , m_statusLed(&m_ledStrip,0,1,2)
     {
+        m_spiFsStorage.setup();
         m_commMode = nativeNode;
         m_initDone = false;
         if(m_ledStrip.isValid())
@@ -194,6 +196,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     float    m_reconnectTimer           = 0.0f;
     ws2812Strip           m_ledStrip;
     ledStatusTrio         m_statusLed;
+    SPIFSStorage          m_spiFsStorage;
     
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;
