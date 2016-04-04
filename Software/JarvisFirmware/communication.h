@@ -491,10 +491,13 @@ class espNative : public communicationModule
     {
       communicationModule::setup();
       m_webServer.setup();
-      m_server.begin();
-      m_server.setNoDelay(true);
-      MDNS.addService("http", "tcp", 80);
+      debugln("D:Setting update server");
       m_httpUpdater.setup(&m_webServer.webServer());
+      yield();
+      debug("D:Listening connections on port:");
+      debugln(m_eeprom->settings().localPort);
+      m_server.begin();
+      MDNS.addService("http", "tcp", 80);
       debug("D: HTTPUpdateServer on http://<IP>/update");
       yield();
     }

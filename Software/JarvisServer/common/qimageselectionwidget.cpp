@@ -70,3 +70,40 @@ void qImageSelectionWidget::resizeImg()
     ui->dataArrayEdit->clear();
     ui->dataArrayEdit->appendPlainText(args);
 }
+
+void qImageSelectionWidget::on_btnSave_clicked()
+{
+    QFileDialog dialog;
+    dialog.setFileMode(QFileDialog::AnyFile);
+    QString strFile = dialog.getSaveFileName(NULL, "Create New File","","");
+    if(strFile.isEmpty()) return;
+
+    QImage img = scaledImage.convertToFormat(QImage::Format_RGB888);
+    QFile f(strFile);
+
+    if(!f.open(QIODevice::WriteOnly))
+    {
+        qDebug() << "Cannot open for write" << strFile ;
+        return;
+    }
+
+    QByteArray data;
+    data.append(img.height());
+    data.append(img.width());
+
+    for(int y = 0 ; y < img.height() ; y++)
+    {
+        for(int x = 0 ; x < img.width() ; x++)
+        {
+            QRgb colorRgb = img.pixel(QPoint(x,y));
+            QColor color(colorRgb);
+            //qDebug() << "x:" << x << " - y:" << y << " - r:" << color.red() << " - g:" << color.green() << " - b:" << color.blue();
+            data.append(color.red());
+            data.append(color.green());
+            data.append(color.blue());
+        }
+    }
+    f.write(data);
+    qDebug() << "Written" << f.size() << " bytes" ;
+    f.close();
+}

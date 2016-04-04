@@ -21,11 +21,11 @@ public:
         m_components.push_back(&m_ledMatrix);
         m_components.push_back(m_dhtSensor.temperatureSensor());
         m_components.push_back(m_dhtSensor.humiditySensor());
-        m_components.push_back(&m_activateBtn);
         m_activateBtn.setId("OnBtn");
         m_deactivateBtn.setId("OffBtn");
-        m_potenciometer.setId("PotenciometerBright");
-        m_components.push_back((&m_deactivateBtn));
+        m_potenciometer.setId("BrightPotenciometer");
+        m_components.push_back(&m_activateBtn);
+        m_components.push_back(&m_deactivateBtn);
         m_components.push_back(&m_potenciometer);
 
         m_actions.push_back(A_ACTIVATE);
@@ -89,8 +89,7 @@ public:
     {
         if      (m_effectIndex == 0)
         {
-            //m_ledMatrix.displayMatrix(ledMatrixIcons::makeSpace50x10Matrix());
-            m_ledMatrix.setColor(255,255,0);
+            m_ledMatrix.displayFromFile("/makespaceBannerBig");
         }
         else if (m_effectIndex == 1)
             m_ledMatrix.rainbow();     //Luz rainbow
