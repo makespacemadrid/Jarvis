@@ -11,7 +11,13 @@ class ledNotificationPanelNode : public jarvisNode
 public:
     ledNotificationPanelNode(EEPROMStorage* settings) :
         jarvisNode(settings),
-        m_ledMatrix(0,16,16,&m_ledStrip,true,true),
+        m_ledMatrix(m_eeprom->settings().ledMatrixFirstLed,
+                    m_eeprom->settings().ledMatrixCols,
+                    m_eeprom->settings().ledMatrixRows,
+                    &m_ledStrip,
+                    m_eeprom->settings().ledMatrixMirror,
+                    m_eeprom->settings().ledMatrixZigZag),
+
         m_dhtSensor(m_eeprom->settings().tempSensorPins[0])
     {
         m_components.push_back(&m_ledMatrix);

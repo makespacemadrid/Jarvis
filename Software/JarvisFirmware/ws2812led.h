@@ -847,10 +847,7 @@ public:
 
         resetAnimation();
 
-        for(uint16_t l = 0 ; l < m_leds.size() ; l++) //clear display
-        {
-            m_leds[l]->off();
-        }
+        off();
 
         if( (matrix.size() > m_matrix.size()) || (matrix[0].size() > m_matrix[0].size()))
         {
@@ -932,22 +929,30 @@ public:
             Serial.println("file open failed");
             return;
         }
-        uint8_t rows,cols;
-        rows = f.read();
-        cols = f.read();
+        uint16_t rows,cols;
+        char a,b,c,d;
+        a = f.read();
+        b = f.read();
+        c = f.read();
+        d = f.read();
+        rows = (a<< 8) | b;
+        cols = (c<< 8) | d;
+        uint8_t headerSize = sizeof(rows) + sizeof(cols);
+
         Serial.print("Loading Matrix, file:");
         Serial.print(filename);
         Serial.print(" rows:");
         Serial.print(rows);
         Serial.print(" cols:");
         Serial.println(cols);
-        uint16_t expectedMatrixSize = (rows*cols*3)+2;
-        if(f.size() < expectedMatrixSize)
+        uint16_t expectedMatrixSize = (rows*cols*3)+headerSize;
+
+        if(f.size() != expectedMatrixSize)
         {
-            Serial.print("File to small:");
-            Serial.print(expectedMatrixSize);
+            Serial.print("Wrong size:");
+            Serial.print(f.size());
             Serial.print("/");
-            Serial.println(f.size());
+            Serial.println(expectedMatrixSize);
             return;
         }
 
@@ -963,7 +968,7 @@ public:
             {
                 if( (row < rows) && (col < cols) )
                 {
-                    uint16_t offset = (( (row*cols) + col) * 3) + 2;
+                    uint16_t offset = (( (row*cols) + col) * 3) + headerSize;
                     f.seek(offset ,SeekSet);
                     uint8_t r = f.read();
                     uint8_t g = f.read();
@@ -1064,9 +1069,16 @@ protected:
             Serial.println("file open failed");
             return;
         }
-        uint8_t rows,cols;
-        rows = f.read();
-        cols = f.read();
+        uint16_t rows,cols;
+        char a,b,c,d;
+        a = f.read();
+        b = f.read();
+        c = f.read();
+        d = f.read();
+        rows = (a<< 8) | b;
+        cols = (c<< 8) | d;
+        uint8_t headerSize = sizeof(rows) + sizeof(cols);
+
 
         for(int row = 0 ; row < m_matrix.size() ; row++)
         {
@@ -1074,7 +1086,7 @@ protected:
             {
                 if( (row < rows) && (col+m_counter1 < cols) )
                 {
-                    uint16_t offset = (( (row*cols) + col+m_counter1) * 3) + 2;
+                    uint16_t offset = (( (row*cols) + col+m_counter1) * 3) + headerSize;
                     f.seek(offset ,SeekSet);
                     uint8_t r = f.read();
                     uint8_t g = f.read();

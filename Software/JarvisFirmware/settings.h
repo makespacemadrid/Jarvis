@@ -7,6 +7,7 @@
 //Por alguna razon no soy capaz de hacerlo funcionar con #ifdef QT
     #include <QObject>
     typedef quint16 uint16_t;
+    typedef quint8 uint8_t;
 #endif
 #endif
 
@@ -45,6 +46,12 @@ struct settingList
   int8_t            ledStripPin         =  13;
   float             ledStripBrightness  =   0.1f;
   uint16_t          ledCount            =   3;
+  uint8_t           ledMatrixFirstLed   =   0;
+  uint8_t           ledMatrixCols       =   16;
+  uint8_t           ledMatrixRows       =   16;
+  bool              ledMatrixZigZag     =   true;
+  bool              ledMatrixMirror     =   false;
+
 
   int8_t           buttonPins[10]      = {  16,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};
   int8_t           tempSensorPins[10]  = {   5,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1,  -1};

@@ -88,9 +88,19 @@ void qImageSelectionWidget::on_btnSave_clicked()
     }
 
     QByteArray data;
-    data.append(img.height());
-    data.append(img.width());
+    quint16 rows = img.height();
+    quint16 cols = img.width();
 
+    char* r = (char*) &rows;
+    char* c = (char*) &cols;
+
+    data.append(r[1]);
+    data.append(r[0]);
+    data.append(c[1]);
+    data.append(c[0]);
+
+    qDebug() << "header written:" << data.size() << "bytes";
+    qDebug() << data;
     for(int y = 0 ; y < img.height() ; y++)
     {
         for(int x = 0 ; x < img.width() ; x++)
