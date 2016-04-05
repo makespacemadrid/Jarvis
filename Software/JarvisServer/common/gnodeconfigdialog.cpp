@@ -25,6 +25,11 @@ void gNodeConfigDialog::loadSettings()
 
     ui->spinLedNumber->setValue(m_nodeConfig.ledCount);
     ui->spinLedBright->setValue(m_nodeConfig.ledStripBrightness);
+    ui->spinMatrixFirst->setValue(m_nodeConfig.ledMatrixFirstLed);
+    ui->spinMatrixCols->setValue(m_nodeConfig.ledMatrixCols);
+    ui->spinMatrixRows->setValue(m_nodeConfig.ledMatrixRows);
+    ui->checkMatrixMirror->setChecked(m_nodeConfig.ledMatrixMirror);
+    ui->checkMatrixZigZag->setChecked(m_nodeConfig.ledMatrixZigZag);
 
     ui->spinLedStripPin->setValue(m_nodeConfig.ledStripPin);
     ui->spinPiezoPin->setValue(m_nodeConfig.piezoPin);
@@ -96,6 +101,7 @@ settingList gNodeConfigDialog::getSettings()
     {
         s.remoteHost[i] = ui->editRemoteAddr->text().trimmed().toLatin1().data()[i];
     }
+
     s.wifiAPMode    = ui->checkApMode->isChecked();
     s.remotePort    = ui->editRemotePort->text().toInt();
     s.localPort     = ui->editLocalPort->text().toInt();
@@ -103,6 +109,12 @@ settingList gNodeConfigDialog::getSettings()
 
     s.ledCount              = ui->spinLedNumber->value();
     s.ledStripBrightness    = ui->spinLedBright->value();
+    s.ledMatrixFirstLed     = ui->spinMatrixFirst->value();
+    s.ledMatrixCols         = ui->spinMatrixCols->value();
+    s.ledMatrixRows         = ui->spinMatrixRows->value();
+    s.ledMatrixMirror       = ui->checkMatrixMirror->isChecked();
+    s.ledMatrixZigZag       = ui->checkMatrixZigZag->isChecked();
+
 
 
     s.ledStripPin       = ui->spinLedStripPin->value();

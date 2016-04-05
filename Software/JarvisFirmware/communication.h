@@ -2,11 +2,12 @@
 #define COMM
 
 #ifdef ESP8266
+#include "espWebServer.h"
 #include <ESP8266WiFi.h>
-#include "webconfigurator.h"
 #include <WiFiClient.h> 
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPUpdateServer.h>
+#include "spifsstorage.h"
 #endif
 
 #include "jarvisParser.h"
@@ -39,6 +40,7 @@ class communicationModule : public jarvisParser , public nodeComponent
       m_eeprom(eeprom), m_ledStrip(eeprom->settings().ledStripPin,eeprom->settings().ledCount)
     , m_statusLed(&m_ledStrip,0,1,2)
     {
+        m_spiFsStorage.setup();
         m_commMode = nativeNode;
         m_initDone = false;
         if(m_ledStrip.isValid())
@@ -194,6 +196,7 @@ class communicationModule : public jarvisParser , public nodeComponent
     float    m_reconnectTimer           = 0.0f;
     ws2812Strip           m_ledStrip;
     ledStatusTrio         m_statusLed;
+    SPIFSStorage          m_spiFsStorage;
     
     virtual void connectAP()      = 0;
     virtual void connectStation() = 0;
@@ -488,10 +491,13 @@ class espNative : public communicationModule
     {
       communicationModule::setup();
       m_webServer.setup();
-      m_server.begin();
-      m_server.setNoDelay(true);
-      MDNS.addService("http", "tcp", 80);
+      debugln("D:Setting update server");
       m_httpUpdater.setup(&m_webServer.webServer());
+      yield();
+      debug("D:Listening connections on port:");
+      debugln(m_eeprom->settings().localPort);
+      m_server.begin();
+      MDNS.addService("http", "tcp", 80);
       debug("D: HTTPUpdateServer on http://<IP>/update");
       yield();
     }
@@ -784,8 +790,8 @@ class espNative : public communicationModule
 
     std::vector<WiFiClient> m_validatedConns;
     std::vector<WiFiClient> m_validatingConns;
-    float                  m_validateTimeout;
-    webConfigurator         m_webServer;
+    float                   m_validateTimeout;
+    espWebServer            m_webServer;
     ESP8266HTTPUpdateServer m_httpUpdater;
 
 

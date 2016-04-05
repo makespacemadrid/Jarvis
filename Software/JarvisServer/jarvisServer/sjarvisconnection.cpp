@@ -1,11 +1,13 @@
 #include "sjarvisconnection.h"
 
+#include <qmetaobject.h>
+
 sJarvisConnection::sJarvisConnection(QObject *parent) : QObject(parent)
 {
     m_enabled   = true;
     m_id        = "Configureme";
     m_delay     = 0;
-    connect(&m_delayTimer,SIGNAL(timeout()),this,SLOT(actuallyDoAction()));
+    //connect(&m_delayTimer,SIGNAL(timeout()),this,SLOT(actuallyDoAction()));
 }
 
 void sJarvisConnection::addSenderEvent(QString senderID, QString senderComponent , jarvisEvents event, sJarvisNodeComponent* senderObj)
@@ -26,18 +28,19 @@ void sJarvisConnection::addSenderEvent(QString senderID, QString senderComponent
     emit updated();
 }
 
-void sJarvisConnection::addDestAction (QString destID, QString destComponent, jarvisActions action, sJarvisNodeComponent *destObj)
+void sJarvisConnection::addDestAction (QString destID, QString destComponent, jarvisActions action, QString actionArgs, sJarvisNodeComponent *destObj)
 {
-    QString actString = sJarvisNodeComponent::actionName(action);
-    addDestAction(destID,destComponent,actString,destObj);
+    QString actString = sJarvisNodeComponent::slotName(action);
+    addDestAction(destID,destComponent,actString,actionArgs,destObj);
 }
 
-void sJarvisConnection::addDestAction (QString destID, QString destComponent,QString action, sJarvisNodeComponent *destObj)
+void sJarvisConnection::addDestAction (QString destID, QString destComponent, QString action, QString actionArgs, sJarvisNodeComponent *destObj)
 {
     m_destId.push_back(destID);
     m_destComponent.push_back(destComponent);
     m_destObj.push_back(destObj);
     m_destAction.push_back(action);
+    m_destActionArgs.push_back(actionArgs);
     emit updated();
 }
 
@@ -86,29 +89,51 @@ void sJarvisConnection::setEnabled(bool en)
 //private:
 
 //private slots:
-void sJarvisConnection::doAction()
+void sJarvisConnection::doAction(QStringList args)
 {
-    if(m_delay >0)
-        m_delayTimer.start(m_delay);
-    else
-        actuallyDoAction();
-}
-
-void sJarvisConnection::actuallyDoAction()
-{
-    m_delayTimer.stop();
-
-    if(!m_enabled)
-        return;
-
-    for(int i = 0 ; i < m_destObj.count() ; i++)
-    {
-        if(m_destObj[i])
-            QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str());
-    }
-
     emit activated();
+    emit actuallyDoAction(args);
+    //if(m_delay >0)
+    //    m_delayTimer.start(m_delay);
+    //else
+    //    actuallyDoAction();
 }
+
+//void sJarvisConnection::actuallyDoAction(QStringList args)
+//{
+//    m_delayTimer.stop();
+//
+//    if(!m_enabled)
+//        return;
+
+
+//    for(int i = 0 ; i < m_destObj.count() ; i++)
+//    {
+//        if(m_destObj[i])
+//        {
+            //if (m_destActionArgs[i].length())
+            //    QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str(),QGenericArgument(m_destActionArgs[i].toStdString().c_str()));
+
+            //else if (args.size() == 1)
+//                QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str(),QGenericArgument(args));
+
+            //else if (args.size() == 2)
+            //    QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str(),QGenericArgument(args[0].toStdString().c_str()),QGenericArgument(args[1].toStdString().c_str()));
+
+            //else if (args.size() == 3)
+            //    QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str(),QGenericArgument(args[0].toStdString().c_str()),QGenericArgument(args[1].toStdString().c_str()),QGenericArgument(args[2].toStdString().c_str()));
+            //else
+//                QMetaObject::invokeMethod(m_destObj[i],m_destAction[i].toStdString().c_str());
+//const QMetaObject* metaObject = m_destObj[i]->metaObject();
+//QStringList methods;
+//for(int i = metaObject->methodOffset(); i < metaObject->methodCount(); ++i)
+//    methods << QString::fromLatin1(metaObject->method(i).methodSignature());
+//qDebug() << "methods:"<<methods;
+
+//        }
+
+//    }
+//}
 
 
 //public slots:
@@ -135,7 +160,7 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
                     qDebug() << "sJarvisConnection::registerNode -> Registering" << m_id << m_senderEvent[i];
                     m_senderObj[i] = node->components()[c];
                     disconnect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction()));// Para evitar conexiones redundantes de desconecta por si ya esta conectada.
-                    connect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction()));
+                    connect(m_senderObj[i],m_senderEvent[i].toStdString().c_str(),this,SLOT(doAction(QStringList)));
                     connect(m_senderObj[i],SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterComp(QObject*)));
                 }
             }
@@ -152,6 +177,7 @@ void sJarvisConnection::registerNode(sJarvisNode *node)
                 {
                     qDebug() << "sJarvisConnection::registerNode -> Registering" << m_id << m_destAction[i];
                     m_destObj[i] = node->components()[c];
+                    connect(this,SIGNAL(actuallyDoAction(QStringList)),m_destObj[i],m_destAction[i].toStdString().c_str());
                     connect(m_destObj[i],SIGNAL(destroyed(QObject*)),this,SLOT(deRegisterComp(QObject*)));
                 }
 

@@ -24,6 +24,7 @@ signals:
 
 private slots:
     void on_selectFileBtn_clicked();
+    void on_btnSave_clicked();
     void resizeImg();
 };
 

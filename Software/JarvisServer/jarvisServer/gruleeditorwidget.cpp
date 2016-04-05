@@ -108,7 +108,7 @@ void gRuleEditorWidget::on_comboDestNode_currentTextChanged(QString str)
                     QListWidgetItem* item = new QListWidgetItem(ui->listNodeActions);
                     item->setText(comp->getId() +
                                   "-" +
-                                  comp->actionName(comp->getActions()[e]));
+                                  comp->slotName(comp->getActions()[e]));
 
                 }
             }

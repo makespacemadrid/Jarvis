@@ -293,7 +293,7 @@ class ledGadget :  public nodeComponent
         m_strip->update();
     }
 
-    void resetAnimation()
+    virtual void resetAnimation()
     {
         if(m_animationType == animationGlow)
         {
@@ -730,7 +730,7 @@ public:
 
             m_matrix.push_back(std::vector<ws2812Strip::led*>());
             bool invertedRow = invertEachRow&&(r % 2 != 0);
-            if(mirror) invertedRow = !invertEachRow;
+            if(mirror) invertedRow = !invertedRow;
 
             int start = r*cols+firstLednr;
             int count = cols;
@@ -773,58 +773,72 @@ public:
     }
 
     void deactivate()
-    {
-        while(m_scrollImg.size())
-        {
-            m_scrollImg.erase(m_scrollImg.begin());
-        }
+    {   
         ledGadget::deactivate();
     }
 
+
     void display(std::vector<String>& args)
     {
-       Serial.print("L-start display: fm:");
-       Serial.println(getFreeMem());
-       Serial.print("args:");
-       Serial.println(args.size());
-        resetAnimation();
-
-        if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5. (x,y,r,g,b)
-        while (args.size())
+        std::vector<uint8_t> argsInt;
+        while(args.size())
         {
-            int row = args[0].toInt();
+            argsInt.push_back(args[0].toInt());
             args.erase(args.begin());
-            int col = args[0].toInt();
-            args.erase(args.begin());
-            uint8_t r = args[0].toInt();
-            args.erase(args.begin());
-            uint8_t g = args[0].toInt();
-            args.erase(args.begin());
-            uint8_t b = args[0].toInt();
-            args.erase(args.begin());
-
-//            while(m_scrollImg.size() < (row+1))
-//                m_scrollImg.push_back(std::vector<ws2812Strip::led>());
-//            while(m_scrollImg[row].size() < (col+1))
-//                m_scrollImg[row].push_back(ws2812Strip::led());
-//            m_scrollImg[row][col].setColor(r,g,b);
-
-            if(row < m_matrix.size() && col < m_matrix[row].size())
-                m_matrix[row][col]->setColor(r,g,b);
         }
+        yield();
+        display(argsInt);
+    }
 
+    void display(std::vector<uint8_t>& args)
+    {
+         resetAnimation();
+
+         if(args.size()%5 != 0) return; // los argumentos tienen que venir de 5 en 5. (x,y,r,g,b)
+         File f = SPIFFS.open("displayBuffer", "w+");
+         if (!f) {
+             Serial.println("file open failed: displayBuffer");
+             return;
+         }
+         uint8_t frows,fcols;
+
+         if(f.size() > 2)
+         {
+             frows = f.read();
+             fcols = f.read();
+         }
+         else
+         {
+             frows = 0;
+             fcols = 0;
+             f.write(0);
+             f.write(0);
+         }
+
+         while (args.size())
+         {
+             int row = args[0];
+             args.erase(args.begin());
+             int col = args[0];
+             args.erase(args.begin());
+             uint8_t r = args[0];
+             args.erase(args.begin());
+             uint8_t g = args[0];
+             args.erase(args.begin());
+             uint8_t b = args[0];
+             args.erase(args.begin());
+
+
+             if(row < m_matrix.size() && col < m_matrix[row].size())
+                 m_matrix[row][col]->setColor(r,g,b);
+         }
+        yield();
 //        if(m_scrollImg[0].size() > m_matrix[0].size())
-//            scroll();
-//        else
-//        {
-//            while(m_scrollImg.size())
-//            {
-//                m_scrollImg.erase(m_scrollImg.begin());
-//            }
-//        }
-        Serial.print("L-display done:, fm:");
-        Serial.println(getFreeMem());
-        m_strip->update();
+//             scroll();
+
+         Serial.print("L-display done:, fm:");
+         Serial.println(getFreeMem());
+         m_strip->update();
     }
 
     void displayMatrix(std::vector<std::vector<ws2812Strip::led> > matrix)
@@ -833,29 +847,143 @@ public:
 
         resetAnimation();
 
-        for(uint16_t l = 0 ; l < m_leds.size() ; l++) //clear display
-        {
-            m_leds[l]->off();
-        }
-        yield();
+        off();
 
-        for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
+        if( (matrix.size() > m_matrix.size()) || (matrix[0].size() > m_matrix[0].size()))
         {
-            for(uint8_t col = 0 ; col < matrix[row].size() ; col++)
+            //m_scrollImg = matrix;
+        }
+        else
+        {
+            for(uint8_t row = 0 ; row < matrix.size() ; row++) //copia los valores que estan dentro del rango de la matriz
             {
-                if((row < m_matrix.size()) && (col < m_matrix[row].size()))
+                for(uint8_t col = 0 ; col < matrix[row].size() ; col++)
                 {
-                    *m_matrix[row][col] = matrix[row][col];
+                    if((row < m_matrix.size()) && (col < m_matrix[row].size()))
+                    {
+                        *m_matrix[row][col] = matrix[row][col];
+                    }
                 }
             }
         }
         update();
     }
 
+    void writeMatrixToFile(String filename,const std::vector<std::vector<ws2812Strip::led> >& matrix)
+    {
+        if(!m_matrix.size() || !m_matrix[0].size())
+        {
+            Serial.println("Bad Matrix");
+            return;
+        }
+        File f = SPIFFS.open(filename, "w");
+        if (!f) {
+            Serial.println("file open failed");
+            return;
+        }
+
+//        f.close();//esto deberia de vaciar el fichero
+//        f = SPIFFS.open(filename, "a");
+        Serial.println("File Opened for write");
+
+        uint8_t rows,cols;
+        rows = matrix.size();
+        cols = matrix[0].size();
+        Serial.print("Saving matrix, ");
+        Serial.print(rows);
+        Serial.print("x");
+        Serial.print(cols);
+        Serial.print(".  ");
+        Serial.print((m_matrix.size()*m_matrix[0].size()*3)+2);
+        Serial.println("bytes");
+
+        f.write(rows);
+        f.write(cols);
+        yield();
+
+        for(int row = 0 ; row < rows ; row++)
+        {
+            for(int col = 0 ; col < cols ; col++)
+            {
+                uint8_t r = m_matrix[row][col]->r();
+                uint8_t g = m_matrix[row][col]->g();
+                uint8_t b = m_matrix[row][col]->b();
+                f.write(r);
+                f.write(g);
+                f.write(b);
+                yield();
+            }
+        }
+        Serial.print("File Saved:");
+        Serial.println(f.size());
+        f.close();
+        yield();
+    }
+
+    void displayFromFile(String filename)
+    {
+        off();
+
+        File f = SPIFFS.open(filename, "r");
+        if (!f) {
+            Serial.println("file open failed");
+            return;
+        }
+        uint16_t rows,cols;
+        char a,b,c,d;
+        a = f.read();
+        b = f.read();
+        c = f.read();
+        d = f.read();
+        rows = (a<< 8) | b;
+        cols = (c<< 8) | d;
+        uint8_t headerSize = sizeof(rows) + sizeof(cols);
+
+        Serial.print("Loading Matrix, file:");
+        Serial.print(filename);
+        Serial.print(" rows:");
+        Serial.print(rows);
+        Serial.print(" cols:");
+        Serial.println(cols);
+        uint16_t expectedMatrixSize = (rows*cols*3)+headerSize;
+
+        if(f.size() != expectedMatrixSize)
+        {
+            Serial.print("Wrong size:");
+            Serial.print(f.size());
+            Serial.print("/");
+            Serial.println(expectedMatrixSize);
+            return;
+        }
+
+        if( (rows >= m_matrix.size()) || (cols >= m_matrix.size()) )
+        {
+            m_file = filename;
+            scroll();
+        }
+
+        for(int row = 0 ; row < m_matrix.size() ; row++)
+        {
+            for(int col = 0 ; col < m_matrix[row].size() ; col++)
+            {
+                if( (row < rows) && (col < cols) )
+                {
+                    uint16_t offset = (( (row*cols) + col) * 3) + headerSize;
+                    f.seek(offset ,SeekSet);
+                    uint8_t r = f.read();
+                    uint8_t g = f.read();
+                    uint8_t b = f.read();
+                    m_matrix[row][col]->setColor(r,g,b);
+                }
+            }
+        }
+        m_strip->update();
+        Serial.println("Done");
+    }
+
 protected:
     std::vector<std::vector<ws2812Strip::led*> >  m_matrix;
-    std::vector<std::vector<ws2812Strip::led> >   m_scrollImg;
-
+    String                                        m_file;
 
     void animateCylon()
     {
@@ -936,13 +1064,55 @@ protected:
 
     void animateScroll()
     {
-//        for(int row = 0 ; row < m_matrix.size() ; row++ )
-//        {
-//            for(int col = 0 ; col < m_matrix[row].size() ; col ++)
-//            {
-//                *m_matrix[row][col] = m_scrollImg[row][col];
-//            }
-//        }
+        File f = SPIFFS.open(m_file, "r");
+        if (!f) {
+            Serial.println("file open failed");
+            return;
+        }
+        uint16_t rows,cols;
+        char a,b,c,d;
+        a = f.read();
+        b = f.read();
+        c = f.read();
+        d = f.read();
+        rows = (a<< 8) | b;
+        cols = (c<< 8) | d;
+        uint8_t headerSize = sizeof(rows) + sizeof(cols);
+
+
+        for(int row = 0 ; row < m_matrix.size() ; row++)
+        {
+            for(int col = 0 ; col < m_matrix[row].size() ; col++)
+            {
+                if( (row < rows) && (col+m_counter1 < cols) )
+                {
+                    uint16_t offset = (( (row*cols) + col+m_counter1) * 3) + headerSize;
+                    f.seek(offset ,SeekSet);
+                    uint8_t r = f.read();
+                    uint8_t g = f.read();
+                    uint8_t b = f.read();
+                    m_matrix[row][col]->setColor(r,g,b);
+                }
+            }
+        }
+
+
+        if      (m_counter1 == cols-m_matrix[0].size())
+            m_counter2 = 1;//contador 2 para controlar la direccion
+        else if (m_counter1 == 0)
+            m_counter2 = 0;
+
+        if(m_counter3 > 5)//contador 3 para hacer un divisor y que el efecto sea mas lento
+        {
+            m_counter3 = 0;
+            if(m_counter2 == 0)
+                m_counter1++;//contador 1 para el offset de la imagen.
+            else
+                m_counter1--;
+        }
+
+        m_counter3++;
+
     }
 };
 
