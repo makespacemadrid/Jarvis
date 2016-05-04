@@ -180,7 +180,12 @@
               </item>
               <item>
                <property name="text">
-                <string notr="true">termometroNode</string>
+                <string notr="true">termometroNodeModule</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>doorControlModule</string>
                </property>
               </item>
              </widget>

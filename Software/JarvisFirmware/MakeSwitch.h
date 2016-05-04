@@ -60,14 +60,14 @@ public:
 
     virtual void sendEvent(String source,nodeComponent::event e)
     {//sobrecargar esta funcion para reaccionar a los eventos salientes.
+        if(!m_enabled)
+        {
+            jarvisNode::sendEvent(source,e);
+            return;
+        }
+
         if(source == "switch")
         {
-            if(!m_enabled)
-            {
-                jarvisNode::sendEvent(source,e);
-                return;
-            }
-
             if(e.jevent == E_ACTIVATED)
             {
                 startPowerOn();

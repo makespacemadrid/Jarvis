@@ -25,7 +25,8 @@ enum jarvisModules
     ledNotificationPanelModule,
     ledPanelModule,
     testNodeModule,
-    termometroNodeModule
+    termometroNodeModule,
+    doorControlModule
 };
 
 struct settingList

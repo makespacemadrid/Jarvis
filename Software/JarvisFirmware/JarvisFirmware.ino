@@ -52,6 +52,7 @@ uint16_t updateInterval = 25;
 #include "lednotificationpanel.h"
 #include "testNode.h"
 #include "termometroNode.h"
+#include "doorcontrolnode.h"
 
 
 jarvisNode* node;
@@ -62,7 +63,7 @@ void setup()
     Serial.begin(115200);
     //EEPROMSettings.clearEEPROM();
     EEPROMSettings.reload();
-
+    node = 0;
     jarvisModules type = EEPROMSettings.settings().moduleType;
 
     if      (type == unConfiguredModule)
@@ -97,7 +98,13 @@ void setup()
         node = new testNode(&EEPROMSettings);
     }else if(type == termometroNodeModule){
         node = new termometroNode(&EEPROMSettings);
+    }else if(type == doorControlModule){
+        node = new doorControlNode(&EEPROMSettings);
     }
+
+    if(node == 0)
+        node = new jarvisNode(&EEPROMSettings);
+
 
     node->setup();
 }
