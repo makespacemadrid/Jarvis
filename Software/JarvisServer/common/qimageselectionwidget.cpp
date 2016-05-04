@@ -3,6 +3,7 @@
 
 #include <QFileDialog>
 #include <QDebug>
+#include <QPainter>
 
 qImageSelectionWidget::qImageSelectionWidget(QWidget *parent) :
     QDialog(parent),
@@ -116,4 +117,58 @@ void qImageSelectionWidget::on_btnSave_clicked()
     f.write(data);
     qDebug() << "Written" << f.size() << " bytes" ;
     f.close();
+}
+
+void qImageSelectionWidget::on_selectDataFileBtn_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Data File"),"",tr("any (*)"));
+    if(fileName.isEmpty()) return;
+    quint16 rows,cols;
+    QFile f(fileName);
+    if(!f.open(QIODevice::ReadOnly))
+    {
+        qDebug() << "Cannot open:" << fileName;
+        return;
+    }
+    char a,b,c,d;
+    f.read(&a,1);
+    f.read(&b,1);
+    f.read(&c,1);
+    f.read(&d,1);
+
+    rows = (b<< 8) | a;
+    cols = (d<< 8) | c;
+    quint8 headerSize = sizeof(rows) + sizeof(cols);
+
+
+    quint16 expectedMatrixSize = (rows*cols*3)+headerSize;
+
+    if(f.size() != expectedMatrixSize)
+    {
+        qDebug() << "Wrong size:" << f.size() << "/" << expectedMatrixSize;
+        return;
+    }
+
+    QImage img;
+    QPainter p;
+    QPixmap pmap;
+//    pmap.loadFromData()
+    p.begin(&pmap);
+
+    for(int row = 0 ; row < rows ; row++)
+    {
+        for(int col = 0 ; col < cols ; col++)
+        {
+            quint16 offset = (( (row*cols) + col) * 3) + headerSize;
+            f.seek(offset);
+            quint8 r,g,b;
+            f.read((char*)&r,1);
+            f.read((char*)&g,1);
+            f.read((char*)&b,1);
+            p.setPen(QPen(QColor(r,g,b)));
+            p.drawPoint(QPoint(col,row));
+        }
+    }
+    p.end();
+    ui->scaledView->setPixmap(QPixmap::fromImage(img));
 }
