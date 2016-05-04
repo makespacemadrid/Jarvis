@@ -1102,7 +1102,7 @@ protected:
         else if (m_counter1 == 0)
             m_counter2 = 0;
 
-        if(m_counter3 > 5)//contador 3 para hacer un divisor y que el efecto sea mas lento
+        if(m_counter3 > 3)//contador 3 para hacer un divisor y que el efecto sea mas lento
         {
             m_counter3 = 0;
             if(m_counter2 == 0)

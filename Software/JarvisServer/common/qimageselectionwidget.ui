@@ -29,7 +29,14 @@
      <item>
       <widget class="QPushButton" name="selectFileBtn">
        <property name="text">
-        <string>Open</string>
+        <string>OpenImage</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="selectDataFileBtn">
+       <property name="text">
+        <string>OpenDataFile</string>
        </property>
       </widget>
      </item>

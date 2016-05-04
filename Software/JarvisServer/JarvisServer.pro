@@ -35,7 +35,7 @@ SOURCES += \
     jarvisServer/qconnectdialog.cpp \
     common/jarvisnodetestapp.cpp \
     jarvisServer/sjarvisconnection.cpp \
-    sjarvisconnectionmanager.cpp \
+    jarvisServer/sjarvisconnectionmanager.cpp \
     jarvisServer/gjarvisconnectionmanagerwidget.cpp \
     jarvisServer/gjarvisconnectionwidget.cpp \
     common/grtttlplayer.cpp \
@@ -63,7 +63,7 @@ HEADERS += \
     jarvisServer/qconnectdialog.h \
     common/jarvisnodetestapp.h \
     jarvisServer/sjarvisconnection.h \
-    sjarvisconnectionmanager.h \
+    jarvisServer/sjarvisconnectionmanager.h \
     jarvisServer/gjarvisconnectionmanagerwidget.h \
     jarvisServer/gjarvisconnectionwidget.h \
     common/grtttlplayer.h \
