@@ -17,9 +17,11 @@ public:
 private:
     sJarvisNodeServer        m_nodeServer;
     sJarvisConnectionManager m_connectionManager;
+    void loadSettings();
 signals:
 
 public slots:
+    void saveSettings();
 
 };
 
