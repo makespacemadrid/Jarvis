@@ -43,7 +43,7 @@ public:
             }
         }
 
-        jarvisNode::update(); // Para terminar se llama al padre para que haga su update
+        jarvisNode::update(); // Para terminar se llama al nodo para que haga su update
     }
 
     virtual void activate()

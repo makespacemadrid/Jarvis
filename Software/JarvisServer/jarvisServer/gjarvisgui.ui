@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>572</width>
-    <height>234</height>
+    <width>777</width>
+    <height>307</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,7 +35,7 @@
       <item>
        <widget class="QToolButton" name="btn_saveSettings">
         <property name="text">
-         <string>Save</string>
+         <string>Save(OLD)</string>
         </property>
        </widget>
       </item>
@@ -89,7 +89,7 @@
       </widget>
       <widget class="gJarvisConnectionManagerWidget" name="connManagerWidget">
        <property name="title">
-        <string>ConnectionManager</string>
+        <string>Rule Manager</string>
        </property>
        <property name="flat">
         <bool>false</bool>
@@ -104,7 +104,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>572</width>
+     <width>777</width>
      <height>25</height>
     </rect>
    </property>

@@ -13,6 +13,7 @@ gJarvisConnectionWidget::gJarvisConnectionWidget(sJarvisConnection * conn, QWidg
         setJarvisConnection(conn,true);
     else
         setJarvisConnection(new sJarvisConnection(),false);
+    connect(ui->btnRemove,SIGNAL(clicked(bool)),this,SLOT(deleteLater()));
 }
 
 void gJarvisConnectionWidget::setJarvisConnection(sJarvisConnection *conn, bool sharedConn)

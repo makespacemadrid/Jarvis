@@ -22,6 +22,7 @@ void gJarvisConnectionManagerWidget::setConnManager(sJarvisConnectionManager *co
     {
         addWidgetConnection(m_connManager->connections()[c]);
     }
+    connect(ui->btnSave,SIGNAL(clicked(bool)),m_connManager,SLOT(saveConfig()));
 }
 
 void gJarvisConnectionManagerWidget::addWidgetConnection(sJarvisConnection *conn)
