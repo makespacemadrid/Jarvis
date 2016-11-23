@@ -73,8 +73,8 @@ void sJarvisConnectionManager::loadConfig()
 
         for(int d = 0 ; d < dataBlock.count() ; d++)
         {
-            QStringList fields = dataBlock[d].split(":");
-            qDebug() << "sJarvisConnectionManager::loadConfig()->" << fields[0] << fields[1];
+            QStringList fields = dataBlock[d].split("@");
+            qDebug() << "sJarvisConnectionManager::loadConfig()->" << fields;
             if(fields[0] == "ID")
             {
                 jc->setId(fields[1]);
@@ -98,27 +98,27 @@ void sJarvisConnectionManager::saveConfig()
     for(int i = 0 ; i < m_conns.count() ; i++)
     {
         sJarvisConnection* c = m_conns[i];
-        data.append("ID:");
+        data.append("ID@");
         data.append(c->id());
         for(int t = 0 ; t < c->senderIds().count() ; t++)
         {
             data.append("|");
-            data.append("TRIGGER:");
+            data.append("TRIGGER@");
             data.append(c->senderIds()[t]);
-            data.append(":");
+            data.append("@");
             data.append(c->senderComp()[t]);
-            data.append(":");
+            data.append("@");
             data.append(c->senderEvents()[t]);
         }
 
         for(int t = 0 ; t < c->destIds().count() ; t++)
         {
             data.append("|");
-            data.append("ACTION:");
+            data.append("ACTION@");
             data.append(c->destIds()[t]);
-            data.append(":");
+            data.append("@");
             data.append(c->destComp()[t]);
-            data.append(":");
+            data.append("@");
             data.append(c->destActions()[t]);
         }
         data.append("\n");
