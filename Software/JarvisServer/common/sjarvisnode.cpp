@@ -229,6 +229,7 @@ QByteArray sJarvisNode::encodeNodeMsg(QStringList args)
     result += P_PACKETTERMINATOR;
     return result;
 }
+
 void sJarvisNode::sendPing()
 {
     send(encodeNodeMsg(QStringList(QString(C_PING))));//formula abreviada para crear una lista de argumntos con un unico elemento y mandarlo

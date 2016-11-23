@@ -50,7 +50,12 @@ public:
     void removeSenderEvent(int index);
     void removeDestAction(int index);
 
-    void setId(QString id)  {m_id = id;}
+    void setId(QString id)
+    {
+        m_id = id;
+        emit updated();
+    }
+
     QString id()            {return m_id;}
 
     void    setDelay(quint16 delayms);
